@@ -9,10 +9,13 @@ PROJECT_NAME = "finephrase"
 parser = argparse.ArgumentParser("Quickly launch thom's style of tokenization.")
 
 parser.add_argument(
-    "data_paths", type=str, help="Path to the data to tokenize."
+    "--data_paths", type=str, help="Path to the data to tokenize.", required=True
 )
 parser.add_argument(
-    "--output_path", type=str, help="Path to the output folder", default="s3://finephrase/experiments/tokenized"
+    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=f"s3://{PROJECT_NAME}/experiments"
+)
+parser.add_argument(
+    "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"
 )
 parser.add_argument(
     "--limit", type=int, help="limit the number of documents to tokenize", default=None
@@ -50,9 +53,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--run_merger", "-rm", action="store_true", help="Run the merger after tokenization"
-)
-parser.add_argument(
-    "--name", "-n", type=str, default=None, help="Name of the tokenization"
 )
 parser.add_argument(
     "--max_chars_per_document", type=int, default=100_000, help="Split documents larger than this many characters"
@@ -180,6 +180,9 @@ if __name__ == "__main__":
     from datatrove.pipeline.writers import JsonlWriter
     from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
     from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
+    
+    logging_base_path = f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/tokenization/{output_name}"
+    
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{output_name}",
         pipeline=[
@@ -188,7 +191,7 @@ if __name__ == "__main__":
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),
             DocumentTokenizer(
-                output_folder=f"s3://{PROJECT_NAME}/experiments/tokenized/{output_name}",
+                output_folder=f"{args.output_path}/tokenized/{output_name}",
                 local_working_dir=f"/scratch/{USER}/tokenized/{output_name}",
                 eos_token="<|end_of_text|>",
                 tokenizer_name_or_path=args.tokenizer,
@@ -202,7 +205,7 @@ if __name__ == "__main__":
         tasks=args.n_tasks,
         time="20:00:00",
         partition="hopper-cpu",
-        logging_dir=f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/tokenization/{output_name}/tokenized",
+        logging_dir=f"{logging_base_path}/tokenized",
         cpus_per_task=8,
         mem_per_cpu_gb=2,
         qos=args.qos,
@@ -216,8 +219,8 @@ if __name__ == "__main__":
                 job_name=f"merge-{output_name}",
                 pipeline=[
                 DocumentTokenizerMerger(
-                    input_folder=f"s3://{PROJECT_NAME}/experiments/tokenized/{output_name}",
-                    output_folder=f"s3://{PROJECT_NAME}/experiments/tokenized_merged/{output_name}",
+                    input_folder=f"{args.output_path}/tokenized/{output_name}",
+                    output_folder=f"{args.output_path}/tokenized_merged/{output_name}",
                     save_filename="tokenized_dataset",
                     shuffle_chunk_size=args.shuffle_chunk_size + 1 if args.shuffle_chunk_size else None
                 ),
@@ -225,7 +228,7 @@ if __name__ == "__main__":
             tasks=1,
             time="20:00:00",
             partition="hopper-cpu",
-            logging_dir=f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/{output_name}/tokenized_merged",
+            logging_dir=f"{logging_base_path}/tokenized_merged",
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,

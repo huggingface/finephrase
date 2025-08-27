@@ -2,6 +2,7 @@
 Synthetic pretraining data by rephrasing the web
 
 ## Setup
+
 ### Install uv and setup a venv
 ```
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -48,7 +49,7 @@ python -c "import nanotron"
 ### Running ablations
 1. Tokenize your dataset with tokenize_dataset.py
 ```
-python tokenize_dataset.py s3://cosmopedia-data/fineweb_edu_samples/100BT/ --output_path s3://finephrase/experiments/tokenized/fineweb-edu
+python tokenize_dataset.py --data_paths s3://cosmopedia-data/fineweb_edu_samples/100BT/ --name fineweb-edu
 ```
 
 2. Train small model for 33B tokens

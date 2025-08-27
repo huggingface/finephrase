@@ -19,11 +19,15 @@ LAUNCH_CONFIGS_PATH = f"{LOG_BASE_PATH}/training/launch-configs"
 SLURM_SCRIPT_PATH = f"{LOG_BASE_PATH}/training/slurm-scripts"
 
 NANOTRON_PATH = f"{PROJECT_PATH}/nanotron"
-S5CMD_PATH = f"{PROJECT_PATH}/training_venv/bin/s5cmd"
+S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 
 LOCAL_TMP_PATH_ON_NODE = f"/scratch/{USER}"
 S3_CHECKPOINTS_PREFIX = f"s3://{PROJECT_NAME}/experiments/checkpoints"
 EVALS_OUTPUT_PATH = f"s3://{PROJECT_NAME}/experiments/evals-test"
+
+TASKS_PATH = f"{PROJECT_PATH}/tasks.txt"
+TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
+
 NUM_GPUS = 8
 NUM_CPUS_IN_NODE = 88
 
@@ -173,26 +177,11 @@ lighteval:
     qos: "normal"
     time: "01:59:00"
   tasks:
-    tasks: /admin/home/{USER}/fsx/projects/{PROJECT_NAME}/tasks.txt
-    custom_tasks: /admin/home/{USER}/fsx/projects/{PROJECT_NAME}/task_list.py
+    tasks: {TASKS_PATH}
+    custom_tasks: {TASK_LIST_PATH}
     max_samples: 1000
 """
 
-custom_tasks = {
-  "eng_Latn": "/admin/home/{USER}/fsx/projects/{PROJECT_NAME}/task_list.py",
-  "fra_Latn": "lighteval.tasks.multilingual.tasks",
-  "arb_Arab": "lighteval.tasks.multilingual.tasks",
-  "cmn_Hani": "lighteval.tasks.multilingual.tasks",
-  "rus_Cyrl": "lighteval.tasks.multilingual.tasks",
-}
-
-tasks_list = {
-  "eng_Latn": f"/admin/home/{USER}/fsx/projects/{PROJECT_NAME}/tasks_txt/tasks_eng.txt",
-  "fra_Latn": f"/admin/home/{USER}/fsx/projects/{PROJECT_NAME}/tasks_txt/tasks_fra.txt",
-  "arb_Arab": f"/admin/home/{USER}/fsx/projects/{PROJECT_NAME}/tasks_txt/tasks_ara.txt",
-  "cmn_Hani": f"/admin/home/{USER}/fsx/projects/{PROJECT_NAME}/tasks_txt/tasks_zho.txt",
-  "rus_Cyrl": f"/admin/home/{USER}/fsx/projects/{PROJECT_NAME}/tasks_txt/tasks_rus.txt",
-} 
 
 def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, timestamp, *args):
     """
@@ -286,19 +275,8 @@ def main():
     config["tokens"]["train_steps"] = args.train_steps
 
     # Lighteval config
-    # get language from the run_name
-    language = run_name.split("-")[0]
-    custom_tasks_path = custom_tasks.get(language)
-    tasks_list_path = tasks_list.get(language)
-
-    # Default to English if language not found
-    if custom_tasks_path is None and tasks_list_path is None:
-        print(f"Language {language} not found in custom_tasks or tasks_list, defaulting to English")
-        custom_tasks_path = custom_tasks.get("eng_Latn")
-        tasks_list_path = tasks_list.get("eng_Latn")
-
-    config["lighteval"]["tasks"]["custom_tasks"] = custom_tasks_path
-    config["lighteval"]["tasks"]["tasks"] = tasks_list_path
+    config["lighteval"]["tasks"]["tasks"] = TASKS_PATH
+    config["lighteval"]["tasks"]["custom_tasks"] = TASK_LIST_PATH
 
     
     # Debug mode settings

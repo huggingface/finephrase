@@ -10,8 +10,10 @@ from datetime import datetime
 USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
 
-LOG_BASE_PATH = f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments"
-PROJECT_PATH = f"/fsx/{USER}/projects/{PROJECT_NAME}"
+BASE_PATH = f"/fsx/{USER}"
+
+LOG_BASE_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments"
+PROJECT_PATH = f"{BASE_PATH}/projects/{PROJECT_NAME}"
 
 TRAINING_LOGS_PATH = f"{LOG_BASE_PATH}/training/logs"
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
@@ -171,7 +173,7 @@ lighteval:
   batch_size: 8
   slurm:
     gpus_per_node: 8
-    hf_cache: "/fsx/{USER}/.cache/huggingface"
+    hf_cache: "{BASE_PATH}/.cache/huggingface"
     partition: "hopper-prod"
     cpus_per_task: 88
     qos: "normal"

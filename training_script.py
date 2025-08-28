@@ -348,6 +348,7 @@ def main():
 #SBATCH --begin=now+0minutes
 #SBATCH --time={args.time}
 #SBATCH --exclusive
+#SBATCH --exclude=ip-26-0-160-242,ip-26-0-161-138,ip-26-0-160-103,ip-26-0-162-46
 {"#SBATCH --dependency=afterok:" + args.d if args.d else ""}
 {"#SBATCH --reservation=" + args.reservation if args.reservation else ""}
 

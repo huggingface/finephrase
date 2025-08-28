@@ -28,7 +28,7 @@ uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch
 uv pip install setuptools s5cmd && uv pip install --no-build-isolation  flash_attn=="2.7.4.post1"
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ "torchvision==0.21.0+cu124"
 uv pip install -e nanotron && uv pip install -e "lighteval[math,multilingual]" && uv pip install -e "datatrove[s3,io,processing]"
-uv pip install hf-transfer
+uv pip install hf-transfer datasets==3.5.1
 ```
 
 ### This is because nanotron env checks (for uv)

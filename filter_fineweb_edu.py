@@ -6,7 +6,7 @@ USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
 
 
-parser = argparse.ArgumentParser("Quickly launch thom's style of tokenization.")
+parser = argparse.ArgumentParser("Filter fineweb-edu dataset by quality and count tokens.")
 
 parser.add_argument(
     "--data_paths", type=str, help="Path to the data to filter.", required=True
@@ -18,16 +18,13 @@ parser.add_argument(
     "--quality", type=str, choices=["lq", "hq"], required=True, help="Quality subset to select based on FineWeb-Edu score (lq: <=2, hq: >4)"
 )
 parser.add_argument(
-    "--subset_tokens", type=float, default=36e9, help="Target number of tokens for the subset (used to compute sampling rate externally)"
-)
-parser.add_argument(
-    "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"
+    "--name", "-n", type=str, default=None, help="Name of the filtering. If not provided, the name will be the last part of the data paths"
 )
 parser.add_argument(
     "--limit", type=int, help="limit the number of documents to process", default=-1
 )
 parser.add_argument(
-    "--n_tasks", type=int, help="nb of filtering tasks", default=100
+    "--n_tasks", type=int, help="number of filtering tasks", default=100
 )
 # For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
 parser.add_argument(

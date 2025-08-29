@@ -6,7 +6,7 @@ USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
 
 
-parser = argparse.ArgumentParser("Quickly launch thom's style of tokenization.")
+parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
 
 parser.add_argument(
     "--data_paths", type=str, help="Path to the data to tokenize.", required=True
@@ -21,7 +21,7 @@ parser.add_argument(
     "--limit", type=int, help="limit the number of documents to tokenize", default=-1
 )
 parser.add_argument(
-    "--n_tasks", type=int, help="nb of tokenization tasks", default=100
+    "--n_tasks", type=int, help="number of tokenization tasks", default=100
 )
 parser.add_argument(
     "--max_toks", type=int, help="max tokens per file", default=1e8

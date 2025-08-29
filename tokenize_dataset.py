@@ -18,7 +18,7 @@ parser.add_argument(
     "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"
 )
 parser.add_argument(
-    "--limit", type=int, help="limit the number of documents to tokenize", default=None
+    "--limit", type=int, help="limit the number of documents to tokenize", default=-1
 )
 parser.add_argument(
     "--n_tasks", type=int, help="nb of tokenization tasks", default=100
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{output_name}",
         pipeline=[
-            *([JsonlReader(data_path, text_key=args.text_key, shuffle_files=True) for data_path in data_paths]),
+            *([JsonlReader(data_path, text_key=args.text_key, shuffle_files=True, limit=args.limit) for data_path in data_paths]),
             SamplerFilter(rate=args.sample),
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),

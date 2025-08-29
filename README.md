@@ -47,6 +47,20 @@ python -c "import nanotron"
 3. Set the default output path for `tokenize_dataset.py` script.
 
 
+### Create FineWeb-Edu subsets by quality and count tokens
+Use `filter_fineweb_edu.py` to filter by FineWeb-Edu score, count tokens, and write the filtered JSONL.
+- lq: score <= 2
+- hq: score > 4
+
+```
+python filter_fineweb_edu.py \
+  --data_paths s3://cosmopedia-data/fineweb_edu_samples/100BT/ \
+  --quality hq \
+  --name fineweb-edu-hq
+```
+
+Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
+
 ### Running ablations
 1. Tokenize your dataset with tokenize_dataset.py
 ```

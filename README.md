@@ -46,28 +46,38 @@ python -c "import nanotron"
 2. Modify the `training_script.py` constants
 3. Set the default output path for `tokenize_dataset.py` script.
 
+### Count the total tokens
 
-### Create FineWeb-Edu subsets by quality and count tokens
-Use `filter_fineweb_edu.py` to filter by FineWeb-Edu score, count tokens, and write the filtered JSONL.
-- lq: score <= 2
-- hq: score > 4
-
+HQ data (rounded int_score 4,5 or score > 3.5):
 ```
 python filter_fineweb_edu.py \
-  --data_paths s3://cosmopedia-data/fineweb_edu_samples/100BT/ \
+  --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
   --name fineweb-edu-hq
 ```
 
+LQ data (rounded int_score 0,1 or score < 1.5):
+```
+python filter_fineweb_edu.py \
+  --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
+  --quality lq \
+  --name fineweb-edu-lq
+```
+
+Hub (fineweb-edu): all dumps with score >=3
+Hub (fineweb-edu-score-2): all dumps with score >= 2
+My S3 bucket: new dumps, data for all scores (score1_2 for <3, score3 for >=3)
+
 Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 
 ### Running ablations
-1. Tokenize your dataset with tokenize_dataset.py
+1. Tokenize your datasets with tokenize_dataset.py
 ```
-python tokenize_dataset.py --data_paths s3://cosmopedia-data/fineweb_edu_samples/100BT/ --name fineweb-edu
+python tokenize_dataset.py --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq
+python tokenize_dataset.py --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name fineweb-edu-lq
 ```
 
-2. Train small model for 33B tokens
+2. Train small model for 36B tokens
 ```
-python training_script.py s3://finephrase/experiments/tokenized/fineweb-edu {ablation_name}
+python training_script.py s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
 ```

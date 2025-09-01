@@ -4,13 +4,16 @@ from lighteval.tasks.default_prompts import LETTER_INDICES
 from lighteval.metrics.normalizations import LogProbCharNorm, LogProbPMINorm, LogProbTokenNorm
 from lighteval.tasks.templates.utils.formulation import CFFormulation, HybridFormulation, MCFFormulation
 from lighteval.tasks.templates.multichoice import get_mcq_prompt_function
+from lighteval.tasks.templates.continuation import get_continuation_prompt_function
 from lighteval.tasks.templates.hellaswag import get_hellaswag_prompt_function
 from lighteval.tasks.templates.qa import get_qa_prompt_function
 from lighteval.metrics.dynamic_metrics import loglikelihood_acc_metric, probability_metric
 from lighteval.tasks.multilingual.utils.task_utils import get_metrics_for_formulation
+from lighteval.tasks.multilingual.adapters import winogrand_adapter
 from lighteval.metrics.dynamic_metrics import multilingual_quasi_exact_match_metric, multilingual_quasi_f1_score_metric
 from lighteval.tasks.multilingual.tasks import xcsqa_tasks
 from lighteval.utils.language import Language
+from functools import partial
 from lighteval.metrics.metrics import Metrics
 
 # ENGLISH
@@ -295,6 +298,89 @@ en_xcsqa = [
     )
 ]
 
+openbook_qa_tasks = [
+    LightevalTaskConfig(
+        name=f"openbookqa_{formulation.name.lower()}",
+        prompt_function=get_mcq_prompt_function(
+            Language.ENGLISH,
+            lambda line: {
+                "question": line["question_stem"],
+                "choices": line["choices"]["text"],
+                "gold_idx": LETTER_INDICES.index(line["answerKey"]),
+            },
+            formulation=formulation,
+        ),
+        suite=["lighteval"],
+        hf_repo="allenai/openbookqa",
+        hf_subset="main",
+        hf_revision="388097ea7776314e93a529163e0fea805b8a6454",
+        hf_avail_splits=["train", "validation"],
+        evaluation_splits=["validation"],
+        few_shots_split="train",
+        metric=get_metrics_for_formulation(formulation, [
+            loglikelihood_acc_metric(normalization=LogProbTokenNorm()),
+            loglikelihood_acc_metric(normalization=LogProbPMINorm()),
+            probability_metric(normalization=LogProbTokenNorm()),
+        ]),
+    )
+    for formulation in [CFFormulation()]
+]
+
+winogrande_tasks = [
+    LightevalTaskConfig(
+        name=f"winogrande_{formulation.name.lower()}",
+        suite=("lighteval",),
+        prompt_function=get_continuation_prompt_function(
+            Language.ENGLISH,
+            partial(winogrand_adapter, Language.ENGLISH),
+            formulation=formulation,
+        ),
+        hf_repo="allenai/winogrande",
+        hf_subset="winogrande_xl",
+        trust_dataset=True,
+        hf_revision="85ac5b5a3b7a930e22d590176e39460400d19e41",
+        hf_avail_splits=["train", "validation"],
+        evaluation_splits=["validation"],
+        few_shots_split="train",
+        metric=get_metrics_for_formulation(formulation, [
+            loglikelihood_acc_metric(normalization=LogProbTokenNorm()),
+            loglikelihood_acc_metric(normalization=LogProbPMINorm()),
+            probability_metric(normalization=LogProbTokenNorm()),
+        ]),
+    )
+    for formulation in [CFFormulation()]
+]
+
+piqa_tasks = [
+    LightevalTaskConfig(
+        name=f"piqa_{formulation.name.lower()}",
+        prompt_function=get_mcq_prompt_function(
+            Language.ENGLISH,
+            lambda line: {
+                "question": line["goal"],
+                "choices": [line["sol1"], line["sol2"]],
+                "gold_idx": int(line["label"]),
+            },
+            formulation=formulation,
+        ),
+        suite=["lighteval"],
+        hf_repo="ybisk/piqa",
+        hf_revision="2e8ac2dffd59bac8c3c6714948f4c551a0848bb0",
+        hf_subset="plain_text",
+        trust_dataset=True,
+        hf_avail_splits=["train", "validation"],
+        evaluation_splits=["validation"],
+        few_shots_split="train",
+        metric=get_metrics_for_formulation(formulation, [
+            loglikelihood_acc_metric(normalization=LogProbTokenNorm()),
+            loglikelihood_acc_metric(normalization=LogProbPMINorm()),
+            probability_metric(normalization=LogProbTokenNorm()),
+        ]),
+    )
+    for formulation in [CFFormulation()]
+]
+
+
 treb_qa = LightevalTaskConfig(
     name="treb_qa",
     prompt_function=get_qa_prompt_function(
@@ -349,6 +435,9 @@ TASKS_TABLE = [
     *arcs,
     *hellaswag_task,
     *mmlu_redux,
+    *openbook_qa_tasks,
+    *winogrande_tasks,
+    *piqa_tasks,
     gsm8k,
     drop_qa,
     squad_v2,

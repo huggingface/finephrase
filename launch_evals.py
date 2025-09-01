@@ -4,9 +4,10 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Optional
+from typing import Optional, Set, List, Tuple
 import random
 import yaml
+import json
 
 from fsspec.core import url_to_fs
 import itertools
@@ -108,9 +109,86 @@ def launch_slurm_job(launch_file_contents, debug, *args):
                 print(launch_file_contents, flush=True)
                 raise e
 
+def get_evaluated_tasks(model_name: str, checkpoint: str, reference_date: Optional[datetime]) -> Set[str]:
+    """Get all tasks that have already been evaluated for a given model and checkpoint."""
+    s3_results_path = f"{S3_EVALS_RESULTS_PREFIX}/results/{model_name}/{checkpoint}"
+    fs, path_prefix = url_to_fs(s3_results_path)
+    
+    evaluated_tasks = set()
+    try:
+        # Get all JSON files in the checkpoint results directory
+        result_files = fs.glob(f"{path_prefix}/results_*.json")
+    except FileNotFoundError:
+        return set()
+
+    for result_file in result_files:
+        try:
+            # Check if file is newer than reference date if provided
+            if reference_date is not None:
+                match = re.search(r'results_(.*)\.json$', result_file)
+                if match:
+                    try:
+                        file_timestamp = datetime.strptime(match.group(1), "%Y-%m-%dT%H-%M-%S.%f")
+                        if file_timestamp <= reference_date:
+                            continue  # Skip files older than reference date
+                    except ValueError:
+                        logger.warning(f"Could not parse timestamp from filename: {result_file}")
+                        continue
+            
+            # Read the JSON file and extract task names from results
+            with fs.open(result_file, 'r') as f:
+                data = json.load(f)
+                if 'results' in data:
+                    tasks = [x.replace(":_average", "") for x in data['results'].keys()]
+                    evaluated_tasks.update(tasks)
+                    
+        except Exception as e:
+            logger.warning(f"Error reading result file {result_file}: {e}")
+    
+    return evaluated_tasks
+
+def get_tasks_from_file(tasks_list_path: str) -> dict[tuple[str, str, str], str]:
+    """
+    Reads all task names from a tasks list file.
+    
+    Args:
+        tasks_list_path: Path to the tasks list file.
+    
+    Returns:
+        Set of task names.
+    """
+    tasks = dict()
+    try:
+        with open(tasks_list_path, 'r') as f:
+            for line in f:
+                line_stripped = line.strip()
+                if line_stripped and not line_stripped.startswith('#'):
+                    # Remove the last part separated by |
+                    parts = '|'.join(line_stripped.split('|')[:-1])
+                    tasks[parts] = line_stripped
+    except FileNotFoundError:
+        logger.error(f"Tasks list file not found: {tasks_list_path}")
+    except Exception as e:
+        logger.error(f"Error reading tasks from {tasks_list_path}: {e}")
+    return tasks
 
 def get_checkpoints_to_run(s3_path: str, model_name: str, checkpoints: str, logging_dir: str, overwrite: bool = False,
-                           after_date: Optional[str] = None):
+                           after_date: Optional[str] = None, tasks_list_path: Optional[str] = None) -> List[Tuple[str, Set[str]]]:
+    """
+    Retrieves checkpoints to run and their remaining tasks.
+    
+    Args:
+        s3_path: S3 path to the model checkpoints.
+        model_name: Name of the model (e.g., "1p46G-control-english-fw-ft-bl-28BT-seed-6").
+        checkpoints: Comma-separated list of checkpoints to run, or "all".
+        logging_dir: S3 path to push results to.
+        overwrite: If True, overwrite existing results.
+        after_date: Only consider checkpoints newer than this date (DD-MM-YYYY HH:MM:SS).
+        tasks_list_path: Path to the original tasks file.
+    
+    Returns:
+        List of tuples (checkpoint_name, remaining_tasks) for checkpoints to evaluate.
+    """
     reference_date = parse_date(after_date)
     df = get_datafolder(s3_path)
     try:
@@ -124,16 +202,55 @@ def get_checkpoints_to_run(s3_path: str, model_name: str, checkpoints: str, logg
     if len(not_found_checkpoints) > 0:
         raise ValueError(f"Checkpoints not found in \"{s3_path}\": {not_found_checkpoints}")
 
-    if not overwrite:
-        completed_checkpoints = [
-            ckpt for ckpt in selected_checkpoints
-            if checkpoint_exists(logging_dir, model_name, ckpt, reference_date)
-        ]
-        completed = len(completed_checkpoints)
-        selected_checkpoints = list(set(selected_checkpoints) - set(completed_checkpoints))
-        if completed:
-            logger.info(f"Skipping {completed} already evaluated checkpoints.")
-    return selected_checkpoints
+    # if not overwrite:
+    #     completed_checkpoints = [
+    #         ckpt for ckpt in selected_checkpoints
+    #         if checkpoint_exists(logging_dir, model_name, ckpt, reference_date)
+    #     ]
+    #     completed = len(completed_checkpoints)
+    #     selected_checkpoints = list(set(selected_checkpoints) - set(completed_checkpoints))
+    #     if completed:
+    #         logger.info(f"Skipping {completed} already evaluated checkpoints.")
+
+    checkpoints_with_tasks = []
+    tasks_from_file = get_tasks_from_file(tasks_list_path) if tasks_list_path else None
+    if tasks_list_path:
+        for ckpt in selected_checkpoints:
+            get_checkpoint_evaluated_tasks = get_evaluated_tasks(model_name, ckpt, reference_date)
+            remaining_tasks = set(tasks_from_file.keys()) - get_checkpoint_evaluated_tasks
+            tasks_str = ",".join([tasks_from_file[task] for task in remaining_tasks])
+            if tasks_str:
+                checkpoints_with_tasks.append((ckpt, tasks_str))
+    return checkpoints_with_tasks
+
+
+def read_tasks_from_file(tasks_list_path: str) -> Set[str]:
+    """
+    Reads all task names from a tasks list file.
+    
+    Args:
+        tasks_list_path: Path to the tasks list file.
+    
+    Returns:
+        Set of task names.
+    """
+    tasks = set()
+    try:
+        with open(tasks_list_path, 'r') as f:
+            for line in f:
+                line_stripped = line.strip()
+                if line_stripped and not line_stripped.startswith('#'):
+                    parts = line_stripped.split('|')
+                    if len(parts) >= 2:
+                        task_name = parts[1]
+                        tasks.add(task_name)
+    except FileNotFoundError:
+        logger.error(f"Tasks list file not found: {tasks_list_path}")
+    except Exception as e:
+        logger.error(f"Error reading tasks from {tasks_list_path}: {e}")
+    return tasks
+
+
 
 
 parser = argparse.ArgumentParser("Launch evals for a set of checkpoints.")
@@ -188,7 +305,7 @@ if __name__ == "__main__":
     for model_name, seed in itertools.product(args.model_name.split(","), args.seed.split(",")):
         formatted_model_name = args.model_template.format(model_name=model_name, seed=seed)
         # get language from the model_name
-        language = formatted_model_name.split("-")[0]
+        language = "_".join(formatted_model_name.split("_")[:2])
         custom_tasks_path = custom_tasks.get(language)
         tasks_list_path = tasks_list.get(language)
 
@@ -199,14 +316,17 @@ if __name__ == "__main__":
 
         s3_path = args.s3_prefix.removesuffix("/") + "/" + formatted_model_name if not formatted_model_name.startswith(
             "s3://") else formatted_model_name
-        selected_checkpoints = get_checkpoints_to_run(s3_path, formatted_model_name, args.checkpoints, args.logging_dir,
-                                                      overwrite=args.overwrite, after_date=args.after_date)
-        logger.info(f"Found {len(selected_checkpoints)} checkpoints to evaluate for {formatted_model_name}")
-        if not selected_checkpoints:
+        
+        # Get checkpoints with their remaining tasks
+        checkpoints_with_tasks = get_checkpoints_to_run(
+            s3_path, formatted_model_name, args.checkpoints, args.logging_dir,
+            overwrite=args.overwrite, after_date=args.after_date, tasks_list_path=tasks_list_path
+        )
+        
+        logger.info(f"Found {len(checkpoints_with_tasks)} checkpoints to evaluate for {formatted_model_name}")
+        if not checkpoints_with_tasks:
             print(f"No checkpoints to run for {formatted_model_name}.")
             continue
-        bash_ckpts_list = "(" + " ".join(
-            f'"{item}"' for item in sorted(selected_checkpoints, key=int, reverse=True)) + ")"
 
         # Create the same folder structure as in one_job_runner.py but with multi-step
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -221,6 +341,10 @@ if __name__ == "__main__":
         os.makedirs(eval_launch_script_path, exist_ok=True)
         os.makedirs(eval_logs_path, exist_ok=True)
         os.makedirs(model_config_path, exist_ok=True)
+
+        # Prepare bash arrays for checkpoints and their corresponding tasks
+        bash_ckpts_list = "(" + " ".join(f'"{item[0]}"' for item in checkpoints_with_tasks) + ")"
+        bash_tasks_list = "(" + " ".join(f'"{item[1]}"' for item in checkpoints_with_tasks) + ")"
 
         # Create lighteval config yaml
         lighteval_config_yaml = {
@@ -248,14 +372,19 @@ if __name__ == "__main__":
             deps.append(f"afterany:{job_id}")
 
         master_port = 1024 + random.randint(0, 64511)
+        
+        # Count total tasks to be evaluated for job name
+        total_remaining_tasks = sum(len(tasks.split(',')) for _, tasks in checkpoints_with_tasks)
+        all_possible_tasks = len(read_tasks_from_file(tasks_list_path))
+        task_suffix = f"_{total_remaining_tasks}tasks" if total_remaining_tasks < all_possible_tasks * len(checkpoints_with_tasks) else ""
 
         launch_script = f"""#!/bin/bash
-#SBATCH --job-name={args.job_prefix}eval-{formatted_model_name}
+#SBATCH --job-name={args.job_prefix}eval-{formatted_model_name}{task_suffix}
 #SBATCH --nodes={NODES}
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition={PARTITION}
 {f'#SBATCH --qos={args.qos}' if args.qos else ''}
-#SBATCH --array=0-{len(selected_checkpoints) - 1}%{args.parallel}
+#SBATCH --array=0-{len(checkpoints_with_tasks) - 1}%{args.parallel}
 #SBATCH --gres=gpu:{args.gpus}
 #SBATCH --time={args.time_limit}
 #SBATCH --cpus-per-task={CPUS_PER_NODE}
@@ -291,10 +420,17 @@ module load cuda/12.4
 
 echo "Running on $COUNT_NODE nodes: $HOSTNAMES"
 
+# Bash arrays for checkpoints and their corresponding tasks
 CHECKPOINTS_LIST={bash_ckpts_list}
+TASKS_LIST={bash_tasks_list}
+
+# Get checkpoint and tasks for this array task
 NSTEP=$((SLURM_ARRAY_TASK_ID))
 STEP=${{CHECKPOINTS_LIST[$NSTEP]}}
+TASKS_TO_EVAL=${{TASKS_LIST[$NSTEP]}}
 
+echo "Processing checkpoint: $STEP"
+echo "Tasks to evaluate: $TASKS_TO_EVAL"
 
 RANDOM_NUMBER=$((RANDOM % 60 + 5))
 # Local directory for downloading the checkpoint
@@ -322,7 +458,7 @@ cd {NANOTRON_PATH}
 # Run conversion script
 torchrun --standalone --nproc_per_node=1 -m examples.llama.convert_nanotron_to_hf \\
     --checkpoint_path $LOCAL_DOWNLOAD_CHECKPOINT_FOLDER \\
-    --save_path $LOCAL_DOWNLOAD_CHECKPOINT_FOLDER/hf_model \
+    --save_path $LOCAL_DOWNLOAD_CHECKPOINT_FOLDER/hf_model \\
     --check_conversion
 
 # Change back to original directory
@@ -342,6 +478,7 @@ model_parameters:
 EOL
 
 # Launch lighteval using accelerate
+echo "Running evaluation for checkpoint $STEP with tasks: $TASKS_TO_EVAL"
 CUDA_DEVICE_MAX_CONNECTIONS=1 accelerate launch \\
     --multi_gpu \\
     --num_processes {args.gpus} \\
@@ -352,7 +489,7 @@ CUDA_DEVICE_MAX_CONNECTIONS=1 accelerate launch \\
     --output-dir {args.logging_dir} \\
     --save-details \\
     $LIGHTEVAL_CONFIG_PATH \\
-    '{tasks_list_path}'
+    "$TASKS_TO_EVAL"
 
 # Clean up downloaded checkpoint from scratch
 echo "Cleaning up downloaded checkpoint $STEP..."
@@ -362,6 +499,14 @@ echo "Cleanup complete."
 echo "END TIME: $(date)"
 """
         launched_id = launch_slurm_job(launch_script, debug=args.debug)
+        
+        # Create summary of what's being evaluated
+        task_summary = []
+        for ckpt, tasks in checkpoints_with_tasks:
+            task_summary.append(f"  {ckpt}: {len(tasks.split(','))} tasks")
+        
         logger.success(
-            f"{formatted_model_name} evals with {args.gpus} gpus launched with id={launched_id}. Local logs: {eval_logs_path}")
+            f"{formatted_model_name} evals launched with id={launched_id}. "
+            f"Total: {len(checkpoints_with_tasks)} checkpoints, {total_remaining_tasks} tasks remaining.\n"
+            f"Details:\n" + "\n".join(task_summary) + f"\nLocal logs: {eval_logs_path}")
         job_id = launched_id

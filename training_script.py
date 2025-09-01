@@ -172,12 +172,12 @@ lighteval:
   nanotron_path: {NANOTRON_PATH}
   batch_size: 8
   slurm:
-    gpus_per_node: 8
+    gpus_per_node: {NUM_GPUS}
     hf_cache: "{BASE_PATH}/.cache/huggingface"
     partition: "hopper-prod"
-    cpus_per_task: 88
+    cpus_per_task: {NUM_CPUS_IN_NODE}
     qos: "normal"
-    time: "01:59:00"
+    time: "5:59:00"
   tasks:
     tasks: {TASKS_PATH}
     custom_tasks: {TASK_LIST_PATH}
@@ -225,7 +225,7 @@ def main():
     parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
     parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=17_000)
     parser.add_argument("--priority", "--qos", "-p", help="QoS to use", type=str, default="normal")
-    parser.add_argument("--nodes", help="Number of nodes", type=int, default=1)
+    parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
     parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")
     parser.add_argument("--job_id", help="Job ID", type=str, default=None)
     parser.add_argument("--lr", help="Learning rate", type=float, default=5e-4)
@@ -413,7 +413,7 @@ echo "END TIME: $(date)"
     job_id = launch_slurm_job(sbatch_script, args.job_id, args.nodes, args.background, run_name, timestamp)
     log_path = f"{TRAINING_LOGS_PATH}/{run_name}/train-{timestamp}-{job_name}-{job_id}"
     
-    print(f"Launched with Slurm job id={job_id}")
+    print(f"Launched with Slurm job id = {job_id}")
     print(f"To view the logs, use the command: tail -f {log_path}")
 
 if __name__ == "__main__":

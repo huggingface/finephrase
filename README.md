@@ -81,5 +81,5 @@ python tokenize_dataset.py --data_paths s3://finephrase/experiments/filtered/fin
 
 2. Train small model for 36B tokens
 ```
-python training_script.py s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
+python train.py s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
 ```

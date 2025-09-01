@@ -76,20 +76,25 @@ if __name__ == "__main__":
     from datatrove.executor import SlurmPipelineExecutor
     from datatrove.pipeline.filters import LambdaFilter
     from datatrove.pipeline.filters import SamplerFilter
-    from datatrove.pipeline.readers import JsonlReader
+    from datatrove.pipeline.readers import JsonlReader, ParquetReader
     from datatrove.pipeline.writers import JsonlWriter
     from datatrove.pipeline.tokens import TokensCounter
     
     logging_base_path = f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/filtering/{output_name}"
     
     _score_predicate = score_predicate_lq if args.quality == "lq" else score_predicate_hq
+
+    if args.quality == "lq": # LQ data is in JSONL format (edu_annotated on S3)
+        reader = [JsonlReader(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]
+    else: # HQ data is in Parquet format (finweb-edu on the hub)
+        reader = [ParquetReader(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]
     
     if args.total_tokens is None:
         # If total tokens is not set, we just count the tokens
         count_executor = SlurmPipelineExecutor(
             job_name=f"count-{output_name}",
             pipeline=[
-                *([JsonlReader(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]),
+                *(reader),
                 LambdaFilter(filter_function=_score_predicate),
                 TokensCounter(tokenizer_name_or_path=args.tokenizer, batch_size=args.batch_size),
             ],
@@ -112,7 +117,7 @@ if __name__ == "__main__":
         filter_executor = SlurmPipelineExecutor(
             job_name=f"filter-{output_name}",
             pipeline=[
-                *([JsonlReader(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]),
+                *(reader),
                 LambdaFilter(filter_function=_score_predicate),
                 SamplerFilter(rate=args.subset_tokens/args.total_tokens),
                 JsonlWriter(output_path),

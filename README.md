@@ -53,7 +53,8 @@ HQ data (rounded int_score 4,5 or score > 3.5):
 python filter_fineweb_edu.py \
   --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
-  --name fineweb-edu-hq
+  --name fineweb-edu-hq \
+  --total_tokens 217715141792
 ```
 
 LQ data (rounded int_score 0,1 or score < 1.5):
@@ -61,7 +62,8 @@ LQ data (rounded int_score 0,1 or score < 1.5):
 python filter_fineweb_edu.py \
   --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
-  --name fineweb-edu-lq
+  --name fineweb-edu-lq \
+  --total_tokens 1644271223950
 ```
 
 Hub (fineweb-edu): all dumps with score >=3

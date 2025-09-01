@@ -80,8 +80,6 @@ if __name__ == "__main__":
     from datatrove.pipeline.writers import JsonlWriter
     from datatrove.pipeline.tokens import TokensCounter
     
-    logging_base_path = f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/filtering/{output_name}"
-    
     _score_predicate = score_predicate_lq if args.quality == "lq" else score_predicate_hq
 
     if args.quality == "lq": # LQ data is in JSONL format (edu_annotated on S3)
@@ -101,7 +99,7 @@ if __name__ == "__main__":
             tasks=args.n_tasks,
             time="1:00:00",
             partition="hopper-cpu",
-            logging_dir=f"{logging_base_path}/filtered",
+            logging_dir=f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/counting/{output_name}/counted",
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,
@@ -119,13 +117,13 @@ if __name__ == "__main__":
             pipeline=[
                 *(reader),
                 LambdaFilter(filter_function=_score_predicate),
-                SamplerFilter(rate=args.subset_tokens/args.total_tokens),
+                SamplerFilter(rate=args.subset_tokens / args.total_tokens),
                 JsonlWriter(output_path),
             ],
             tasks=args.n_tasks,
             time="5:00:00",
             partition="hopper-cpu",
-            logging_dir=f"{logging_base_path}/filtered",
+            logging_dir=f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/filtering/{output_name}/filtered",
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,

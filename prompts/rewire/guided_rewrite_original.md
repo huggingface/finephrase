@@ -6,7 +6,7 @@ Deliberate meta-reasoning also involves reflection which can help identify issue
 
 Let’s first try to understand the task and exactly what problem(s) to be solved. What is the core issue or problem that needs to be addressed? What are the key assumptions underlying this problem?
 How can I break down this problem into smaller, more manageable parts? How can I simplify the problem so that it is easier to solve?
-What kinds of solution typically are produced for this kind of problem specification? Given the problem specification and the current best solution, have a guess about other possible solutions. Let’s imagine the current best solution is totally wrong, what other ways are there to think about the problem specification?
+What kinds of solution typically are produced for this kind of problem specification? Given the problem specification and the current best solution, have a guess about other possible solutions. Let’s imagine the current best solution is totally wrong, what other ways are there to think about the problem specific
 What is the best way to modify this current best solution, given what you know about these kinds of problem specification?
 Am I on the right track? Let’s check our progress so far.
 Let’s make a step by step plan and implement it with good notion and explanation.

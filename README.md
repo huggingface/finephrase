@@ -91,7 +91,11 @@ python evaluate_checkpoints.py fineweb-edu-hq-36B-seed-606,fineweb-edu-lq-36B-se
 
 4. Inference with different rephrasing prompts
 ```
-python rephrase_dataset.py --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name rewire --limit 10
+python rephrase_dataset.py \
+  --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq \
+  --name rewire \
+  --prompt_template rewire/guided_rewrite_corrected.md \
+  --limit 10 
 ```
 
 Use different prompts for data quality improvement:

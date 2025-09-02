@@ -14,13 +14,82 @@ from datatrove.data import Document
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 
 
+def load_prompt_template(template_path: str) -> str:
+    """
+    Load a prompt template from a file in the prompts directory.
+    
+    Args:
+        template_path:  Path to template file relative to prompts/ directory
+        
+    Returns:
+        Template content as a string
+    """
+    if not template_path:
+        return None
+        
+    # Get the base directory of this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    full_path = os.path.join(script_dir, "prompts", template_path)
+    
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"Prompt template not found: {full_path}")
+        
+    with open(full_path, 'r', encoding='utf-8') as f:
+        return f.read().strip()
+
+
+def create_templated_query_builder(max_tokens: int, prompt_template: str = None):
+    """
+    Create a query builder function that uses a prompt template.
+    
+    Args:
+        max_tokens:         Maximum tokens for the response
+        prompt_template:    The prompt template content with placeholders
+        
+    Returns:
+        Query builder function
+    """
+
+    assert prompt_template, "Prompt template is required"
+
+    def query_builder(runner: InferenceRunner, document: Document) -> dict[str, Any]:
+        """
+        Query builder that applies a prompt template to document content.
+        
+        Args:
+            runner:     Inference runner instance
+            document:   Input document with text content
+            
+        Returns:
+            Query payload for the inference server
+        """
+        # Replace common placeholders in the template
+        content = prompt_template
+        content = content.replace("[DOCUMENT SEGMENT]", document.text)
+        content = content.replace("[ORIGINAL DOCUMENT]", document.text)
+        content = content.replace("[TEXT]", document.text)
+
+        return {
+            "messages": [
+                {
+                    "role": "user", 
+                    "content": [
+                        {"type": "text", "text": content},
+                    ],
+                }
+            ],
+            "max_tokens": max_tokens,
+        }
+    return query_builder
+
+
 
 def simple_query_builder(max_tokens: int):
     """
     Create a query builder function for rephrasing documents.
 
     Args:
-        max_tokens: Maximum tokens for the response
+        max_tokens:     Maximum tokens for the response
 
     Returns:
         Query builder function
@@ -30,8 +99,8 @@ def simple_query_builder(max_tokens: int):
         Simple query builder that extracts text from document for rephrasing.
 
         Args:
-            runner: Inference runner instance
-            document: Input document with text content
+            runner:     Inference runner instance
+            document:   Input document with text content
 
         Returns:
             Query payload for the inference server
@@ -62,6 +131,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--name", "-n", type=str, help="Name of the rephrasing experiment", required=True
+)
+parser.add_argument(
+    "--prompt_template", type=str, help="Path to prompt template file (relative to prompts/ directory)", required=True
 )
 parser.add_argument(
     "--output_path", type=str, help="Path to the base output folder.", default=f"s3://{PROJECT_NAME}/experiments/rephrased"
@@ -138,13 +210,27 @@ if __name__ == "__main__":
         metric_interval=args.metric_interval,
     )
 
+    # Load prompt template if specified
+    try:
+        prompt_template = load_prompt_template(args.prompt_template)
+        print(f"Loaded prompt template: {args.prompt_template}")
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        print("Available templates:")
+        prompts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts")
+        for root, dirs, files in os.walk(prompts_dir):
+            for file in files:
+                if file.endswith('.md'):
+                    rel_path = os.path.relpath(os.path.join(root, file), prompts_dir)
+                    print(f"  - {rel_path}")
+        exit(1)
 
     # Create the pipeline executor with pipeline defined directly
     pipeline_executor: LocalPipelineExecutor = LocalPipelineExecutor(
         pipeline=[
             *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit) for data_path in data_paths],
             InferenceRunner(
-                query_builder=simple_query_builder(args.max_tokens),
+                query_builder=create_templated_query_builder(args.max_tokens, prompt_template),
                 config=config,
                 records_per_chunk=args.records_per_chunk,
                 checkpoints_local_dir=checkpoints_path,

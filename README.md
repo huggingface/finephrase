@@ -81,5 +81,30 @@ python tokenize_dataset.py --data_paths s3://finephrase/experiments/filtered/fin
 
 2. Train small model for 36B tokens
 ```
-python train.py s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
+python train_model.py s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
 ```
+
+3. Run evaluations manually (if automatic ones fail during training)
+```
+python evaluate_checkpoints.py fineweb-edu-hq-36B-seed-606,fineweb-edu-lq-36B-seed-606
+```
+
+4. Inference with different rephrasing prompts
+```
+python rephrase_dataset.py --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name rewire --limit 10
+```
+
+Use different prompts for data quality improvement:
+
+**For LQ data:**
+- `prompts/rewire/guided_rewrite_corrected.md` - Guided rewriting with expert reasoning
+- `prompts/nemotron/wikipedia_style_rephrasing.md` - Wikipedia-style paraphrasing
+
+**For HQ data:**
+- Any of the Nemotron prompts in `prompts/nemotron/`:
+  - `distill.md` - Text condensation and paraphrasing
+  - `extract_knowledge.md` - Knowledge extraction and rewriting
+  - `diverse_qa_pairs.md` - Question-answer pair generation
+  - `knowledge_list.md` - Factual information extraction
+  - `wikipedia_style_rephrasing.md` - Wikipedia-style paraphrasing`
+

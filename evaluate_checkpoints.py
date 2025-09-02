@@ -486,6 +486,6 @@ echo "END TIME: $(date)"
             f"{formatted_model_name} evals launched with id = {launched_id}.\n"
             f"Total: {len(checkpoints_with_tasks)} checkpoints, {total_remaining_tasks} tasks remaining.\n"
             f"Details:\n{'\n'.join(task_summary)}\n"
-            f"View local logs with: tail -f {eval_logs_path}"
+            f"Local logs: {eval_logs_path}"
         )
         job_id = launched_id

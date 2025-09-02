@@ -16,31 +16,23 @@ from loguru import logger
 
 
 USER = os.environ.get("USER", "user")
-EVAL_LOGS_PATH = f"/fsx/{USER}/logs/pdf_project/experiments/evals/logs"
-S3_EVALS_RESULTS_PREFIX = f"s3://fine-pdfs/experiments/evals-test"
-NANOTRON_PATH = "/fsx/hynek_kydlicek/projects/new_training_setup/nanotron"
-S5CMD_PATH = "/fsx/hynek_kydlicek/projects/new_training_setup/training_venv/bin/s5cmd"
+PROJECT_NAME = "finephrase"
+
+BASE_PATH = f"/fsx/{USER}"
+PROJECT_PATH = f"{BASE_PATH}/projects/{PROJECT_NAME}"
+
+EVAL_LOGS_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments/evals"
+S3_EVALS_RESULTS_PREFIX = f"s3://{PROJECT_NAME}/experiments/evals-test"
+NANOTRON_PATH = f"{PROJECT_PATH}/nanotron"
+S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
+
+TASKS_PATH = f"{PROJECT_PATH}/tasks.txt"
+TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
 
 CPUS_PER_NODE = 88
 GPUS_PER_NODE = 8
 PARTITION = "hopper-prod"
 NODES = 1
-
-custom_tasks = {
-  "eng_Latn": "/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/task_list.py",
-  "fra_Latn": "lighteval.tasks.multilingual.tasks",
-  "arb_Arab": "lighteval.tasks.multilingual.tasks",
-  "cmn_Hani": "lighteval.tasks.multilingual.tasks",
-  "rus_Cyrl": "lighteval.tasks.multilingual.tasks",
-}
-
-tasks_list = {
-  "eng_Latn": "/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/tasks_txt/tasks_eng.txt",
-  "fra_Latn": "/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/tasks_txt/tasks_fra.txt",
-  "arb_Arab": "/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/tasks_txt/tasks_ara.txt",
-  "cmn_Hani": "/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/tasks_txt/tasks_zho.txt",
-  "rus_Cyrl": "/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/tasks_txt/tasks_rus.txt",
-}
 
 def parse_date(date_string: Optional[str]) -> Optional[datetime]:
     if date_string is None:
@@ -202,16 +194,6 @@ def get_checkpoints_to_run(s3_path: str, model_name: str, checkpoints: str, logg
     if len(not_found_checkpoints) > 0:
         raise ValueError(f"Checkpoints not found in \"{s3_path}\": {not_found_checkpoints}")
 
-    # if not overwrite:
-    #     completed_checkpoints = [
-    #         ckpt for ckpt in selected_checkpoints
-    #         if checkpoint_exists(logging_dir, model_name, ckpt, reference_date)
-    #     ]
-    #     completed = len(completed_checkpoints)
-    #     selected_checkpoints = list(set(selected_checkpoints) - set(completed_checkpoints))
-    #     if completed:
-    #         logger.info(f"Skipping {completed} already evaluated checkpoints.")
-
     checkpoints_with_tasks = []
     tasks_from_file = get_tasks_from_file(tasks_list_path) if tasks_list_path else None
     if tasks_list_path:
@@ -261,7 +243,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--s3_prefix", type=str, help="s3://path/to/models/ by default",
-    default="s3://fine-pdfs/experiments/checkpoints"
+    default=f"s3://{PROJECT_NAME}/experiments/checkpoints"
 )
 parser.add_argument(
     "--checkpoints", "-ckpts", type=str, help="Comma separated list of checkpoints to run, or \"all\"",
@@ -274,9 +256,9 @@ parser.add_argument(
 parser.add_argument("--run-all", action="store_true", default=False, help="Run in sequence")
 
 parser.add_argument("--tasks", type=str, help="Comma separated list of tasks to run, or \"all\"",
-                    default="/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/tasks.txt")
+                    default=TASKS_PATH)
 parser.add_argument("--custom-tasks", type=str, help="lighteval custom tasks",
-                    default="/admin/home/hynek_kydlicek/fsx/projects/new_training_setup/task_list.py")
+                    default=TASK_LIST_PATH)
 parser.add_argument(
     "--offline-datasets", action="store_true", help="Turns off datasets downloading", default=False
 )
@@ -304,15 +286,10 @@ if __name__ == "__main__":
     job_id = None
     for model_name, seed in itertools.product(args.model_name.split(","), args.seed.split(",")):
         formatted_model_name = args.model_template.format(model_name=model_name, seed=seed)
-        # get language from the model_name
-        language = "_".join(formatted_model_name.split("_")[:2])
-        custom_tasks_path = custom_tasks.get(language)
-        tasks_list_path = tasks_list.get(language)
-
-        if custom_tasks_path is None and tasks_list_path is None:
-            print(f"Language {language} not found in custom_tasks or tasks_list, defaulting to English")
-            custom_tasks_path = custom_tasks.get("eng_Latn")
-            tasks_list_path = tasks_list.get("eng_Latn")
+        
+        # Use the provided task paths (English only)
+        custom_tasks_path = args.custom_tasks
+        tasks_list_path = args.tasks
 
         s3_path = args.s3_prefix.removesuffix("/") + "/" + formatted_model_name if not formatted_model_name.startswith(
             "s3://") else formatted_model_name
@@ -397,7 +374,7 @@ if __name__ == "__main__":
 # Ensure cache is on fsx not on admin
 # export HF_DATASETS_OFFLINE={1 if args.offline_datasets else 0}
 export TMPDIR=/scratch/{USER}/tmp
-source /admin/home/hynek_kydlicek/fsx/projects/new_training_setup/training_venv/bin/activate
+source {PROJECT_PATH}/.venv/bin/activate
 mkdir -p $TMPDIR
 
 ###########################################
@@ -506,7 +483,9 @@ echo "END TIME: $(date)"
             task_summary.append(f"  {ckpt}: {len(tasks.split(','))} tasks")
         
         logger.success(
-            f"{formatted_model_name} evals launched with id={launched_id}. "
+            f"{formatted_model_name} evals launched with id = {launched_id}.\n"
             f"Total: {len(checkpoints_with_tasks)} checkpoints, {total_remaining_tasks} tasks remaining.\n"
-            f"Details:\n" + "\n".join(task_summary) + f"\nLocal logs: {eval_logs_path}")
+            f"Details:\n{'\n'.join(task_summary)}\n"
+            f"View local logs with: tail -f {eval_logs_path}"
+        )
         job_id = launched_id

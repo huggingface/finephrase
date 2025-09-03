@@ -372,7 +372,7 @@ def main():
 ###########################################
 
 # Ensure cache is on fsx not on admin
-# export HF_DATASETS_OFFLINE={1 if args.offline_datasets else 0}
+export HF_DATASETS_OFFLINE={1 if args.offline_datasets else 0}
 export TMPDIR=/scratch/{USER}/tmp
 source {PROJECT_PATH}/.venv/bin/activate
 mkdir -p $TMPDIR

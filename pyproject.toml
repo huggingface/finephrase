@@ -29,6 +29,7 @@ dependencies = [
     "s5cmd", 
     "hf-transfer",
     "datasets",
+    "flashinfer-python==0.2.2",
     "vllm<0.9.0",  # Ensure compatibility with PyTorch 2.6.0
     "flash-attn==2.7.4.post1",  # Ensure compatibility with PyTorch 2.6.0
     "aiofiles",

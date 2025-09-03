@@ -280,7 +280,7 @@ parser.add_argument("--after-date", type=str, default=None,
 parser.add_argument("--job-prefix", type=str, default="", help="Prefix to add to the job name")
 parser.add_argument("--debug", action="store_true", default=False)
 
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
 
     job_id = None
@@ -482,10 +482,14 @@ echo "END TIME: $(date)"
         for ckpt, tasks in checkpoints_with_tasks:
             task_summary.append(f"  {ckpt}: {len(tasks.split(','))} tasks")
         
+        task_details = '\n'.join(task_summary)
         logger.success(
-            f"{formatted_model_name} evals launched with id = {launched_id}.\n"
+            f"{formatted_model_name} evals launched with id = {launched_id}\n"
             f"Total: {len(checkpoints_with_tasks)} checkpoints, {total_remaining_tasks} tasks remaining.\n"
-            f"Details:\n{'\n'.join(task_summary)}\n"
+            f"Details:\n{task_details}\n"
             f"Local logs: {eval_logs_path}"
         )
         job_id = launched_id
+
+if __name__ == "__main__":
+    main()

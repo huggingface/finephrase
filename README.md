@@ -16,30 +16,41 @@ git clone -b lighteval-experiment-setup  git@github.com:huggingface/lighteval.gi
 git clone -b fix-nanotron git@github.com:huggingface/datatrove.git
 ```
 
+### Add latest datatrove changes so we can use the InferenceRunner for rephrasing
+```
+(cd datatrove && git rebase origin/main)
+```
+
 ### Enter a GPU node for installation
 ```
 srun --gpus=1 --qos=high --time="01:59:00"  --pty bash
-```
-
-### Install deps and correct cuda
-```
 module load cuda/12.4
-uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch==2.6.0+cu124"
-uv pip install setuptools s5cmd && uv pip install --no-build-isolation  flash_attn=="2.7.4.post1"
-uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ "torchvision==0.21.0+cu124"
-uv pip install -e nanotron && uv pip install -e "lighteval[math,multilingual]" && uv pip install -e "datatrove[s3,io,processing]"
-uv pip install hf-transfer datasets==3.5.1
 ```
 
-### This is because nanotron env checks (for uv)
+### Install dependencies (order is important)
 ```
-uv pip install pip pybind11 pydantic "huggingface_hub[hf_xet]"
+uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch==2.6.0+cu124"
+uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ "torchvision==0.21.0+cu124"
+uv pip install --no-build-isolation  "flash_attn==2.7.4.post1"
+uv pip install -e "nanotron" && uv pip install -e "lighteval[math,multilingual]" && uv pip install -e "datatrove[s3,io,processing]"
+uv pip install -e .
 ```
 
 ### Test the installation
 ```
 python -c "import nanotron"
 ```
+
+### Available console commands
+After installation, you can use these short commands:
+
+- `filter-fineweb-edu`  - Filter fineweb edu data (filter_fineweb_edu.py)
+- `rephrase`            - Rephrase datasets (rephrase_dataset.py)
+- `tokenize`            - Tokenize datasets (tokenize_dataset.py)
+- `train`               - Train models (train_model.py)
+- `evaluate`            - Evaluate checkpoints (evaluate_checkpoints.py) 
+
+All commands support `--help` to see available options.
 
 ### Before running ablations
 1. Create a bucket on s3 for your project
@@ -50,7 +61,7 @@ python -c "import nanotron"
 
 HQ data (rounded int_score 4,5 or score > 3.5):
 ```
-python filter_fineweb_edu.py \
+filter-fineweb-edu \
   --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
   --name fineweb-edu-hq \
@@ -59,7 +70,7 @@ python filter_fineweb_edu.py \
 
 LQ data (rounded int_score 0,1 or score < 1.5):
 ```
-python filter_fineweb_edu.py \
+filter-fineweb-edu \
   --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
   --name fineweb-edu-lq \
@@ -75,23 +86,23 @@ Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 ### Running ablations
 1. Tokenize your datasets with tokenize_dataset.py
 ```
-python tokenize_dataset.py --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq
-python tokenize_dataset.py --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name fineweb-edu-lq
+tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq
+tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name fineweb-edu-lq
 ```
 
 2. Train small model for 36B tokens
 ```
-python train_model.py s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
+train s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
 ```
 
 3. Run evaluations manually (if automatic ones fail during training)
 ```
-python evaluate_checkpoints.py fineweb-edu-hq-36B-seed-606,fineweb-edu-lq-36B-seed-606
+evaluate fineweb-edu-hq-36B-seed-606,fineweb-edu-lq-36B-seed-606
 ```
 
 4. Inference with different rephrasing prompts
 ```
-python rephrase_dataset.py \
+rephrase \
   --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq \
   --name rewire \
   --prompt_template rewire/guided_rewrite_corrected.md \

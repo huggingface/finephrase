@@ -61,7 +61,7 @@ def score_predicate_hq(doc):
         return False
 
 
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
     # Output name should be the same as last part of the data path
     if args.name:
@@ -132,3 +132,6 @@ if __name__ == "__main__":
             depends_job_id=args.dep_job_id
         )
         filter_executor.run()
+
+if __name__ == "__main__":
+    main()

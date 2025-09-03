@@ -161,8 +161,7 @@ class DocumentSplitter(PipelineStep):
         # Absolute last resort: hard split at character limit
         return max_chars
 
-
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
     # Output name should be the same as last part of the data path
     if args.name:
@@ -238,3 +237,6 @@ if __name__ == "__main__":
         merge_executor.run()
     else:
         tokenizer_executor.run() 
+
+if __name__ == "__main__":
+    main()

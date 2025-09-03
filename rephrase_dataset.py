@@ -179,7 +179,7 @@ parser.add_argument(
 )
 
 
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
     
     # Set up paths based on arguments
@@ -245,3 +245,5 @@ if __name__ == "__main__":
     # Run the pipeline
     pipeline_executor.run()
 
+if __name__ == "__main__":
+    main()

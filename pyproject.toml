@@ -1,0 +1,158 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finephrase"
+version = "0.1.0"
+description = "Synthetic pretraining data by rephrasing the web"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Joel Niklaus", email = "your.email@example.com"},
+]
+keywords = ["nlp", "pretraining", "data-generation", "rephrasing", "synthetic-data"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "setuptools",
+    "s5cmd", 
+    "hf-transfer",
+    "datasets==3.5.1",
+    "vllm<0.9.0",  # Ensure compatibility with PyTorch 2.6.0
+    "flash-attn==2.7.4.post1",  # Ensure compatibility with PyTorch 2.6.0
+    "aiofiles",
+    "pip",
+    "pybind11", 
+    "pydantic",
+    "huggingface_hub[hf_xet]",
+    
+    # Note: torch and torchvision with CUDA versions installed separately via --find-links
+    # "torch==2.6.0+cu124" 
+    # "torchvision==0.21.0+cu124"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "isort",
+    "flake8",
+    "mypy",
+]
+
+cuda = [
+    # These should be installed with specific CUDA versions using --find-links
+    # torch==2.6.0+cu124
+    # torchvision==0.21.0+cu124
+]
+
+[project.urls]
+Homepage = "https://github.com/huggingface/finephrase"
+Repository = "https://github.com/huggingface/finephrase"
+Issues = "https://github.com/huggingface/finephrase/issues"
+
+[project.scripts]
+train = "train_model:main"
+evaluate = "evaluate_checkpoints:main"
+rephrase = "rephrase_dataset:main"
+tokenize = "tokenize_dataset:main"
+filter-fineweb-edu = "filter_fineweb_edu:main"
+
+[tool.setuptools]
+py-modules = ["evaluate_checkpoints", "train_model", "rephrase_dataset", "tokenize_dataset", "filter_fineweb_edu"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.txt", "*.yaml", "*.yml"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | nanotron
+  | lighteval
+  | datatrove
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+extend_skip_glob = ["nanotron/*", "lighteval/*", "datatrove/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: marks tests that require GPU",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = [
+    "nanotron/",
+    "lighteval/", 
+    "datatrove/",
+    "build/",
+    "dist/",
+]
+
+# UV-specific configuration for dependency resolution
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+# Custom installation notes for CUDA dependencies
+# IMPORTANT: Install these BEFORE installing the main dependencies to ensure compatibility
+[tool.finephrase]
+cuda-install-commands = [
+    "uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ 'torch==2.6.0+cu124'",
+    "uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ 'torchvision==0.21.0+cu124'",
+    "uv pip install --no-build-isolation 'flash_attn==2.7.4.post1'",
+]
+editable-dependencies = [
+    "uv pip install -e 'nanotron'",
+    "uv pip install -e 'lighteval[math,multilingual]'", 
+    "uv pip install -e 'datatrove[s3,io,processing]'",
+]

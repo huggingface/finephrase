@@ -8,6 +8,7 @@ for resuming from failures. Each chunk is saved to a separate output file.
 
 import argparse
 import os
+import sys
 from typing import Any
 
 from datatrove.data import Document
@@ -81,6 +82,94 @@ def create_templated_query_builder(max_tokens: int, prompt_template: str = None)
             "max_tokens": max_tokens,
         }
     return query_builder
+
+
+def create_logging_postprocess_fn(debug: bool = False):
+    """
+    Create a postprocess function that optionally logs both input and output text.
+    
+    Args:
+        debug: Whether to enable debug logging
+    
+    Returns:
+        Postprocess function for logging input/output pairs (if debug=True)
+    """
+    def postprocess_fn(document: Document) -> Document:
+        """
+        Postprocess function that conditionally logs the input text and paraphrased output.
+        
+        Args:
+            document: Document with inference results in metadata
+            
+        Returns:
+            The document (unchanged)
+        """
+        if debug:
+            # First, log that postprocess function was called
+            sys.stdout.write("🔧 DEBUG: Postprocess function called!\n")
+            sys.stdout.flush()
+            
+            # Extract inference results from document metadata
+            inference_results = document.metadata.get("inference_results", [])
+            sys.stdout.write(f"🔧 DEBUG: Found {len(inference_results)} inference results\n")
+            sys.stdout.flush()
+            
+            output_text = ""
+            if inference_results:
+                # Get the first successful result
+                for result in inference_results:
+                    if hasattr(result, 'text'):  # InferenceSuccess object
+                        output_text = result.text
+                        break
+                    elif isinstance(result, dict):
+                        # Extract from dict format
+                        if "choices" in result and len(result["choices"]) > 0:
+                            choice = result["choices"][0]
+                            if "message" in choice and "content" in choice["message"]:
+                                output_text = choice["message"]["content"]
+                                break
+                            elif "text" in choice:
+                                output_text = choice["text"]
+                                break
+                        elif "content" in result:
+                            output_text = result["content"]
+                            break
+                        elif "text" in result:
+                            output_text = result["text"]
+                            break
+                
+                # If still no output, log the structure for debugging
+                if not output_text:
+                    sys.stdout.write(f"🔧 DEBUG: Result structure: {str(inference_results[0])[:500]}...\n")
+                    sys.stdout.flush()
+            
+            sys.stdout.write(f"🔧 DEBUG: Extracted output length: {len(output_text)}\n")
+            sys.stdout.flush()
+
+            log_cutoff = 2500
+            
+            # Log the input and output pair
+            debug_output = f"""
+{'='*80}
+🔍 DEBUG: INPUT/OUTPUT PAIR
+{'='*80}
+📝 INPUT TEXT:
+{'-'*40}
+{document.text[:log_cutoff] + ("..." if len(document.text) > log_cutoff else "")}
+{'-'*40}
+🔄 PARAPHRASED TEXT:
+{'-'*40}
+{output_text[:log_cutoff] + ("..." if len(output_text) > log_cutoff else "")}
+{'='*80}
+
+"""
+            # Write to stdout and flush to ensure immediate visibility
+            sys.stdout.write(debug_output)
+            sys.stdout.flush()
+        
+        return document
+    
+    return postprocess_fn
 
 
 
@@ -177,6 +266,9 @@ parser.add_argument(
 parser.add_argument(
     "--disable_checkpoints", action="store_true", help="Disable checkpoint functionality"
 )
+parser.add_argument(
+    "--debug", action="store_true", help="Enable debug logging to show input/output text pairs in terminal"
+)
 
 
 def main():
@@ -185,13 +277,19 @@ def main():
     # Set up paths based on arguments
     BASE_PATH = f"/fsx/{USER}"
     output_path = f"{args.output_path}/{args.name}"
-    logs_path = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments/rephrased/{args.name}"
+    logs_path = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments/rephrasing/{args.name}"
     checkpoints_path = f"{BASE_PATH}/checkpoints/{args.name}" if not args.disable_checkpoints else None
 
     # Parse data paths
     data_paths = args.data_paths.split(",")
     print(f"Data paths: {data_paths}")
     print(f"Output path: {output_path}")
+    
+    # Debug mode confirmation
+    if args.debug:
+        debug_msg = "🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal\n"
+        sys.stdout.write(debug_msg)
+        sys.stdout.flush()
 
     # Import required modules for pipeline
     from datatrove.pipeline.readers import JsonlReader
@@ -235,7 +333,7 @@ def main():
                 records_per_chunk=args.records_per_chunk,
                 checkpoints_local_dir=checkpoints_path,
                 output_writer=JsonlWriter(output_path, output_filename="${rank}_chunk_${chunk_index}.jsonl"),
-                postprocess_fn=None,
+                postprocess_fn=create_logging_postprocess_fn(debug=args.debug),
             ),
         ],
         logging_dir=logs_path,

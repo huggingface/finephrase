@@ -456,7 +456,7 @@ EOL
 
 # Launch lighteval using accelerate
 echo "Running evaluation for checkpoint $STEP with tasks: $TASKS_TO_EVAL"
-CUDA_DEVICE_MAX_CONNECTIONS=1 accelerate launch {'--multi_gpu' if args.gpus > 1 else ''} {'--num_processes ' + args.gpus if args.gpus > 1 else ''} \\
+CUDA_DEVICE_MAX_CONNECTIONS=1 accelerate launch {'--multi_gpu' if args.gpus > 1 else ''} {'--num_processes ' + str(args.gpus) if args.gpus > 1 else ''} \\
     -m lighteval accelerate \\
     --custom-tasks {custom_tasks_path} \\
     --dataset-loading-processes {CPUS_PER_NODE} \\

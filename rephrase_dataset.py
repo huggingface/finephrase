@@ -12,13 +12,55 @@ import argparse
 import os
 from typing import Any
 
-from datatrove.data import Document
+from datatrove.data import Document, DocumentsPipeline
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 from datatrove.pipeline.readers import JsonlReader
 from datatrove.pipeline.writers import JsonlWriter
+from datatrove.pipeline.base import PipelineStep
 from datatrove.executor.local import LocalPipelineExecutor
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+class EduScoreStatsLogger(PipelineStep):
+    """
+    Pipeline step that logs education score statistics from document metadata.
+    """
+    
+    type = "📊 - STATS"
+    name = "Education Score Stats Logger"
+    
+    def __init__(self):
+        super().__init__()
+    
+    def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
+        """
+        Log education score statistics and pass documents through unchanged.
+        
+        Args:
+            data: Input documents pipeline
+            rank: Worker rank
+            world_size: Total number of workers
+            
+        Yields:
+            Documents unchanged after logging stats
+        """
+        for doc in data:
+            with self.track_time():
+                # Extract education scores from metadata
+                input_edu_score = doc.metadata.get("input", {}).get("score", 0.0)
+                thinking_edu_score = doc.metadata.get("thinking", {}).get("score", 0.0)
+                output_edu_score = doc.metadata.get("score", 0.0)
+                edu_score_difference = doc.metadata.get("edu_score_difference", 0.0)
+                edu_score_improvement = doc.metadata.get("edu_score_improvement", 0)
+                
+                # Log the statistics
+                self.stat_update("input_edu_score", value=input_edu_score)
+                self.stat_update("thinking_edu_score", value=thinking_edu_score)
+                self.stat_update("output_edu_score", value=output_edu_score)
+                self.stat_update("edu_score_difference", value=edu_score_difference)
+                self.stat_update("edu_score_improvement", value=edu_score_improvement)
+                
+            yield doc
 
 
 def load_prompt_template(template_path: str) -> str:
@@ -246,6 +288,7 @@ def postprocess_fn(debug: bool = False, tokenizer=None, edu_tokenizer=None, edu_
         document.metadata["token_count"] = final_output_token_count
         document.metadata.update(final_output_edu_scores)
         document.metadata["edu_score_difference"] = final_output_edu_scores["score"] - input_edu_scores["score"]
+        document.metadata["edu_score_improvement"] = 1 if final_output_edu_scores["score"] > input_edu_scores["score"] else 0
         
         # Store processing configuration
         if tokenizer_name:
@@ -479,7 +522,7 @@ def main():
         server_type=args.server_type,
         model_name_or_path=args.model_name_or_path,
         temperature=args.temperature,
-        repetition_penalty=args.repetition_penalty,
+        #repetition_penalty=args.repetition_penalty,
         model_max_context=args.model_max_context,
         max_concurrent_requests=args.max_concurrent_requests,
         max_concurrent_tasks=args.max_concurrent_tasks,
@@ -501,8 +544,8 @@ def main():
                     print(f"  - {rel_path}")
         exit(1)
 
-    # Create the pipeline executor with pipeline defined directly
-    pipeline_executor: LocalPipelineExecutor = LocalPipelineExecutor(
+    # Create the main rephrasing pipeline executor
+    rephrase_executor: LocalPipelineExecutor = LocalPipelineExecutor(
         pipeline=[
             *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit) for data_path in data_paths],
             InferenceRunner(
@@ -511,15 +554,24 @@ def main():
                 records_per_chunk=args.records_per_chunk,
                 checkpoints_local_dir=checkpoints_path,
                 output_writer=JsonlWriter(output_path, output_filename="${rank}_chunk_${chunk_index}.jsonl"),
-                postprocess_fn=postprocess_fn(debug=args.debug, tokenizer=tokenizer, edu_tokenizer=edu_tokenizer, edu_model=edu_model, tokenizer_name=args.tokenizer, model_name=args.model_name_or_path),
+                postprocess_fn=postprocess_fn(
+                    debug=args.debug, 
+                    tokenizer=tokenizer, 
+                    edu_tokenizer=edu_tokenizer, 
+                    edu_model=edu_model, 
+                    tokenizer_name=args.tokenizer, 
+                    model_name=args.model_name_or_path
+                ),
             ),
+            JsonlReader(output_path),
+            EduScoreStatsLogger(),
         ],
         logging_dir=logs_path,
         tasks=args.n_tasks,
     )
     
-    # Run the pipeline
-    pipeline_executor.run()
+    rephrase_executor.run()
+    
 
 if __name__ == "__main__":
     main()

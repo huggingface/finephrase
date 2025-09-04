@@ -10,5 +10,4 @@ Here is the text:
 [DOCUMENT SEGMENT]
 
 Task:
-After thoroughly reading the above text, paraphrase it in high-quality and clear English following
-the instructions.
+After thoroughly reading the above text, paraphrase it in high-quality and clear English following the instructions.

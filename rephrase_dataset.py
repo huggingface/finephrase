@@ -245,6 +245,7 @@ def postprocess_fn(debug: bool = False, tokenizer=None, edu_tokenizer=None, edu_
         # Store final output metrics at top level
         document.metadata["token_count"] = final_output_token_count
         document.metadata.update(final_output_edu_scores)
+        document.metadata["edu_score_difference"] = final_output_edu_scores["score"] - input_edu_scores["score"]
         
         # Store processing configuration
         if tokenizer_name:
@@ -408,6 +409,9 @@ parser.add_argument(
     "--temperature", type=float, help="Temperature for inference", default=0.5
 )
 parser.add_argument(
+    "--repetition_penalty", type=float, help="Repetition penalty for inference (1.0 = no penalty, >1.0 = penalty)", default=1.2
+)
+parser.add_argument(
     "--model_max_context", type=int, help="Maximum context length for the model", default=8192
 )
 parser.add_argument(
@@ -475,6 +479,7 @@ def main():
         server_type=args.server_type,
         model_name_or_path=args.model_name_or_path,
         temperature=args.temperature,
+        repetition_penalty=args.repetition_penalty,
         model_max_context=args.model_max_context,
         max_concurrent_requests=args.max_concurrent_requests,
         max_concurrent_tasks=args.max_concurrent_tasks,

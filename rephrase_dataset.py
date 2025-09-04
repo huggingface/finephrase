@@ -1,18 +1,24 @@
 """
-Chunked inference pipeline example.
+Document rephrasing pipeline with comprehensive quality assessment.
 
-This example shows how to run inference on documents using the InferenceRunner
-with chunking enabled. Documents are processed in chunks with checkpoint support
-for resuming from failures. Each chunk is saved to a separate output file.
+This script processes documents through an LLM to rephrase/rewrite them using 
+customizable prompt templates. It extracts thinking and final output, calculates 
+educational quality scores with fineweb-edu-classifier, counts tokens, and 
+organizes metadata hierarchically. Supports chunked processing with checkpoints, 
+debug output, and stores complete processing provenance.
 """
 
 import argparse
 import os
-import sys
 from typing import Any
 
 from datatrove.data import Document
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
+from datatrove.pipeline.readers import JsonlReader
+from datatrove.pipeline.writers import JsonlWriter
+from datatrove.executor.local import LocalPipelineExecutor
+
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
 def load_prompt_template(template_path: str) -> str:
@@ -84,88 +90,250 @@ def create_templated_query_builder(max_tokens: int, prompt_template: str = None)
     return query_builder
 
 
-def create_logging_postprocess_fn(debug: bool = False):
+def postprocess_fn(debug: bool = False, tokenizer=None, edu_tokenizer=None, edu_model=None, tokenizer_name=None, model_name=None):
     """
-    Create a postprocess function that optionally logs both input and output text.
+    Create a postprocess function that parses thinking/output and saves data to metadata.
     
     Args:
-        debug: Whether to enable debug logging
+        debug: Whether to enable debug logging to terminal
+        tokenizer: Pre-loaded tokenizer for token counting in debug output
+        edu_tokenizer: Pre-loaded tokenizer for fineweb edu classification
+        edu_model: Pre-loaded model for fineweb edu classification
+        tokenizer_name: Name of the tokenizer used
+        model_name: Name of the rephrasing model used
     
     Returns:
-        Postprocess function for logging input/output pairs (if debug=True)
+        Postprocess function that processes LLM output and saves to metadata
     """
+    def count_tokens(text: str) -> int:
+        """Count tokens in text using provided tokenizer."""
+        if tokenizer and text:
+            return len(tokenizer.encode(text))
+        return 0
+    
+    def calculate_edu_score(text: str) -> dict:
+        """Calculate fineweb edu score for text."""
+        if not edu_tokenizer or not edu_model or not text.strip():
+            return {"score": 0.0, "int_score": 0}
+        
+        try:
+            inputs = edu_tokenizer(text, return_tensors="pt", padding="longest", truncation=True)
+            outputs = edu_model(**inputs)
+            logits = outputs.logits.squeeze(-1).float().detach().numpy()
+            score = logits.item()
+            int_score = int(round(max(0, min(score, 5))))
+            return {"score": score, "int_score": int_score}
+        except Exception:
+            return {"score": 0.0, "int_score": 0}
+
+    def parse_thinking_output(text: str) -> tuple[str, str]:
+        """
+        Parse output text into thinking and final output parts.
+        
+        Args:
+            text: Raw output text that may contain <think></think> tags
+            
+        Returns:
+            Tuple of (thinking_text, final_output_text)
+        """
+        thinking_text = ""
+        final_output_text = text
+        
+        # Look for <think> and </think> tags
+        if "<think>" in text and "</think>" in text:
+            think_start = text.find("<think>")
+            think_end = text.find("</think>", think_start)
+            
+            if think_start != -1 and think_end != -1:
+                # Extract thinking content (without tags)
+                thinking_text = text[think_start + 7:think_end].strip()
+                
+                # Remove thinking section from final output
+                final_output_text = text[:think_start] + text[think_end + 8:]
+                final_output_text = final_output_text.strip()
+        
+        return thinking_text, final_output_text
+    
+    def format_thinking_display(thinking_text: str) -> str:
+        """
+        Format thinking text for display, truncating if > 1000 characters.
+        
+        Args:
+            thinking_text: The thinking content
+            
+        Returns:
+            Formatted thinking text for display
+        """
+        if len(thinking_text) <= 1000:
+            return thinking_text
+        else:
+            first_500 = thinking_text[:500]
+            last_500 = thinking_text[-500:]
+            return f"{first_500}\n[...]\n{last_500}"
+            
     def postprocess_fn(document: Document) -> Document:
         """
-        Postprocess function that conditionally logs the input text and paraphrased output.
+        Postprocess function that parses thinking/output and saves data to metadata.
+        Sets document.text to the final output.
         
         Args:
             document: Document with inference results in metadata
             
         Returns:
-            The document (unchanged)
+            The document with updated text and metadata
         """
-        if debug:
-            # First, log that postprocess function was called
-            sys.stdout.write("🔧 DEBUG: Postprocess function called!\n")
-            sys.stdout.flush()
-            
-            # Extract inference results from document metadata
-            inference_results = document.metadata.get("inference_results", [])
-            sys.stdout.write(f"🔧 DEBUG: Found {len(inference_results)} inference results\n")
-            sys.stdout.flush()
-            
-            output_text = ""
-            if inference_results:
-                # Get the first successful result
-                for result in inference_results:
-                    if hasattr(result, 'text'):  # InferenceSuccess object
-                        output_text = result.text
+        # Extract inference results from document metadata
+        inference_results = document.metadata.get("inference_results", [])
+        
+        output_text = ""
+        if inference_results:
+            # Get the first successful result
+            for result in inference_results:
+                if hasattr(result, 'text'):  # InferenceSuccess object
+                    output_text = result.text
+                    break
+                elif isinstance(result, dict):
+                    # Extract from dict format
+                    if "choices" in result and len(result["choices"]) > 0:
+                        choice = result["choices"][0]
+                        if "message" in choice and "content" in choice["message"]:
+                            output_text = choice["message"]["content"]
+                            break
+                        elif "text" in choice:
+                            output_text = choice["text"]
+                            break
+                    elif "content" in result:
+                        output_text = result["content"]
                         break
-                    elif isinstance(result, dict):
-                        # Extract from dict format
-                        if "choices" in result and len(result["choices"]) > 0:
-                            choice = result["choices"][0]
-                            if "message" in choice and "content" in choice["message"]:
-                                output_text = choice["message"]["content"]
-                                break
-                            elif "text" in choice:
-                                output_text = choice["text"]
-                                break
-                        elif "content" in result:
-                            output_text = result["content"]
-                            break
-                        elif "text" in result:
-                            output_text = result["text"]
-                            break
-                
-                # If still no output, log the structure for debugging
-                if not output_text:
-                    sys.stdout.write(f"🔧 DEBUG: Result structure: {str(inference_results[0])[:500]}...\n")
-                    sys.stdout.flush()
+                    elif "text" in result:
+                        output_text = result["text"]
+                        break
+        
+        # Parse thinking and final output
+        thinking_text, final_output_text = parse_thinking_output(output_text)
+        
+        # Calculate metrics for input, thinking, and final output
+        input_token_count = count_tokens(document.text)
+        thinking_token_count = count_tokens(thinking_text)
+        final_output_token_count = count_tokens(final_output_text)
+        
+        input_edu_scores = calculate_edu_score(document.text)
+        thinking_edu_scores = calculate_edu_score(thinking_text)
+        final_output_edu_scores = calculate_edu_score(final_output_text)
+        
+        # Collect input-related metadata fields to move
+        input_metadata_fields = ["dump", "url", "date", "file_path", "language", "language_score", "filter_reason"]
+        input_metadata = {}
+        for field in input_metadata_fields:
+            if field in document.metadata:
+                input_metadata[field] = document.metadata.pop(field)
+        
+        # Store data in hierarchical metadata structure
+        document.metadata["input"] = {
+            "text": document.text,
+            "token_count": input_token_count,
+            **input_edu_scores,
+            **input_metadata
+        }
+        
+        document.metadata["thinking"] = {
+            "text": thinking_text,
+            "token_count": thinking_token_count,
+            **thinking_edu_scores
+        }
+        
+        # Store final output metrics at top level
+        document.metadata["token_count"] = final_output_token_count
+        document.metadata.update(final_output_edu_scores)
+        
+        # Store processing configuration
+        if tokenizer_name:
+            document.metadata["tokenizer_name"] = tokenizer_name
+        if model_name:
+            document.metadata["rephrasing_model_name"] = model_name
+        
+        # Set document text to the final output
+        document.text = final_output_text
+        
+        # Debug output (only if debug flag is enabled)
+        if debug:
+            # Get tokens from metadata
+            input_tokens = document.metadata["input"]["token_count"]
+            thinking_tokens = document.metadata["thinking"]["token_count"]
+            final_output_tokens = document.metadata["token_count"]
             
-            sys.stdout.write(f"🔧 DEBUG: Extracted output length: {len(output_text)}\n")
-            sys.stdout.flush()
-
             log_cutoff = 2500
+            delimiter_outside = '='*100
+            delimiter_inside = '-'*50
             
-            # Log the input and output pair
-            debug_output = f"""
-{'='*80}
+            # Prepare document structure summary
+            def format_document_structure(doc: Document) -> str:
+                """Format document structure without showing full content."""
+                structure_info = []
+                
+                # Document ID and basic info
+                if hasattr(doc, 'id') and doc.id:
+                    structure_info.append(f"Document ID: {doc.id}")
+                
+                # Text length info
+                structure_info.append(f"Document text: {len(doc.text)} chars")
+                
+                # Metadata summary
+                if doc.metadata:
+                    structure_info.append("Metadata keys:")
+                    for key, value in doc.metadata.items():
+                        if isinstance(value, str):
+                            value_summary = f"{len(value)} chars" if len(value) > 250 else f"'{value}'"
+                        elif isinstance(value, (int, float, bool)):
+                            value_summary = str(value)
+                        elif isinstance(value, list):
+                            value_summary = f"list({len(value)} items)"
+                        elif isinstance(value, dict):
+                            value_summary = f"dict({len(value)} items)"
+                            structure_info.append(f"  - {key}: {value_summary}")
+                            # Expand nested dict contents
+                            for nested_key, nested_value in value.items():
+                                if isinstance(nested_value, str):
+                                    nested_summary = f"{len(nested_value)} chars" if len(nested_value) > 250 else f"'{nested_value}'"
+                                elif isinstance(nested_value, (int, float, bool)):
+                                    nested_summary = str(nested_value)
+                                elif isinstance(nested_value, (list, dict)):
+                                    nested_summary = f"{type(nested_value).__name__}({len(nested_value)} items)"
+                                else:
+                                    nested_summary = f"{type(nested_value).__name__}"
+                                structure_info.append(f"    - {nested_key}: {nested_summary}")
+                            continue  # Skip the normal append since we already added it
+                        else:
+                            value_summary = f"{type(value).__name__}"
+                        structure_info.append(f"  - {key}: {value_summary}")
+                else:
+                    structure_info.append("Metadata: None")
+                
+                return "\n".join(structure_info)
+            
+            document_structure = format_document_structure(document)
+            
+            print(f"""
+{delimiter_outside}
 🔍 DEBUG: INPUT/OUTPUT PAIR
-{'='*80}
-📝 INPUT TEXT:
-{'-'*40}
-{document.text[:log_cutoff] + ("..." if len(document.text) > log_cutoff else "")}
-{'-'*40}
-🔄 PARAPHRASED TEXT:
-{'-'*40}
-{output_text[:log_cutoff] + ("..." if len(output_text) > log_cutoff else "")}
-{'='*80}
-
-"""
-            # Write to stdout and flush to ensure immediate visibility
-            sys.stdout.write(debug_output)
-            sys.stdout.flush()
+{delimiter_outside}
+📝 INPUT ({input_tokens} tokens, edu score: {document.metadata["input"]["score"]:.2f}/{document.metadata["input"]["int_score"]}):
+{delimiter_inside}
+{document.metadata["input"]["text"][:log_cutoff] + ("..." if len(document.metadata["input"]["text"]) > log_cutoff else "")}
+{delimiter_inside}
+🧠 THINKING ({thinking_tokens} tokens, edu score: {document.metadata["thinking"]["score"]:.2f}/{document.metadata["thinking"]["int_score"]}):
+{delimiter_inside}
+{format_thinking_display(thinking_text)}
+{delimiter_inside}
+🔄 FINAL OUTPUT ({final_output_tokens} tokens, edu score: {document.metadata["score"]:.2f}/{document.metadata["int_score"]}):
+{delimiter_inside}
+{final_output_text}
+{delimiter_inside}
+📋 DOCUMENT STRUCTURE:
+{delimiter_inside}
+{document_structure}
+{delimiter_outside}
+""")
         
         return document
     
@@ -228,7 +396,7 @@ parser.add_argument(
     "--output_path", type=str, help="Path to the base output folder.", default=f"s3://{PROJECT_NAME}/experiments/rephrased"
 )
 parser.add_argument(
-    "--model_name_or_path", type=str, help="Model name or path for inference", default="Qwen/Qwen3-4B-FP8"
+    "--model_name_or_path", type=str, help="Model name or path for inference", default="Qwen/Qwen3-0.6B-FP8"
 )
 parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to rephrase", default=-1
@@ -269,6 +437,9 @@ parser.add_argument(
 parser.add_argument(
     "--debug", action="store_true", help="Enable debug logging to show input/output text pairs in terminal"
 )
+parser.add_argument(
+    "--tokenizer", type=str, default="hynky/Llama-3.2-1B-no-bos", help="Tokenizer to use for token counting in debug output"
+)
 
 
 def main():
@@ -285,16 +456,18 @@ def main():
     print(f"Data paths: {data_paths}")
     print(f"Output path: {output_path}")
     
-    # Debug mode confirmation
+    # Load tokenizer if debug mode is enabled
+    tokenizer = None
     if args.debug:
-        debug_msg = "🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal\n"
-        sys.stdout.write(debug_msg)
-        sys.stdout.flush()
-
-    # Import required modules for pipeline
-    from datatrove.pipeline.readers import JsonlReader
-    from datatrove.pipeline.writers import JsonlWriter
-    from datatrove.executor.local import LocalPipelineExecutor
+        print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
+        
+        tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
+        print(f"✅ Loaded tokenizer: {args.tokenizer}")
+    
+    # Load fineweb edu classifier
+    edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
+    edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
+    print("✅ Loaded fineweb edu classifier")
 
     # Configure the inference settings with chunking
     # Inspired by Nemotron-CC config (https://arxiv.org/pdf/2412.02595 Section 2.3)
@@ -316,7 +489,7 @@ def main():
         print(f"Error: {e}")
         print("Available templates:")
         prompts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts")
-        for root, dirs, files in os.walk(prompts_dir):
+        for root, _, files in os.walk(prompts_dir):
             for file in files:
                 if file.endswith('.md'):
                     rel_path = os.path.relpath(os.path.join(root, file), prompts_dir)
@@ -333,7 +506,7 @@ def main():
                 records_per_chunk=args.records_per_chunk,
                 checkpoints_local_dir=checkpoints_path,
                 output_writer=JsonlWriter(output_path, output_filename="${rank}_chunk_${chunk_index}.jsonl"),
-                postprocess_fn=create_logging_postprocess_fn(debug=args.debug),
+                postprocess_fn=postprocess_fn(debug=args.debug, tokenizer=tokenizer, edu_tokenizer=edu_tokenizer, edu_model=edu_model, tokenizer_name=args.tokenizer, model_name=args.model_name_or_path),
             ),
         ],
         logging_dir=logs_path,

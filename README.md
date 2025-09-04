@@ -105,8 +105,8 @@ evaluate fineweb-edu-hq-36B-seed-606,fineweb-edu-lq-36B-seed-606
 rephrase \
   --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq \
   --name rewire \
-  --prompt_template rewire/guided_rewrite_corrected.md \
-  --limit 10 
+  --prompt_template rewire/guided_rewrite_improved.md \
+  --limit 5 --debug --disable_checkpoints
 ```
 
 Use different prompts for data quality improvement:

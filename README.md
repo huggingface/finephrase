@@ -65,6 +65,7 @@ filter-fineweb-edu \
   --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
   --name fineweb-edu-hq \
+  --subset_tokens 36e9 \
   --total_tokens 217715141792
 ```
 
@@ -74,25 +75,29 @@ filter-fineweb-edu \
   --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
   --name fineweb-edu-lq \
+  --subset_tokens 36e9 \
   --total_tokens 1644271223950
 ```
 
 Hub (fineweb-edu): all dumps with score >=3
 Hub (fineweb-edu-score-2): all dumps with score >= 2
-My S3 bucket: new dumps, data for all scores (score1_2 for <3, score3 for >=3)
+S3 bucket: new dumps, data for all scores (score1_2 for <3, score3 for >=3)
 
 Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 
 ### Running ablations
 1. Tokenize your datasets with tokenize_dataset.py
 ```
-tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq
-tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name fineweb-edu-lq
+tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq-36BT --sample 1
+tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name fineweb-edu-lq-36BT --sample 1
+tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq-18BT --sample 0.5
 ```
 
 2. Train small model for 36B tokens
 ```
-train s3://finephrase/experiments/tokenized/fineweb-edu-hq {ablation_name}
+train s3://finephrase/experiments/tokenized/fineweb-edu-hq-36BT finweb-edu-hq-36BT
+train s3://finephrase/experiments/tokenized/fineweb-edu-lq-36BT finweb-edu-lq-36BT
+train s3://finephrase/experiments/tokenized/fineweb-edu-hq-18BT finweb-edu-hq-18BT
 ```
 
 3. Run evaluations manually (if automatic ones fail during training)

@@ -26,20 +26,21 @@ classifiers = [
 
 dependencies = [
     "setuptools",
-    "s5cmd", 
+    "s5cmd",
     "hf-transfer",
     "datasets==3.5.1",
     "flashinfer-python==0.2.2",
-    "vllm<0.9.0",  # Ensure compatibility with PyTorch 2.6.0
-    "flash-attn==2.7.4.post1",  # Ensure compatibility with PyTorch 2.6.0
+    "vllm<0.9.0", # Ensure compatibility with PyTorch 2.6.0
+    "flash-attn==2.7.4.post1", # Ensure compatibility with PyTorch 2.6.0
+    "dspy>=3.0.3",
+    "transformers>=4.56.1",
     "aiofiles",
     "pip",
-    "pybind11", 
+    "pybind11",
     "pydantic",
     "huggingface_hub[hf_xet]",
-    
     # Note: torch and torchvision with CUDA versions installed separately via --find-links
-    # "torch==2.6.0+cu124" 
+    # "torch==2.6.0+cu124"
     # "torchvision==0.21.0+cu124"
 ]
 

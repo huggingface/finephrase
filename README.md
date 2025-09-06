@@ -93,7 +93,7 @@ tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name
 tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq-18BT --sample 0.5
 ```
 
-2. Train small model for 36B tokens
+2. Train 1B model for 36B tokens
 ```
 train s3://finephrase/experiments/tokenized/fineweb-edu-hq-36BT finweb-edu-hq-36BT
 train s3://finephrase/experiments/tokenized/fineweb-edu-lq-36BT finweb-edu-lq-36BT
@@ -102,7 +102,7 @@ train s3://finephrase/experiments/tokenized/fineweb-edu-hq-18BT finweb-edu-hq-18
 
 3. Run evaluations manually (if automatic ones fail during training)
 ```
-evaluate fineweb-edu-hq-36B-seed-606,fineweb-edu-lq-36B-seed-606
+evaluate fineweb-edu-hq-36BT-36B-seed-606,fineweb-edu-lq-36BT-36B-seed-606
 ```
 
 4. Inference with different rephrasing prompts

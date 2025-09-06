@@ -245,7 +245,7 @@ def prepare_dataset(train_size: int, val_size: int, seed: int = 42) -> tuple[lis
     
     return trainset, valset
 
-def optimize_rephraser(trainset: list, valset: list, reflection_lm, seed: int = 42):
+def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: int = 42):
     """
     Optimize the rephraser module using GEPA.
     
@@ -264,7 +264,9 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm, seed: int = 
     # Configure GEPA optimizer
     gepa = dspy.GEPA(
         metric=gepa_metric,
-        auto="light",  # Light budget for quick experimentation
+        #auto="light",  # Light budget for quick experimentation
+        max_full_evals=5,
+        #max_metric_calls=10,
         reflection_lm=reflection_lm,
         reflection_minibatch_size=1,
         candidate_selection_strategy="pareto",
@@ -287,18 +289,20 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm, seed: int = 
     # Test the optimized module on a few examples
     logging.info("Testing optimized module:")
     test_examples = valset[:min(3, len(valset))]
+
+    example_length = 2000
     
     for i, example in enumerate(test_examples):
         logging.info(f"--- Example {i+1} ---")
         original_score = calculate_edu_score(example.original_text)
         logging.info(f"Original (edu score: {original_score:.2f}):")
-        original_preview = example.original_text[:200] + "..." if len(example.original_text) > 200 else example.original_text
+        original_preview = example.original_text[:example_length] + "..." if len(example.original_text) > example_length else example.original_text
         logging.info(f"Original text: {original_preview}")
         
         result = optimized_module(original_text=example.original_text)
         rephrased_score = calculate_edu_score(result.rephrased_text)
         
-        rephrased_preview = result.rephrased_text[:200] + "..." if len(result.rephrased_text) > 200 else result.rephrased_text
+        rephrased_preview = result.rephrased_text[:example_length] + "..." if len(result.rephrased_text) > example_length else result.rephrased_text
         logging.info(f"Rephrased (edu score: {rephrased_score:.2f}):")
         logging.info(f"Rephrased text: {rephrased_preview}")
         
@@ -312,12 +316,19 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm, seed: int = 
         logging.info(f"- Total candidates evaluated: {len(results.candidates)}")
         logging.info(f"- Best validation score: {max(results.val_aggregate_scores):.3f}")
         logging.info(f"- Total metric calls: {results.total_metric_calls}")
-        
-        # Print the best prompt
-        best_candidate = results.best_candidate
-        logging.info("Best optimized prompt:")
-        for component, text in best_candidate.items():
-            logging.info(f"{component}: {text}")
+        logging.info(f"- Best candidate: {results.best_candidate}")
+
+        logging.info(results)
+
+    # Print optimization results
+    logging.info(optimized_module)
+    for name, pred in optimized_module.named_predictors():
+        logging.info("================================")
+        logging.info(f"Predictor: {name}")
+        logging.info("================================")
+        logging.info("Prompt:")
+        logging.info(pred.signature.instructions)
+        logging.info("*********************************")
     
     return optimized_module
 
@@ -349,72 +360,6 @@ def setup_logging(log_dir: str) -> None:
     
     logging.info(f"Logging initialized. Log file: {log_file}")
 
-def save_optimization_results(optimized_module, log_dir: str, model_name: str, provider: str) -> None:
-    """
-    Save the optimized module and prompt to the log directory.
-    
-    Args:
-        optimized_module: The optimized DSPy module
-        log_dir: Directory to save results
-        model_name: Name of the model used
-        provider: Provider used for optimization
-    """
-    # Create timestamp for unique filenames
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_path = Path(log_dir)
-    
-    # Save the optimized module
-    module_file = log_path / f"optimized_module_{timestamp}.pkl"
-    try:
-        with open(module_file, 'wb') as f:
-            pickle.dump(optimized_module, f)
-        logging.info(f"Optimized module saved to: {module_file}")
-    except Exception as e:
-        logging.error(f"Failed to save optimized module: {e}")
-    
-    # Extract and save optimization results
-    results_data = {
-        "timestamp": timestamp,
-        "model_name": model_name,
-        "provider": provider,
-        "optimization_completed": True
-    }
-    
-    # Save optimization statistics if available
-    if hasattr(optimized_module, 'detailed_results'):
-        results = optimized_module.detailed_results
-        results_data.update({
-            "total_candidates_evaluated": len(results.candidates),
-            "best_validation_score": max(results.val_aggregate_scores),
-            "total_metric_calls": results.total_metric_calls
-        })
-        
-        # Save the best optimized prompt
-        if hasattr(results, 'best_candidate') and results.best_candidate:
-            best_candidate = results.best_candidate
-            results_data["optimized_prompt"] = dict(best_candidate)
-            
-            # Also save prompt as separate text file
-            prompt_file = log_path / f"optimized_prompt_{timestamp}.txt"
-            try:
-                with open(prompt_file, 'w', encoding='utf-8') as f:
-                    f.write(f"Optimized Prompt (Model: {model_name}, Provider: {provider})\n")
-                    f.write(f"Timestamp: {timestamp}\n")
-                    f.write("=" * 80 + "\n\n")
-                    for component, text in best_candidate.items():
-                        f.write(f"{component}:\n{text}\n\n")
-                logging.info(f"Optimized prompt saved to: {prompt_file}")
-            except Exception as e:
-                logging.error(f"Failed to save optimized prompt: {e}")
-    
-    # Save results summary as JSON
-    results_file = log_path / f"optimization_results_{timestamp}.json"
-    try:
-        with open(results_file, 'w', encoding='utf-8') as f:
-            json.dump(results_data, f, indent=2, ensure_ascii=False)
-        logging.info(f"Optimization results saved to: {results_file}")
-    except Exception as e:
-        logging.error(f"Failed to save optimization results: {e}")
 
 def parse_args():
     """Parse command line arguments."""
@@ -525,9 +470,9 @@ def main():
             optimized_module = optimize_rephraser(trainset, valset, reflection_lm, args.seed)
     else:
         optimized_module = optimize_rephraser(trainset, valset, reflection_lm, args.seed)
-    
-    # Save optimization results
-    save_optimization_results(optimized_module, args.log_dir, args.model_name, args.provider)
+
+    optimized_module.save(f"{LOG_BASE_PATH}/optimized_module_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl")
+
 
 if __name__ == "__main__":
     main()

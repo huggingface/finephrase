@@ -231,7 +231,7 @@ def main():
     parser.add_argument("--lr", help="Learning rate", type=float, default=5e-4)
     parser.add_argument("--background", help="Run in background", action="store_true")
     parser.add_argument("--reservation", help="SLURM reservation name", type=str, default=None)
-    parser.add_argument("--time", help="SLURM time", type=str, default="08:59:00")
+    parser.add_argument("--time", help="SLURM time", type=str, default="20:00:00")
     parser.add_argument("--resume", help="Set resume checkpoint path to the checkpoint path", action="store_true")
     args = parser.parse_args()
     

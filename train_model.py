@@ -215,24 +215,26 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, 
     else:
       return subprocess.run(["sbatch", *args, f.name], capture_output=True, text=True).stdout.split()[-1]
 
+
+parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
+parser.add_argument("data", help="Dataset folder path (can be S3 path)", type=str)
+parser.add_argument("run_name", help="Run name", type=str)
+parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
+parser.add_argument("-d", help="Dependency job", type=str, default=None)
+parser.add_argument("--seed", help="Seed", type=int, default=6)
+parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
+parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=17_000)
+parser.add_argument("--priority", "--qos", "-p", help="QoS to use", type=str, default="normal")
+parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
+parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")
+parser.add_argument("--job_id", help="Job ID", type=str, default=None)
+parser.add_argument("--lr", help="Learning rate", type=float, default=5e-4)
+parser.add_argument("--background", help="Run in background", action="store_true")
+parser.add_argument("--reservation", help="SLURM reservation name", type=str, default=None)
+parser.add_argument("--time", help="SLURM time", type=str, default="20:00:00")
+parser.add_argument("--resume", help="Set resume checkpoint path to the checkpoint path", action="store_true")
+
 def main():
-    parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
-    parser.add_argument("data", help="Dataset folder path (can be S3 path)", type=str)
-    parser.add_argument("run_name", help="Run name", type=str)
-    parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
-    parser.add_argument("-d", help="Dependency job", type=str, default=None)
-    parser.add_argument("--seed", help="Seed", type=int, default=6)
-    parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
-    parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=17_000)
-    parser.add_argument("--priority", "--qos", "-p", help="QoS to use", type=str, default="normal")
-    parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
-    parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")
-    parser.add_argument("--job_id", help="Job ID", type=str, default=None)
-    parser.add_argument("--lr", help="Learning rate", type=float, default=5e-4)
-    parser.add_argument("--background", help="Run in background", action="store_true")
-    parser.add_argument("--reservation", help="SLURM reservation name", type=str, default=None)
-    parser.add_argument("--time", help="SLURM time", type=str, default="20:00:00")
-    parser.add_argument("--resume", help="Set resume checkpoint path to the checkpoint path", action="store_true")
     args = parser.parse_args()
     
     # Load the config

@@ -1,65 +1,19 @@
 import argparse
 import os
 from datatrove.pipeline.base import PipelineStep
+from datatrove.executor import SlurmPipelineExecutor
+from datatrove.pipeline.filters import SamplerFilter
+from datatrove.pipeline.readers import JsonlReader
+from datatrove.pipeline.writers import JsonlWriter
+from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
+from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
+
 
 USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
 
 
-parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
 
-parser.add_argument(
-    "--data_paths", type=str, help="Path to the data to tokenize.", required=True
-)
-parser.add_argument(
-    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=f"s3://{PROJECT_NAME}/experiments"
-)
-parser.add_argument(
-    "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"
-)
-parser.add_argument(
-    "--limit", type=int, help="limit the number of documents to tokenize", default=-1
-)
-parser.add_argument(
-    "--n_tasks", type=int, help="number of tokenization tasks", default=100
-)
-parser.add_argument(
-    "--max_toks", type=int, help="max tokens per file", default=1e8
-)
-# For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
-parser.add_argument(
-    "--batch_size", type=int, help="batch size", default=2000
-)
-parser.add_argument(
-    "--qos", type=str, default="normal"
-)
-parser.add_argument(
-    "--tokenizer", type=str, help="tokenizer to use", default="hynky/Llama-3.2-1B-no-bos"
-)
-parser.add_argument(
-    "--text_key", type=str, default="text"
-)
-parser.add_argument(
-    "--sample", type=float, default=1.0
-)
-parser.add_argument(
-    "--dep_job_id", type=str, default=None, help="ID of the job that produced the data to tokenize."
-)
-parser.add_argument(
-    "--jsonl_output", "-jo", type=str, default=None, help="Path to optionally save the sampled data jsonl"
-)
-parser.add_argument(
-    "--shuffle_chunk_size", "-scs", type=int, default=4096, help="Shuffle inter document"
-)
-parser.add_argument(
-    "--run_merger", "-rm", action="store_true", help="Run the merger after tokenization"
-)
-parser.add_argument(
-    "--max_chars_per_document", type=int, default=100_000, help="Split documents larger than this many characters"
-)
-parser.add_argument(
-    "--duplicate", type=int, default=1, help="Duplicate the data n times"
-)
 
 class DocumentSplitter(PipelineStep):
     def __init__(self, max_chars_per_document: int):
@@ -161,6 +115,68 @@ class DocumentSplitter(PipelineStep):
         # Absolute last resort: hard split at character limit
         return max_chars
 
+parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
+
+parser.add_argument(
+    "--data_paths", type=str, help="Path to the data to tokenize.", required=True
+)
+parser.add_argument(
+    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=f"s3://{PROJECT_NAME}/experiments"
+)
+parser.add_argument(
+    "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"
+)
+parser.add_argument(
+    "--limit", type=int, help="limit the number of documents to tokenize", default=-1
+)
+parser.add_argument(
+    "--n_tasks", type=int, help="number of tokenization tasks", default=100
+)
+parser.add_argument(
+    "--max_toks", type=int, help="max tokens per file", default=1e8
+)
+# For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
+parser.add_argument(
+    "--batch_size", type=int, help="batch size", default=2000
+)
+parser.add_argument(
+    "--qos", type=str, default="normal"
+)
+parser.add_argument(
+    "--tokenizer", type=str, help="tokenizer to use", default="hynky/Llama-3.2-1B-no-bos"
+)
+parser.add_argument(
+    "--text_key", type=str, default="text"
+)
+parser.add_argument(
+    "--sample", type=float, default=1.0
+)
+parser.add_argument(
+    "--dep_job_id", type=str, default=None, help="ID of the job that produced the data to tokenize."
+)
+parser.add_argument(
+    "--jsonl_output", "-jo", type=str, default=None, help="Path to optionally save the sampled data jsonl"
+)
+parser.add_argument(
+    "--shuffle_chunk_size", "-scs", type=int, default=4096, help="Shuffle inter document"
+)
+parser.add_argument(
+    "--run_merger", "-rm", action="store_true", help="Run the merger after tokenization"
+)
+parser.add_argument(
+    "--max_chars_per_document", type=int, default=100_000, help="Split documents larger than this many characters"
+)
+parser.add_argument(
+    "--duplicate", type=int, default=1, help="Duplicate the data n times"
+)
+parser.add_argument(
+    "--sample_seed", type=int, default=42, help="Seed for the sample filter random number generator"
+)
+parser.add_argument(
+    "--shuffle_seed", type=int, default=42, help="Seed for the tokenizer shuffle random number generator"
+)
+
+
 def main():
     args = parser.parse_args()
     # Output name should be the same as last part of the data path
@@ -173,20 +189,13 @@ def main():
     data_paths = args.data_paths.split(",")
     print(f"Data paths: {data_paths}")
 
-    from datatrove.executor import SlurmPipelineExecutor
-    from datatrove.pipeline.filters import SamplerFilter
-    from datatrove.pipeline.readers import JsonlReader
-    from datatrove.pipeline.writers import JsonlWriter
-    from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
-    from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
-    
     logging_base_path = f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/tokenization/{output_name}"
     
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{output_name}",
         pipeline=[
             *([JsonlReader(data_path, text_key=args.text_key, shuffle_files=True, limit=args.limit) for data_path in data_paths]),
-            SamplerFilter(rate=args.sample),
+            SamplerFilter(rate=args.sample, seed=args.sample_seed),
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),
             DocumentTokenizer(
@@ -199,6 +208,7 @@ def main():
                 # Max 1 GT per file (i.e. btw 5 et 300 tokenized files per dump et about 100 dump extracts per merged file)
                 shuffle_documents=True,
                 shuffle_chunk_size=args.shuffle_chunk_size + 1 if args.shuffle_chunk_size else None
+                seed=args.shuffle_seed,
             ),
         ],
         tasks=args.n_tasks,

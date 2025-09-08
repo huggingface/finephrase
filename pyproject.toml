@@ -39,6 +39,8 @@ dependencies = [
     "pybind11",
     "pydantic",
     "huggingface_hub[hf_xet]",
+    "plotly",
+    "kaleido",
     # Note: torch and torchvision with CUDA versions installed separately via --find-links
     # "torch==2.6.0+cu124"
     # "torchvision==0.21.0+cu124"

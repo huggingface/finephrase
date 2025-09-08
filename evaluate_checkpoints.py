@@ -233,8 +233,6 @@ def read_tasks_from_file(tasks_list_path: str) -> Set[str]:
     return tasks
 
 
-
-
 parser = argparse.ArgumentParser("Launch evals for a set of checkpoints.")
 
 parser.add_argument(

@@ -23,8 +23,6 @@ import argparse
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
-import pickle
-import json
 from datetime import datetime
 
 # Load environment variables from .env file
@@ -433,7 +431,7 @@ def main():
     # Configure provider-specific settings
     if args.provider == "vllm":
         # Configure DSPy with local VLLM server (explicit OpenAI provider)
-        # Currently there are some issues with this: potentially a deadlock
+        # TODO: Currently there are some issues with this: potentially a deadlock
         os.environ['OPENAI_API_BASE'] = f'http://127.0.0.1:{args.port}/v1'
         lm_model_name = f"openai/{args.model_name}"
     elif args.provider == "openrouter":

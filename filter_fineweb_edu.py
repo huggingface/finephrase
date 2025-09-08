@@ -1,12 +1,35 @@
 import argparse
 import os
 
+from datatrove.executor import SlurmPipelineExecutor
+from datatrove.pipeline.filters import LambdaFilter, SamplerFilter
+from datatrove.pipeline.writers import JsonlWriter
+from datatrove.pipeline.tokens import TokensCounter
+
+from utils import get_reader
+
+
 USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
 
 
-parser = argparse.ArgumentParser("Filter fineweb-edu dataset by quality and count tokens.")
+def score_predicate_lq(doc):
+    try:
+        score = float(doc.metadata["int_score"])
+        return score in [0, 1]
+    except (TypeError, ValueError):
+        return False
 
+
+def score_predicate_hq(doc):
+    try:
+        score = float(doc.metadata["int_score"])
+        return score in [4, 5]
+    except (TypeError, ValueError):
+        return False
+
+
+parser = argparse.ArgumentParser("Filter fineweb-edu dataset by quality and count tokens.")
 parser.add_argument(
     "--data_paths", type=str, help="Path to the data to filter.", required=True
 )
@@ -44,22 +67,9 @@ parser.add_argument(
 parser.add_argument(
     "--tokenizer", type=str, default="hynky/Llama-3.2-1B-no-bos", help="Tokenizer to use for counting tokens"
 )
-
-def score_predicate_lq(doc):
-    try:
-        score = float(doc.metadata["int_score"])
-        return score in [0, 1]
-    except (TypeError, ValueError):
-        return False
-
-
-def score_predicate_hq(doc):
-    try:
-        score = float(doc.metadata["int_score"])
-        return score in [4, 5]
-    except (TypeError, ValueError):
-        return False
-
+parser.add_argument(
+    "--sample_seed", type=int, default=42, help="Seed for the sample filter random number generator"
+)
 
 def main():
     args = parser.parse_args()
@@ -73,19 +83,9 @@ def main():
     data_paths = args.data_paths.split(",")
     print(f"Data paths: {data_paths}")
 
-    from datatrove.executor import SlurmPipelineExecutor
-    from datatrove.pipeline.filters import LambdaFilter
-    from datatrove.pipeline.filters import SamplerFilter
-    from datatrove.pipeline.readers import JsonlReader, ParquetReader
-    from datatrove.pipeline.writers import JsonlWriter
-    from datatrove.pipeline.tokens import TokensCounter
-    
     _score_predicate = score_predicate_lq if args.quality == "lq" else score_predicate_hq
-
-    if args.quality == "lq": # LQ data is in JSONL format (edu_annotated on S3)
-        reader = [JsonlReader(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]
-    else: # HQ data is in Parquet format (finweb-edu on the hub)
-        reader = [ParquetReader(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]
+    
+    reader = [get_reader(data_path)(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]
     
     if args.total_tokens is None:
         # If total tokens is not set, we just count the tokens
@@ -117,7 +117,7 @@ def main():
             pipeline=[
                 *(reader),
                 LambdaFilter(filter_function=_score_predicate),
-                SamplerFilter(rate=args.subset_tokens / args.total_tokens),
+                SamplerFilter(rate=args.subset_tokens / args.total_tokens, seed=args.sample_seed),
                 JsonlWriter(output_path),
             ],
             tasks=args.n_tasks,

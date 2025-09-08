@@ -17,7 +17,7 @@ from datatrove.pipeline.inference.run_inference import InferenceConfig, Inferenc
 from datatrove.pipeline.readers import JsonlReader
 from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.base import PipelineStep
-from datatrove.executor.local import LocalPipelineExecutor
+from datatrove.executor.slurm import SlurmPipelineExecutor
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
@@ -132,32 +132,39 @@ def create_templated_query_builder(max_tokens: int, prompt_template: str = None)
     return query_builder
 
 
-def postprocess_fn(debug: bool = False, tokenizer=None, edu_tokenizer=None, edu_model=None, tokenizer_name=None, model_name=None):
+def postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=None):
     """
     Create a postprocess function that parses thinking/output and saves data to metadata.
     
     Args:
         debug: Whether to enable debug logging to terminal
-        tokenizer: Pre-loaded tokenizer for token counting in debug output
-        edu_tokenizer: Pre-loaded tokenizer for fineweb edu classification
-        edu_model: Pre-loaded model for fineweb edu classification
         tokenizer_name: Name of the tokenizer used
         model_name: Name of the rephrasing model used
     
     Returns:
         Postprocess function that processes LLM output and saves to metadata
     """
+    # Lazily initialized caches
+    tokenizer, edu_tokenizer, edu_model = None, None, None
+
     def count_tokens(text: str) -> int:
-        """Count tokens in text using provided tokenizer."""
-        if tokenizer and text:
-            return len(tokenizer.encode(text))
+        """Count tokens in text using tokenizer; lazily load on first use."""
+        nonlocal tokenizer
+        if text:
+            if tokenizer is None and tokenizer_name:
+                tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+            if tokenizer:
+                return len(tokenizer.encode(text))
         return 0
     
     def calculate_edu_score(text: str) -> dict:
-        """Calculate fineweb edu score for text."""
-        if not edu_tokenizer or not edu_model or not text.strip():
+        """Calculate fineweb edu score; lazily load model on first use."""
+        nonlocal edu_tokenizer, edu_model
+        if not text or not text.strip():
             return {"score": 0.0, "int_score": 0}
-        
+        if edu_tokenizer is None or edu_model is None:
+            edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
+            edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
         try:
             inputs = edu_tokenizer(text, return_tensors="pt", padding="longest", truncation=True)
             outputs = edu_model(**inputs)
@@ -449,10 +456,7 @@ parser.add_argument(
     "--n_tasks", type=int, help="Number of parallel tasks", default=1
 )
 parser.add_argument(
-    "--temperature", type=float, help="Temperature for inference", default=0.5
-)
-parser.add_argument(
-    "--repetition_penalty", type=float, help="Repetition penalty for inference (1.0 = no penalty, >1.0 = penalty)", default=1.2
+    "--temperature", type=float, help="Temperature for inference", default=0.6
 )
 parser.add_argument(
     "--model_max_context", type=int, help="Maximum context length for the model", default=8192
@@ -470,7 +474,7 @@ parser.add_argument(
     "--records_per_chunk", type=int, help="Number of records per chunk", default=500
 )
 parser.add_argument(
-    "--max_tokens", type=int, help="Maximum tokens per request", default=4096
+    "--max_tokens", type=int, help="Maximum tokens per request", default=4096 # Should be half of the model context length
 )
 parser.add_argument(
     "--server_type", type=str, help="Inference server type", choices=["vllm", "sglang", "dummy"], default="vllm"
@@ -486,6 +490,18 @@ parser.add_argument(
 )
 parser.add_argument(
     "--tokenizer", type=str, default="hynky/Llama-3.2-1B-no-bos", help="Tokenizer to use for token counting in debug output"
+)
+parser.add_argument(
+    "--time", type=str, default="20:00:00", help="Slurm time limit"
+)
+parser.add_argument(
+    "--partition", type=str, default="hopper-cpu", help="Slurm partition"
+)
+parser.add_argument(
+    "--qos", type=str, default="normal", help="Slurm QoS"
+)
+parser.add_argument(
+    "--dep_job_id", type=str, default=None, help="Optional Slurm dependency job id"
 )
 
 
@@ -503,18 +519,8 @@ def main():
     print(f"Data paths: {data_paths}")
     print(f"Output path: {output_path}")
     
-    # Load tokenizer if debug mode is enabled
-    tokenizer = None
     if args.debug:
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
-        
-        tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
-        print(f"✅ Loaded tokenizer: {args.tokenizer}")
-    
-    # Load fineweb edu classifier
-    edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
-    edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
-    print("✅ Loaded fineweb edu classifier")
 
     # Configure the inference settings with chunking
     # Inspired by Nemotron-CC config (https://arxiv.org/pdf/2412.02595 Section 2.3)
@@ -522,7 +528,6 @@ def main():
         server_type=args.server_type,
         model_name_or_path=args.model_name_or_path,
         temperature=args.temperature,
-        #repetition_penalty=args.repetition_penalty,
         model_max_context=args.model_max_context,
         max_concurrent_requests=args.max_concurrent_requests,
         max_concurrent_tasks=args.max_concurrent_tasks,
@@ -544,8 +549,9 @@ def main():
                     print(f"  - {rel_path}")
         exit(1)
 
-    # Create the main rephrasing pipeline executor
-    rephrase_executor: LocalPipelineExecutor = LocalPipelineExecutor(
+    # Create the main rephrasing pipeline executor (Slurm)
+    rephrase_executor: SlurmPipelineExecutor = SlurmPipelineExecutor(
+        job_name=f"rephrase-{args.name}",
         pipeline=[
             *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit) for data_path in data_paths],
             InferenceRunner(
@@ -554,12 +560,10 @@ def main():
                 records_per_chunk=args.records_per_chunk,
                 checkpoints_local_dir=checkpoints_path,
                 output_writer=JsonlWriter(output_path, output_filename="${rank}_chunk_${chunk_index}.jsonl"),
+                skip_bad_requests=True, # Skips documents that cause BadRequestError from the server, e.g., when they are too long
                 postprocess_fn=postprocess_fn(
-                    debug=args.debug, 
-                    tokenizer=tokenizer, 
-                    edu_tokenizer=edu_tokenizer, 
-                    edu_model=edu_model, 
-                    tokenizer_name=args.tokenizer, 
+                    debug=args.debug,
+                    tokenizer_name=args.tokenizer,
                     model_name=args.model_name_or_path
                 ),
             ),
@@ -568,6 +572,15 @@ def main():
         ],
         logging_dir=logs_path,
         tasks=args.n_tasks,
+        time=args.time,
+        partition="hopper-prod",
+        cpus_per_task=88,
+        mem_per_cpu_gb=2,
+        qos=args.qos,
+        env_command="sleep $((RANDOM % 30))",
+        mail_user="joel@hf.co",
+        depends_job_id=args.dep_job_id,
+        sbatch_args={"gres": "gpu:1"}
     )
     
     rephrase_executor.run()

@@ -231,45 +231,29 @@ def read_tasks_from_file(tasks_list_path: str) -> Set[str]:
 parser = argparse.ArgumentParser("Launch evals for a set of checkpoints.")
 
 parser.add_argument(
-    "model_name", type=str,
-    help="Model name on s3. Example: 1p46G-control-english-fw-ft-bl-28BT-seed-6. Use commas for multiple models"
+    "model_name", type=str, help="Model name on s3. Example: 1p46G-control-english-fw-ft-bl-28BT-seed-6. Use commas for multiple models", required=True
 )
 parser.add_argument(
-    "--s3_prefix", type=str, help="s3://path/to/models/ by default",
-    default=f"{S3_BASE_PATH}/checkpoints"
+    "--s3_prefix", type=str, help="s3://path/to/models/ by default", default=f"{S3_BASE_PATH}/checkpoints"
 )
 parser.add_argument(
-    "--checkpoints", "-ckpts", type=str, help="Comma separated list of checkpoints to run, or \"all\"",
-    default="all"
+    "--checkpoints", "-ckpts", type=str, help="Comma separated list of checkpoints to run, or \"all\"", default="all"
 )
-parser.add_argument(
-    "--model-template", type=str, help="Template to use for the model name",
-    default="{model_name}"
-)
+parser.add_argument("--model-template", type=str, help="Template to use for the model name", default="{model_name}")
 parser.add_argument("--run-all", action="store_true", default=False, help="Run in sequence")
-
-parser.add_argument("--tasks", type=str, help="Comma separated list of tasks to run, or \"all\"",
-                    default=TASKS_PATH)
-parser.add_argument("--custom-tasks", type=str, help="lighteval custom tasks",
-                    default=TASK_LIST_PATH)
-parser.add_argument(
-    "--offline-datasets", action="store_true", help="Turns off datasets downloading", default=False
-)
-parser.add_argument(
-    "--seed", help="Defines seeds to use in model template. Comma separated list of seeds", default="6"
-)
+parser.add_argument("--tasks", type=str, help="Comma separated list of tasks to run, or \"all\"", default=TASKS_PATH)
+parser.add_argument("--custom-tasks", type=str, help="lighteval custom tasks", default=TASK_LIST_PATH)
+parser.add_argument("--offline-datasets", action="store_true", help="Turns off datasets downloading", default=False)
+parser.add_argument("--seed", help="Defines seeds to use in model template. Comma separated list of seeds", default="6")
 parser.add_argument("--qos", type=str, default="normal", help="qos to use")
 parser.add_argument("--time_limit", type=str, default="1:50:00", help="slurm time limit. 1:50:00 by default")
 parser.add_argument("--parallel", "-p", type=int, default=5, help="How many eval tasks to run simultaneously")
 parser.add_argument("--batch_size", "-bs", type=int, default=None, help="Batch size")
 parser.add_argument("--gpus", "-g", type=int, default=GPUS_PER_NODE, help="How many gpus to use")
-parser.add_argument("--logging_dir", type=str, default=S3_EVALS_RESULTS_PREFIX,
-                    help="S3 repo to push results to")
+parser.add_argument("--logging_dir", type=str, default=S3_EVALS_RESULTS_PREFIX, help="S3 repo to push results to")
 parser.add_argument("-d", help="dependency job", type=str, default=None)
-parser.add_argument("--overwrite", "-ow", action="store_true", default=False,
-                    help="Overwrite existing eval results. Will skip completed checkpoints by default")
-parser.add_argument("--after-date", type=str, default=None,
-                    help="Only consider checkpoints newer than this date (DD-MM-YYYY HH:MM:SS)")
+parser.add_argument("--overwrite", "-ow", action="store_true", default=False, help="Overwrite existing eval results. Will skip completed checkpoints by default")
+parser.add_argument("--after-date", type=str, default=None, help="Only consider checkpoints newer than this date (DD-MM-YYYY HH:MM:SS)")
 parser.add_argument("--job-prefix", type=str, default="", help="Prefix to add to the job name")
 parser.add_argument("--debug", action="store_true", default=False)
 

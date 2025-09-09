@@ -175,28 +175,23 @@ parser.add_argument(
 
 def main():
     args = parser.parse_args()
-    # Output name should be the same as last part of the data path
-    if args.name:
-        output_name = args.name
-    else:
-        output_name = args.data_paths.replace("/", "_")
-    print(f"Output name: {output_name}")
+    print(f"Output name: {args.name}")
 
     data_paths = args.data_paths.split(",")
     print(f"Data paths: {data_paths}")
 
-    logging_base_path = f"{LOG_BASE_PATH}/tokenization/{output_name}"
+    logging_base_path = f"{LOG_BASE_PATH}/tokenization/{args.name}"
     
     tokenizer_executor = SlurmPipelineExecutor(
-        job_name=f"tok-{output_name}",
+        job_name=f"tok-{args.name}",
         pipeline=[
             *([JsonlReader(data_path, text_key=args.text_key, shuffle_files=True, limit=args.limit) for data_path in data_paths]),
             SamplerFilter(rate=args.sample, seed=args.sample_seed),
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),
             DocumentTokenizer(
-                output_folder=f"{args.output_path}/tokenized/{output_name}",
-                local_working_dir=f"{LOCAL_TMP_PATH_ON_NODE}/tokenized/{output_name}",
+                output_folder=f"{args.output_path}/tokenized/{args.name}",
+                local_working_dir=f"{LOCAL_TMP_PATH_ON_NODE}/tokenized/{args.name}",
                 eos_token="<|end_of_text|>",
                 tokenizer_name_or_path=args.tokenizer,
                 batch_size=args.batch_size,
@@ -221,11 +216,11 @@ def main():
 
     if args.run_merger:
         merge_executor = SlurmPipelineExecutor(
-                job_name=f"merge-{output_name}",
+                job_name=f"merge-{args.name}",
                 pipeline=[
                 DocumentTokenizerMerger(
-                    input_folder=f"{args.output_path}/tokenized/{output_name}",
-                    output_folder=f"{args.output_path}/tokenized_merged/{output_name}",
+                    input_folder=f"{args.output_path}/tokenized/{args.name}",
+                    output_folder=f"{args.output_path}/tokenized_merged/{args.name}",
                     save_filename="tokenized_dataset",
                     shuffle_chunk_size=args.shuffle_chunk_size + 1 if args.shuffle_chunk_size else None
                 ),

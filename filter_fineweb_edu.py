@@ -68,12 +68,7 @@ parser.add_argument(
 
 def main():
     args = parser.parse_args()
-    # Output name should be the same as last part of the data path
-    if args.name:
-        output_name = args.name
-    else:
-        output_name = args.data_paths.replace("/", "_")
-    print(f"Output name: {output_name}")
+    print(f"Output name: {args.name}")
 
     data_paths = args.data_paths.split(",")
     print(f"Data paths: {data_paths}")
@@ -85,7 +80,7 @@ def main():
     if args.total_tokens is None:
         # If total tokens is not set, we just count the tokens
         count_executor = SlurmPipelineExecutor(
-            job_name=f"count-{output_name}",
+            job_name=f"count-{args.name}",
             pipeline=[
                 *(reader),
                 LambdaFilter(filter_function=_score_predicate),
@@ -94,7 +89,7 @@ def main():
             tasks=args.n_tasks,
             time="1:00:00",
             partition="hopper-cpu",
-            logging_dir=f"{LOG_BASE_PATH}/counting/{output_name}",
+            logging_dir=f"{LOG_BASE_PATH}/counting/{args.name}",
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,
@@ -105,10 +100,10 @@ def main():
         count_executor.run()
     else:
         # If total tokens is set, we subsample the data and save it
-        output_path = f"{args.output_path}/filtered/{output_name}"
+        output_path = f"{args.output_path}/filtered/{args.name}"
         
         filter_executor = SlurmPipelineExecutor(
-            job_name=f"filter-{output_name}",
+            job_name=f"filter-{args.name}",
             pipeline=[
                 *(reader),
                 LambdaFilter(filter_function=_score_predicate),
@@ -118,7 +113,7 @@ def main():
             tasks=args.n_tasks,
             time="5:00:00",
             partition="hopper-cpu",
-            logging_dir=f"{LOG_BASE_PATH}/filtering/{output_name}",
+            logging_dir=f"{LOG_BASE_PATH}/filtering/{args.name}",
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,

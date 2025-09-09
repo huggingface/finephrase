@@ -6,7 +6,7 @@ import subprocess
 import yaml
 from datetime import datetime
 
-from utils import LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
+from utils import LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
 TRAINING_LOGS_PATH = f"{LOG_BASE_PATH}/training/logs"

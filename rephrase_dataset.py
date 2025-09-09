@@ -19,8 +19,7 @@ from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.base import PipelineStep
 from datatrove.executor.slurm import SlurmPipelineExecutor
 
-USER = os.environ.get('USER')
-PROJECT_NAME = "finephrase"
+from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH
 
 class EduScoreStatsLogger(PipelineStep):
     """
@@ -428,7 +427,7 @@ parser.add_argument(
     "--prompt_template", type=str, help="Path to prompt template file (relative to prompts/ directory)", required=True
 )
 parser.add_argument(
-    "--output_path", type=str, help="Path to the base output folder.", default=f"s3://{PROJECT_NAME}/experiments/rephrased"
+    "--output_path", type=str, help="Path to the base output folder.", default=S3_BASE_PATH
 )
 parser.add_argument(
     "--model_name_or_path", type=str, help="Model name or path for inference", default="Qwen/Qwen3-0.6B-FP8"
@@ -508,10 +507,9 @@ def main():
     args = parser.parse_args()
     
     # Set up paths based on arguments
-    BASE_PATH = f"/fsx/{USER}"
-    output_path = f"{args.output_path}/{args.name}"
-    logs_path = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments/rephrasing/{args.name}"
-    checkpoints_path = f"{BASE_PATH}/checkpoints/{args.name}" if not args.disable_checkpoints else None
+    output_path = f"{args.output_path}/rephrased/{args.name}"
+    logs_path = f"{LOG_BASE_PATH}/rephrasing/{args.name}"
+    checkpoints_path = f"{LOCAL_TMP_PATH_ON_NODE}/checkpoints/{args.name}" if not args.disable_checkpoints else None
 
     # Parse data paths
     data_paths = args.data_paths.split(",")

@@ -28,11 +28,8 @@ from datetime import datetime
 # Load environment variables from .env file
 load_dotenv()
 
-USER = os.environ.get('USER')
-PROJECT_NAME = "finephrase"
+from utils import LOG_BASE_PATH
 
-BASE_PATH = f"/fsx/{USER}"
-LOG_BASE_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments/prompt_optimization"
 
 # Load fineweb edu classifier for scoring
 edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
@@ -359,61 +356,55 @@ def setup_logging(log_dir: str) -> None:
     logging.info(f"Logging initialized. Log file: {log_file}")
 
 
-def parse_args():
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Optimize prompts for rephrasing low-quality web data using DSPy GEPA"
-    )
-    
-    parser.add_argument(
-        "--model-name", "-m",
-        type=str,
-        default="deepseek-chat",
-        help="Model name for rephrasing (default: deepseek-chat)"
-    )
-    parser.add_argument(
-        "--provider",
-        type=str,
-        default="deepseek",
-        choices=["deepseek", "openrouter", "vllm"],
-        help="LLM provider to use (default: deepseek)"
-    )
-    parser.add_argument(
-        "--port", "-p",
-        type=int,
-        default=8000,
-        help="Port for VLLM server (default: 8000)"
-    )
-    parser.add_argument(
-        "--train-size", "-t",
-        type=int,
-        default=50,
-        help="Number of training examples (default: 50)"
-    )
-    parser.add_argument(
-        "--val-size", "-v",
-        type=int,
-        default=20,
-        help="Number of validation examples (default: 20)"
-    )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=42,
-        help="Random seed for reproducibility (default: 42)"
-    )
-    parser.add_argument(
-        "--log-dir",
-        type=str,
-        default=LOG_BASE_PATH,
-        help=f"Directory to save log files (default: {LOG_BASE_PATH})"
-    )
-    
-    return parser.parse_args()
+
+parser = argparse.ArgumentParser(description="Optimize prompts for rephrasing low-quality web data using DSPy GEPA")
+parser.add_argument(
+    "--model-name", "-m",
+    type=str,
+    default="deepseek-chat",
+    help="Model name for rephrasing (default: deepseek-chat)"
+)
+parser.add_argument(
+    "--provider",
+    type=str,
+    default="deepseek",
+    choices=["deepseek", "openrouter", "vllm"],
+    help="LLM provider to use (default: deepseek)"
+)
+parser.add_argument(
+    "--port", "-p",
+    type=int,
+    default=8000,
+    help="Port for VLLM server (default: 8000)"
+)
+parser.add_argument(
+    "--train-size", "-t",
+    type=int,
+    default=50,
+    help="Number of training examples (default: 50)"
+)
+parser.add_argument(
+    "--val-size", "-v",
+    type=int,
+    default=20,
+    help="Number of validation examples (default: 20)"
+)
+parser.add_argument(
+    "--seed",
+    type=int,
+    default=42,
+    help="Random seed for reproducibility (default: 42)"
+)
+parser.add_argument(
+    "--log-dir",
+    type=str,
+    default=LOG_BASE_PATH,
+    help=f"Directory to save log files (default: {LOG_BASE_PATH})"
+)
 
 def main():
     """Main optimization function."""
-    args = parse_args()
+    args = parser.parse_args()
     
     # Setup logging
     setup_logging(args.log_dir)

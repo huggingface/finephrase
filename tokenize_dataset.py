@@ -1,5 +1,5 @@
 import argparse
-import os
+
 from datatrove.pipeline.base import PipelineStep
 from datatrove.executor import SlurmPipelineExecutor
 from datatrove.pipeline.filters import SamplerFilter
@@ -8,11 +8,7 @@ from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
 from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
 
-
-USER = os.environ.get('USER')
-PROJECT_NAME = "finephrase"
-
-
+from utils import LOG_BASE_PATH, S3_BASE_PATH
 
 
 class DocumentSplitter(PipelineStep):
@@ -121,10 +117,10 @@ parser.add_argument(
     "--data_paths", type=str, help="Path to the data to tokenize.", required=True
 )
 parser.add_argument(
-    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=f"s3://{PROJECT_NAME}/experiments"
+    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=S3_BASE_PATH
 )
 parser.add_argument(
-    "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"
+    "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"  
 )
 parser.add_argument(
     "--limit", type=int, help="limit the number of documents to tokenize", default=-1
@@ -189,7 +185,7 @@ def main():
     data_paths = args.data_paths.split(",")
     print(f"Data paths: {data_paths}")
 
-    logging_base_path = f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/tokenization/{output_name}"
+    logging_base_path = f"{LOG_BASE_PATH}/tokenization/{output_name}"
     
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{output_name}",
@@ -200,7 +196,7 @@ def main():
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),
             DocumentTokenizer(
                 output_folder=f"{args.output_path}/tokenized/{output_name}",
-                local_working_dir=f"/scratch/{USER}/tokenized/{output_name}",
+                local_working_dir=f"{LOCAL_TMP_PATH_ON_NODE}/tokenized/{output_name}",
                 eos_token="<|end_of_text|>",
                 tokenizer_name_or_path=args.tokenizer,
                 batch_size=args.batch_size,
@@ -214,7 +210,7 @@ def main():
         tasks=args.n_tasks,
         time="20:00:00",
         partition="hopper-cpu",
-        logging_dir=f"{logging_base_path}/tokenized",
+        logging_dir=logging_base_path,
         cpus_per_task=8,
         mem_per_cpu_gb=2,
         qos=args.qos,

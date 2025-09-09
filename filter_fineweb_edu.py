@@ -1,16 +1,11 @@
 import argparse
-import os
 
 from datatrove.executor import SlurmPipelineExecutor
 from datatrove.pipeline.filters import LambdaFilter, SamplerFilter
 from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.tokens import TokensCounter
 
-from utils import get_reader
-
-
-USER = os.environ.get('USER')
-PROJECT_NAME = "finephrase"
+from utils import LOG_BASE_PATH, S3_BASE_PATH, get_reader
 
 
 def score_predicate_lq(doc):
@@ -34,7 +29,7 @@ parser.add_argument(
     "--data_paths", type=str, help="Path to the data to filter.", required=True
 )
 parser.add_argument(
-    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/filtered/<name>", default=f"s3://{PROJECT_NAME}/experiments"
+    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/filtered/<name>", default=S3_BASE_PATH
 )
 parser.add_argument(
     "--quality", type=str, choices=["lq", "hq"], required=True, help="Quality subset to select based on FineWeb-Edu score (lq: <=2, hq: >4)"
@@ -99,7 +94,7 @@ def main():
             tasks=args.n_tasks,
             time="1:00:00",
             partition="hopper-cpu",
-            logging_dir=f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/counting/{output_name}/counted",
+            logging_dir=f"{LOG_BASE_PATH}/counting/{output_name}",
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,
@@ -123,7 +118,7 @@ def main():
             tasks=args.n_tasks,
             time="5:00:00",
             partition="hopper-cpu",
-            logging_dir=f"/fsx/{USER}/logs/{PROJECT_NAME}/experiments/filtering/{output_name}/filtered",
+            logging_dir=f"{LOG_BASE_PATH}/filtering/{output_name}",
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,

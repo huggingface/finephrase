@@ -1,15 +1,15 @@
 import os
+
 from datatrove.data import DocumentsPipeline
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.base import PipelineStep
 from datatrove.pipeline.tokens import TokensCounter
+
 import argparse
 
-from utils import get_reader, human_readable
+from utils import LOG_BASE_PATH, get_reader, human_readable
 
-USER = os.environ.get('USER')
-PROJECT_NAME = "finephrase"
 
 class ReportTokens(PipelineStep):
     def report(self, i, all_tokens):
@@ -38,7 +38,7 @@ parser.add_argument(
 parser.add_argument(
     "--run_local",
     action="store_true",
-    help="Run the pipeline locally",
+    help="Run the pipeline locally, usually for debugging",
 )
 parser.add_argument(
     "--limit",
@@ -62,8 +62,7 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-    BASE_PATH = f"/fsx/{USER}"
-    logs_path = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments/token_counts/{args.data_paths.replace('/', '_')}"
+    logs_path = f"{LOG_BASE_PATH}/token_counts/{args.data_paths.replace('/', '_')}"
     
     data_paths = args.data_paths.split(",")
     

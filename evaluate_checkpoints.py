@@ -14,15 +14,10 @@ import itertools
 from datatrove.io import get_datafolder
 from loguru import logger
 
+from utils import LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
 
-USER = os.environ.get("USER", "user")
-PROJECT_NAME = "finephrase"
-
-BASE_PATH = f"/fsx/{USER}"
-PROJECT_PATH = f"{BASE_PATH}/projects/{PROJECT_NAME}"
-
-EVAL_LOGS_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments/evals"
-S3_EVALS_RESULTS_PREFIX = f"s3://{PROJECT_NAME}/experiments/evals-test"
+EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
+S3_EVALS_RESULTS_PREFIX = f"{S3_BASE_PATH}/evals-test"
 NANOTRON_PATH = f"{PROJECT_PATH}/nanotron"
 S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 
@@ -241,7 +236,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--s3_prefix", type=str, help="s3://path/to/models/ by default",
-    default=f"s3://{PROJECT_NAME}/experiments/checkpoints"
+    default=f"{S3_BASE_PATH}/checkpoints"
 )
 parser.add_argument(
     "--checkpoints", "-ckpts", type=str, help="Comma separated list of checkpoints to run, or \"all\"",

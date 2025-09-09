@@ -6,26 +6,18 @@ import subprocess
 import yaml
 from datetime import datetime
 
-# Constants - modify these as needed
-USER = os.environ.get('USER')
-PROJECT_NAME = "finephrase"
+from utils import LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
 
-BASE_PATH = f"/fsx/{USER}"
-
-LOG_BASE_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments"
-PROJECT_PATH = f"{BASE_PATH}/projects/{PROJECT_NAME}"
-
-TRAINING_LOGS_PATH = f"{LOG_BASE_PATH}/training/logs"
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
+TRAINING_LOGS_PATH = f"{LOG_BASE_PATH}/training/logs"
 LAUNCH_CONFIGS_PATH = f"{LOG_BASE_PATH}/training/launch-configs"
 SLURM_SCRIPT_PATH = f"{LOG_BASE_PATH}/training/slurm-scripts"
 
 NANOTRON_PATH = f"{PROJECT_PATH}/nanotron"
 S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 
-LOCAL_TMP_PATH_ON_NODE = f"/scratch/{USER}"
-S3_CHECKPOINTS_PREFIX = f"s3://{PROJECT_NAME}/experiments/checkpoints"
-EVALS_OUTPUT_PATH = f"s3://{PROJECT_NAME}/experiments/evals-test"
+S3_CHECKPOINTS_PREFIX = f"{S3_BASE_PATH}/checkpoints"
+EVALS_OUTPUT_PATH = f"{S3_BASE_PATH}/evals-test"
 
 TASKS_PATH = f"{PROJECT_PATH}/tasks.txt"
 TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"

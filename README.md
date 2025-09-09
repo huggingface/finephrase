@@ -16,6 +16,9 @@ git clone -b lighteval-experiment-setup  git@github.com:huggingface/lighteval.gi
 git clone -b fix-nanotron git@github.com:huggingface/datatrove.git
 ```
 
+### Enable training with recursive dataloaders
+In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to set `recursive=True`.
+
 ### Add latest datatrove changes so we can use the InferenceRunner for rephrasing
 ```
 (cd datatrove && git rebase origin/main)
@@ -23,7 +26,7 @@ git clone -b fix-nanotron git@github.com:huggingface/datatrove.git
 
 ### Enter a GPU node for installation
 ```
-srun --gpus=1 --qos=high --time="01:59:00"  --pty bash
+srun --gpus=1 --qos=high --time="01:59:00" --pty bash
 module load cuda/12.4
 ```
 
@@ -54,7 +57,7 @@ All commands support `--help` to see available options.
 
 ### Before running ablations
 1. Create a bucket on s3 for your project
-2. Modify the `training_script.py` constants
+2. Modify the `train_model.py` constants
 3. Set the default output path for `tokenize_dataset.py` script.
 
 ### Count the total tokens
@@ -107,11 +110,7 @@ evaluate fineweb-edu-hq-36BT-36B-seed-606,fineweb-edu-lq-36BT-36B-seed-606
 
 4. Inference with different rephrasing prompts
 ```
-rephrase \
-  --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq \
-  --name rewire \
-  --prompt_template rewire/guided_rewrite_improved.md \
-  --limit 5 --debug --disable_checkpoints
+rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --prompt_template dspy/5-max_full_evals.md --name dspy-5-max_full_evals --limit 1000
 ```
 
 Use different prompts for data quality improvement:

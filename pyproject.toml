@@ -41,6 +41,7 @@ dependencies = [
     "huggingface_hub[hf_xet]",
     "plotly",
     "kaleido",
+    "pyyaml",
     # Note: torch and torchvision with CUDA versions installed separately via --find-links
     # "torch==2.6.0+cu124"
     # "torchvision==0.21.0+cu124"
@@ -74,9 +75,10 @@ rephrase = "rephrase_dataset:main"
 tokenize = "tokenize_dataset:main"
 train = "train_model:main"
 evaluate = "evaluate_checkpoints:main"
+launch-experiments = "launch_experiments:main"
 
 [tool.setuptools]
-py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "utils"]
+py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "utils"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]

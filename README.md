@@ -1,4 +1,4 @@
-# finephrase
+# FinePhrase
 Synthetic pretraining data by rephrasing the web
 
 ## Setup
@@ -44,25 +44,33 @@ uv pip install -e .
 python -c "import nanotron"
 ```
 
-### Available console commands
-After installation, you can use these short commands:
+## Available Commands
 
+After installation, you can use these console commands for different aspects of the data pipeline:
+
+- `report-tokens`       - Report tokens (report_tokens.py)
 - `filter-fineweb-edu`  - Filter fineweb edu data (filter_fineweb_edu.py)
 - `rephrase`            - Rephrase datasets (rephrase_dataset.py)
 - `tokenize`            - Tokenize datasets (tokenize_dataset.py)
 - `train`               - Train models (train_model.py)
-- `evaluate`            - Evaluate checkpoints (evaluate_checkpoints.py) 
+- `evaluate`            - Evaluate checkpoints (evaluate_checkpoints.py)
+- `launch-experiments`  - Launch multiple Slurm experiments from YAML configs (launch_experiments.py)
 
 All commands support `--help` to see available options.
 
-### Before running ablations
-1. Create a bucket on s3 for your project
-2. Modify the `train_model.py` constants
-3. Set the default output path for `tokenize_dataset.py` script.
+## Data Processing
 
-### Count the total tokens
+### Token Statistics
+Get comprehensive token statistics for any dataset:
 
-HQ data (rounded int_score 4,5 or score > 3.5):
+```
+report-tokens --data_paths s3://path/to/dataset1,hf://datasets/owner/dataset2
+```
+
+### Filtering Educational Data
+Use `filter-fineweb-edu` to create datasets with specific educational quality scores.
+
+**HQ data** (rounded int_score 4,5 or score > 3.5):
 ```
 filter-fineweb-edu \
   --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
@@ -72,7 +80,7 @@ filter-fineweb-edu \
   --total_tokens 217715141792
 ```
 
-LQ data (rounded int_score 0,1 or score < 1.5):
+**LQ data** (rounded int_score 0,1 or score < 1.5):
 ```
 filter-fineweb-edu \
   --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
@@ -82,48 +90,90 @@ filter-fineweb-edu \
   --total_tokens 1644271223950
 ```
 
-Hub (fineweb-edu): all dumps with score >=3
-Hub (fineweb-edu-score-2): all dumps with score >= 2
-S3 bucket: new dumps, data for all scores (score1_2 for <3, score3 for >=3)
+**Data sources:**
+- Hub (fineweb-edu): all dumps with score >=3
+- Hub (fineweb-edu-score-2): all dumps with score >= 2
+- S3 bucket: new dumps, data for all scores (score1_2 for <3, score3 for >=3)
 
 Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 
-### Running ablations
-1. Tokenize your datasets with tokenize_dataset.py
+
+
+### Tokenizing Datasets
+Prepare datasets for training by tokenizing them:
+
 ```
 tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq-36BT --sample 1
 tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --name fineweb-edu-lq-36BT --sample 1
 tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq --name fineweb-edu-hq-18BT --sample 0.5
 ```
 
-2. Train 1B model for 36B tokens
+## Model Training & Evaluation
+
+### Training Models
+Train 1B parameter models on your tokenized datasets:
+
 ```
 train s3://finephrase/experiments/tokenized/fineweb-edu-hq-36BT finweb-edu-hq-36BT
 train s3://finephrase/experiments/tokenized/fineweb-edu-lq-36BT finweb-edu-lq-36BT
 train s3://finephrase/experiments/tokenized/fineweb-edu-hq-18BT finweb-edu-hq-18BT
 ```
 
-3. Run evaluations manually (if automatic ones fail during training)
+### Evaluating Checkpoints
+Run evaluations manually if automatic ones fail during training:
+
 ```
 evaluate fineweb-edu-hq-36BT-36B-seed-606,fineweb-edu-lq-36BT-36B-seed-606
 ```
 
-4. Inference with different rephrasing prompts
+## Data Generation
+
+### Rephrasing Datasets
+Generate synthetic training data by rephrasing existing content:
+
 ```
 rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq --prompt_template dspy/5-max_full_evals.md --name dspy-5-max_full_evals --limit 1000
 ```
 
-Use different prompts for data quality improvement:
+**Available prompts for data quality improvement:**
 
-**For LQ data:**
+*For LQ data:*
 - `prompts/rewire/guided_rewrite_corrected.md` - Guided rewriting with expert reasoning
 - `prompts/nemotron/wikipedia_style_rephrasing.md` - Wikipedia-style paraphrasing
+- `prompts/dspy/5-max_full_evals.md` - DSPy GEPA optimized prompt
 
-**For HQ data:**
-- Any of the Nemotron prompts in `prompts/nemotron/`:
-  - `distill.md` - Text condensation and paraphrasing
-  - `extract_knowledge.md` - Knowledge extraction and rewriting
-  - `diverse_qa_pairs.md` - Question-answer pair generation
-  - `knowledge_list.md` - Factual information extraction
-  - `wikipedia_style_rephrasing.md` - Wikipedia-style paraphrasing`
+*For HQ data:*
+- `prompts/nemotron/distill.md` - Text condensation and paraphrasing
+- `prompts/nemotron/extract_knowledge.md` - Knowledge extraction and rewriting
+- `prompts/nemotron/diverse_qa_pairs.md` - Question-answer pair generation
+- `prompts/nemotron/knowledge_list.md` - Factual information extraction
+- `prompts/nemotron/wikipedia_style_rephrasing.md` - Wikipedia-style paraphrasing
+
+## Experiment Management
+
+### Experiment Launcher
+Submit multiple Slurm experiments with different configurations using YAML files:
+
+```bash
+# Submit all Slurm jobs in a configuration
+launch-experiments config/rephrase_benchmark.yaml
+
+# Test configuration without submitting jobs (dry run)
+launch-experiments config/rephrase_benchmark.yaml --dry-run
+
+# Submit only specific experiments
+launch-experiments config/rephrase_benchmark.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
+```
+
+## Analysis & Visualization
+
+### Visualizing Rephrasing Statistics
+Generate bar charts comparing educational score improvements across rephrasing experiments:
+
+```
+python /fsx/joel_niklaus/projects/finephrase/plot_rephrasing_stats.py
+```
+
+This writes a high-DPI PNG to `plots/rephrasing_edu_score_difference_means.png`.
+
 

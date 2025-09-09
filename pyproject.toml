@@ -68,14 +68,15 @@ Repository = "https://github.com/huggingface/finephrase"
 Issues = "https://github.com/huggingface/finephrase/issues"
 
 [project.scripts]
-train = "train_model:main"
-evaluate = "evaluate_checkpoints:main"
+report-tokens = "report_tokens:main"
+filter-fineweb-edu = "filter_fineweb_edu:main"
 rephrase = "rephrase_dataset:main"
 tokenize = "tokenize_dataset:main"
-filter-fineweb-edu = "filter_fineweb_edu:main"
+train = "train_model:main"
+evaluate = "evaluate_checkpoints:main"
 
 [tool.setuptools]
-py-modules = ["evaluate_checkpoints", "train_model", "rephrase_dataset", "tokenize_dataset", "filter_fineweb_edu"]
+py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "utils"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]

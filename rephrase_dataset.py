@@ -19,6 +19,8 @@ from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.base import PipelineStep
 from datatrove.executor.slurm import SlurmPipelineExecutor
 
+USER = os.environ.get('USER')
+PROJECT_NAME = "finephrase"
 
 class EduScoreStatsLogger(PipelineStep):
     """
@@ -412,10 +414,6 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
     
     return postprocess_fn
 
-
-# Configuration
-USER = os.environ.get('USER')
-PROJECT_NAME = "finephrase"
 
 # Create argument parser
 parser = argparse.ArgumentParser("Rephrase documents using inference pipeline.")

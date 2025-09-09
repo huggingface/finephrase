@@ -1,0 +1,97 @@
+# Rephrasing benchmark experiment configuration
+# Tests different models on 100M tokens
+
+experiment_name: "rephrasing_benchmark_100M"
+script: "rephrase"
+continue_on_failure: true
+
+# Fixed arguments that apply to all runs
+fixed_args:
+  # Data and output configuration
+  data_paths: "s3://finephrase/experiments/filtered/fineweb-edu-lq"  # Update this path
+  limit: 2_000  # On average a document contains 500 tokens, so this will give us ~100K tokens
+  
+  # Processing configuration
+  n_tasks: 2
+  records_per_chunk: 500
+  
+  # Model configuration 
+  prompt_template: "dspy/5-max_full_evals.md"  # Adjust prompt as needed
+  temperature: 0.6
+  top_p: 0.8
+  top_k: 20
+  presence_penalty: 1.5
+  max_tokens: 4096
+  model_max_context: 8192
+  
+  # Infrastructure configuration
+  max_concurrent_requests: 500
+  max_concurrent_tasks: 500
+  metric_interval: 120
+  server_type: "vllm"
+  
+  # Debugging and checkpoints
+  debug: true
+  tokenizer: "hynky/Llama-3.2-1B-no-bos"
+  
+  # Slurm configuration
+  time: "20:00:00"
+  partition: "hopper-prod"
+  qos: "normal"
+  gpus: 2
+
+# Variable arguments - creates different experiment runs
+runs:
+  - name: "qwen_0.6b_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-0.6B-FP8"
+      enable_thinking: true
+  - name: "qwen_0.6b_no_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-0.6B-FP8"
+      enable_thinking: false
+      
+  - name: "qwen_1.5b_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen2.5-1.5B"
+      enable_thinking: true
+  - name: "qwen_1.5b_no_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen2.5-1.5B"
+      enable_thinking: false
+      
+  - name: "qwen_4b_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-4B-FP8"
+      enable_thinking: true
+  - name: "qwen_4b_no_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-4B-FP8"
+      enable_thinking: false
+      
+  - name: "qwen_8b_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-8B-FP8"
+      enable_thinking: true
+  - name: "qwen_8b_no_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-8B-FP8"
+      enable_thinking: false
+      
+  - name: "qwen_14b_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-14B-FP8"
+      enable_thinking: true
+  - name: "qwen_14b_no_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-14B-FP8"
+      enable_thinking: false
+
+  - name: "qwen_32b_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-32B-FP8"
+      enable_thinking: true
+  - name: "qwen_32b_no_thinking"
+    args:
+      model_name_or_path: "Qwen/Qwen3-32B-FP8"
+      enable_thinking: false

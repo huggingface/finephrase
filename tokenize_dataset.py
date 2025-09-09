@@ -8,7 +8,7 @@ from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
 from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
 
-from utils import LOG_BASE_PATH, S3_BASE_PATH
+from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH
 
 
 class DocumentSplitter(PipelineStep):
@@ -203,7 +203,7 @@ def main():
                 max_tokens_per_file=args.max_toks,
                 # Max 1 GT per file (i.e. btw 5 et 300 tokenized files per dump et about 100 dump extracts per merged file)
                 shuffle_documents=True,
-                shuffle_chunk_size=args.shuffle_chunk_size + 1 if args.shuffle_chunk_size else None
+                shuffle_chunk_size=args.shuffle_chunk_size + 1 if args.shuffle_chunk_size else None,
                 seed=args.shuffle_seed,
             ),
         ],

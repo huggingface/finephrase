@@ -19,7 +19,6 @@ from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.base import PipelineStep
 from datatrove.executor.slurm import SlurmPipelineExecutor
 
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 class EduScoreStatsLogger(PipelineStep):
     """
@@ -52,6 +51,11 @@ class EduScoreStatsLogger(PipelineStep):
                 output_edu_score = doc.metadata.get("score", 0.0)
                 edu_score_difference = doc.metadata.get("edu_score_difference", 0.0)
                 edu_score_improvement = doc.metadata.get("edu_score_improvement", 0)
+
+                input_token_count = doc.metadata.get("input", {}).get("token_count", 0)
+                thinking_token_count = doc.metadata.get("thinking", {}).get("token_count", 0)
+                output_token_count = doc.metadata.get("token_count", 0)
+                token_reduction = doc.metadata.get("token_reduction", 0)
                 
                 # Log the statistics
                 self.stat_update("input_edu_score", value=input_edu_score)
@@ -59,6 +63,11 @@ class EduScoreStatsLogger(PipelineStep):
                 self.stat_update("output_edu_score", value=output_edu_score)
                 self.stat_update("edu_score_difference", value=edu_score_difference)
                 self.stat_update("edu_score_improvement", value=edu_score_improvement)
+
+                self.stat_update("input_token_count", value=input_token_count)
+                self.stat_update("thinking_token_count", value=thinking_token_count)
+                self.stat_update("output_token_count", value=output_token_count)
+                self.stat_update("token_reduction", value=token_reduction)
                 
             yield doc
 
@@ -87,13 +96,18 @@ def load_prompt_template(template_path: str) -> str:
         return f.read().strip()
 
 
-def create_templated_query_builder(max_tokens: int, prompt_template: str = None):
+def create_templated_query_builder(prompt_template: str, max_tokens: int, temperature: float = 0.7, top_p: float = 0.8, top_k: int = 20, presence_penalty: float = 1.5, enable_thinking: bool = False):
     """
     Create a query builder function that uses a prompt template.
     
     Args:
-        max_tokens:         Maximum tokens for the response
         prompt_template:    The prompt template content with placeholders
+        max_tokens:         Maximum tokens for the response
+        temperature:        Temperature for inference
+        top_p:              Top-p (nucleus sampling) for inference
+        top_k:              Top-k sampling for inference
+        presence_penalty:   Presence penalty for inference
+        enable_thinking:    Enable thinking in chat template
         
     Returns:
         Query builder function
@@ -128,11 +142,16 @@ def create_templated_query_builder(max_tokens: int, prompt_template: str = None)
                 }
             ],
             "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "top_k": top_k,
+            "presence_penalty": presence_penalty,
+            "chat_template_kwargs": {"enable_thinking": enable_thinking},
         }
     return query_builder
 
 
-def postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=None):
+def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=None):
     """
     Create a postprocess function that parses thinking/output and saves data to metadata.
     
@@ -152,6 +171,7 @@ def postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=None):
         nonlocal tokenizer
         if text:
             if tokenizer is None and tokenizer_name:
+                from transformers import AutoTokenizer
                 tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
             if tokenizer:
                 return len(tokenizer.encode(text))
@@ -163,6 +183,7 @@ def postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=None):
         if not text or not text.strip():
             return {"score": 0.0, "int_score": 0}
         if edu_tokenizer is None or edu_model is None:
+            from transformers import AutoTokenizer, AutoModelForSequenceClassification
             edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
             edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
         try:
@@ -294,6 +315,7 @@ def postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=None):
         # Store final output metrics at top level
         document.metadata["token_count"] = final_output_token_count
         document.metadata.update(final_output_edu_scores)
+        document.metadata["token_reduction"] = input_token_count - final_output_token_count
         document.metadata["edu_score_difference"] = final_output_edu_scores["score"] - input_edu_scores["score"]
         document.metadata["edu_score_improvement"] = 1 if final_output_edu_scores["score"] > input_edu_scores["score"] else 0
         
@@ -391,42 +413,6 @@ def postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=None):
     return postprocess_fn
 
 
-
-def simple_query_builder(max_tokens: int):
-    """
-    Create a query builder function for rephrasing documents.
-
-    Args:
-        max_tokens:     Maximum tokens for the response
-
-    Returns:
-        Query builder function
-    """
-    def query_builder(runner: InferenceRunner, document: Document) -> dict[str, Any]:
-        """
-        Simple query builder that extracts text from document for rephrasing.
-
-        Args:
-            runner:     Inference runner instance
-            document:   Input document with text content
-
-        Returns:
-            Query payload for the inference server
-        """
-        return {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": document.text},
-                    ],
-                }
-            ],
-            "max_tokens": max_tokens,
-        }
-    return query_builder
-
-
 # Configuration
 USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
@@ -457,6 +443,18 @@ parser.add_argument(
 )
 parser.add_argument(
     "--temperature", type=float, help="Temperature for inference", default=0.6
+)
+parser.add_argument(
+    "--top_p", type=float, help="Top-p (nucleus sampling) for inference", default=0.8
+)
+parser.add_argument(
+    "--top_k", type=int, help="Top-k sampling for inference", default=20
+)
+parser.add_argument(
+    "--presence_penalty", type=float, help="Presence penalty for inference", default=1.5
+)
+parser.add_argument(
+    "--enable_thinking", action="store_true", help="Enable thinking in chat template"
 )
 parser.add_argument(
     "--model_max_context", type=int, help="Maximum context length for the model", default=8192
@@ -502,6 +500,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--dep_job_id", type=str, default=None, help="Optional Slurm dependency job id"
+)
+parser.add_argument(
+    "--gpus", type=int, default=1, help="Number of GPUs per task"
 )
 
 
@@ -555,13 +556,21 @@ def main():
         pipeline=[
             *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit) for data_path in data_paths],
             InferenceRunner(
-                query_builder=create_templated_query_builder(args.max_tokens, prompt_template),
+                query_builder=create_templated_query_builder(
+                    prompt_template, 
+                    args.max_tokens, 
+                    args.temperature, 
+                    args.top_p, 
+                    args.top_k, 
+                    args.presence_penalty, 
+                    args.enable_thinking
+                ),
                 config=config,
                 records_per_chunk=args.records_per_chunk,
                 checkpoints_local_dir=checkpoints_path,
                 output_writer=JsonlWriter(output_path, output_filename="${rank}_chunk_${chunk_index}.jsonl"),
                 skip_bad_requests=True, # Skips documents that cause BadRequestError from the server, e.g., when they are too long
-                postprocess_fn=postprocess_fn(
+                postprocess_fn=create_postprocess_fn(
                     debug=args.debug,
                     tokenizer_name=args.tokenizer,
                     model_name=args.model_name_or_path
@@ -574,13 +583,13 @@ def main():
         tasks=args.n_tasks,
         time=args.time,
         partition="hopper-prod",
-        cpus_per_task=88,
+        cpus_per_task=10*args.gpus,
         mem_per_cpu_gb=2,
         qos=args.qos,
         env_command="sleep $((RANDOM % 30))",
         mail_user="joel@hf.co",
         depends_job_id=args.dep_job_id,
-        sbatch_args={"gres": "gpu:1"}
+        sbatch_args={"gres": f"gpu:{args.gpus}"}
     )
     
     rephrase_executor.run()

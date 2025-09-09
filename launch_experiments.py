@@ -133,8 +133,9 @@ class ExperimentLauncher:
             # Execute script directly (e.g., "rephrase" -> "rephrase")
             cmd = [script]
         
-        # Add the run name as --name argument first
-        cmd.extend(['--name', run_config['name']])
+        # Add the experiment name and run name as --name argument first
+        full_name = f"{self.experiment_name}/{run_config['name']}"
+        cmd.extend(['--name', full_name])
         
         # Add fixed arguments (apply to all runs)
         fixed_args = self.config.get('fixed_args', {})

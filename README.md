@@ -21,7 +21,7 @@ In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to 
 
 ### Enter a GPU node for installation
 ```
-srun --gpus=1 --qos=high --time="01:59:00" --pty bash
+srun --gpus=1 --qos=high --time="02:00:00" --pty bash
 module load cuda/12.4
 ```
 

@@ -18,6 +18,7 @@ from datatrove.pipeline.readers import JsonlReader
 from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.base import PipelineStep
 from datatrove.executor.slurm import SlurmPipelineExecutor
+from datatrove.executor.local import LocalPipelineExecutor
 
 from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH
 
@@ -463,7 +464,7 @@ parser.add_argument(
     "--max_concurrent_tasks", type=int, help="Maximum concurrent tasks", default=500
 )
 parser.add_argument(
-    "--metric_interval", type=int, help="Metric logging interval in seconds", default=120
+    "--metric_interval", type=int, help="Metric logging interval in seconds", default=60
 )
 parser.add_argument(
     "--records_per_chunk", type=int, help="Number of records per chunk", default=500
@@ -501,6 +502,22 @@ parser.add_argument(
 parser.add_argument(
     "--gpus", type=int, default=1, help="Number of GPUs per task"
 )
+parser.add_argument(
+    "--enable_prefix_caching", default=True, help="Enable prefix caching"
+)
+parser.add_argument(
+    "--enable_chunked_prefill", default=True, help="Enable chunked prefill"
+)
+parser.add_argument(
+    # https://docs.vllm.ai/en/latest/configuration/optimization.html#performance-tuning-with-chunked-prefill
+    "--max_num_batched_tokens", type=int, default=256, help="Maximum number of tokens to batch"
+)
+parser.add_argument(
+    "--max_num_seqs", type=int, default=256, help="Maximum number of sequences to batch"
+)
+parser.add_argument(
+    "--run_local", action="store_true", help="Run pipeline locally instead of using Slurm"
+)
 
 
 def main():
@@ -519,8 +536,6 @@ def main():
     if args.debug:
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
 
-    # Configure the inference settings with chunking
-    # Inspired by Nemotron-CC config (https://arxiv.org/pdf/2412.02595 Section 2.3)
     config: InferenceConfig = InferenceConfig(
         server_type=args.server_type,
         model_name_or_path=args.model_name_or_path,
@@ -529,6 +544,13 @@ def main():
         max_concurrent_requests=args.max_concurrent_requests,
         max_concurrent_tasks=args.max_concurrent_tasks,
         metric_interval=args.metric_interval,
+        dp=args.gpus,
+        model_kwargs={
+            "enable_prefix_caching": args.enable_prefix_caching,
+            "enable_chunked_prefill": args.enable_chunked_prefill,
+            "max_num_batched_tokens": args.max_num_batched_tokens,
+            "max_num_seqs": args.max_num_seqs,
+        },
     )
 
     # Load prompt template if specified
@@ -546,10 +568,7 @@ def main():
                     print(f"  - {rel_path}")
         exit(1)
 
-    # Create the main rephrasing pipeline executor (Slurm)
-    rephrase_executor: SlurmPipelineExecutor = SlurmPipelineExecutor(
-        job_name=f"rephrase-{args.name}",
-        pipeline=[
+    pipeline = [
             *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit) for data_path in data_paths],
             InferenceRunner(
                 query_builder=create_templated_query_builder(
@@ -574,19 +593,26 @@ def main():
             ),
             JsonlReader(output_path),
             EduScoreStatsLogger(),
-        ],
-        logging_dir=logs_path,
-        tasks=args.n_tasks,
-        time=args.time,
-        partition="hopper-prod",
-        cpus_per_task=10*args.gpus,
-        mem_per_cpu_gb=2,
-        qos=args.qos,
-        env_command="sleep $((RANDOM % 30))",
-        mail_user="joel@hf.co",
-        depends_job_id=args.dep_job_id,
-        sbatch_args={"gres": f"gpu:{args.gpus}"}
-    )
+        ]
+
+    if args.run_local:
+        rephrase_executor = LocalPipelineExecutor(pipeline=pipeline)
+    else:
+        rephrase_executor = SlurmPipelineExecutor(
+            job_name=f"rephrase-{args.name}",
+            pipeline=pipeline,
+            logging_dir=logs_path,
+            tasks=args.n_tasks,
+            time=args.time,
+            partition="hopper-prod",
+            cpus_per_task=10*args.gpus,
+            mem_per_cpu_gb=8,
+            qos=args.qos,
+            env_command="sleep $((RANDOM % 30))",
+            mail_user="joel@hf.co",
+            depends_job_id=args.dep_job_id,
+            sbatch_args={"gres": f"gpu:{args.gpus}"}
+        )
     
     rephrase_executor.run()
     

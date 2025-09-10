@@ -75,7 +75,7 @@ def main():
 
     _score_predicate = score_predicate_lq if args.quality == "lq" else score_predicate_hq
     
-    reader = [get_reader(data_path)(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]
+    reader = [get_reader(data_path)(data_path, shuffle_files=True, limit=args.limit / args.n_tasks) for data_path in data_paths]
     
     if args.total_tokens is None:
         # If total tokens is not set, we just count the tokens

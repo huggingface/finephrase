@@ -58,6 +58,12 @@ parser.add_argument(
     default=10000,
     help="Batch size for token counting",
 )
+parser.add_argument(
+    "--n_tasks",
+    type=int,
+    default=100,
+    help="Number of parallel tasks",
+)
 
 def main():
     args = parser.parse_args()
@@ -66,7 +72,7 @@ def main():
     
     data_paths = args.data_paths.split(",")
     
-    reader = [get_reader(data_path)(data_path, shuffle_files=True, limit=args.limit) for data_path in data_paths]
+    reader = [get_reader(data_path)(data_path, shuffle_files=True, limit=args.limit / args.n_tasks) for data_path in data_paths]
 
     pipeline = [
         *(reader),
@@ -77,7 +83,7 @@ def main():
         executor = LocalPipelineExecutor(pipeline)
     else:
         executor = SlurmPipelineExecutor(
-            pipeline, tasks=100, time="01:00:00", partition="hopper-cpu", qos="normal", cpus_per_task=4,
+            pipeline, tasks=args.n_tasks, time="01:00:00", partition="hopper-cpu", qos="normal", cpus_per_task=4,
             logging_dir=logs_path, job_name=f"report-tokens-{args.data_paths}", mail_user="joel@hf.co",
         )
     executor.run()

@@ -185,7 +185,7 @@ def main():
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{args.name}",
         pipeline=[
-            *([JsonlReader(data_path, text_key=args.text_key, shuffle_files=True, limit=args.limit) for data_path in data_paths]),
+            *([JsonlReader(data_path, text_key=args.text_key, shuffle_files=True, limit=args.limit / args.n_tasks) for data_path in data_paths]),
             SamplerFilter(rate=args.sample, seed=args.sample_seed),
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),

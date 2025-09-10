@@ -455,7 +455,7 @@ parser.add_argument(
     "--enable_thinking", action="store_true", help="Enable thinking in chat template"
 )
 parser.add_argument(
-    "--model_max_context", type=int, help="Maximum context length for the model", default=8192
+    "--model_max_context", type=int, help="Maximum context length for the model", default=16384
 )
 parser.add_argument(
     "--max_concurrent_requests", type=int, help="Maximum concurrent requests", default=500
@@ -470,7 +470,7 @@ parser.add_argument(
     "--records_per_chunk", type=int, help="Number of records per chunk", default=500
 )
 parser.add_argument(
-    "--max_tokens", type=int, help="Maximum tokens per request", default=4096 # Should be half of the model context length
+    "--max_tokens", type=int, help="Maximum tokens per request", default=8192 # Should be half of the model context length
 )
 parser.add_argument(
     "--server_type", type=str, help="Inference server type", choices=["vllm", "sglang", "dummy"], default="vllm"
@@ -569,7 +569,7 @@ def main():
         exit(1)
 
     pipeline = [
-            *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit) for data_path in data_paths],
+            *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit / args.n_tasks) for data_path in data_paths],
             InferenceRunner(
                 query_builder=create_templated_query_builder(
                     prompt_template, 

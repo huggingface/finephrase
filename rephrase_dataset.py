@@ -133,6 +133,17 @@ def create_templated_query_builder(prompt_template: str, max_tokens: int, temper
         content = content.replace("[DOCUMENT SEGMENT]", document.text)
         content = content.replace("[ORIGINAL DOCUMENT]", document.text)
         content = content.replace("[TEXT]", document.text)
+        
+        # Truncate if content is too long to make sure the server doesn't throw an error
+        max_chars = 4 * max_tokens # rough heuristic for average token length
+        if len(content) > max_chars:
+            # Find the last newline before the cutoff
+            cutoff_content = content[:max_chars]
+            last_newline = cutoff_content.rfind('\n')
+            if last_newline != -1:
+                content = content[:last_newline]
+            else:
+                content = content[:max_chars]
 
         return {
             "messages": [
@@ -440,7 +451,7 @@ parser.add_argument(
     "--n_tasks", type=int, help="Number of parallel tasks", default=1
 )
 parser.add_argument(
-    "--temperature", type=float, help="Temperature for inference", default=0.6
+    "--temperature", type=float, help="Temperature for inference", default=0.7
 )
 parser.add_argument(
     "--top_p", type=float, help="Top-p (nucleus sampling) for inference", default=0.8
@@ -467,7 +478,7 @@ parser.add_argument(
     "--metric_interval", type=int, help="Metric logging interval in seconds", default=60
 )
 parser.add_argument(
-    "--records_per_chunk", type=int, help="Number of records per chunk", default=500
+    "--records_per_chunk", type=int, help="Number of records per chunk", default=1000
 )
 parser.add_argument(
     "--max_tokens", type=int, help="Maximum tokens per request", default=8192 # Should be half of the model context length
@@ -503,10 +514,10 @@ parser.add_argument(
     "--gpus", type=int, default=1, help="Number of GPUs per task"
 )
 parser.add_argument(
-    "--enable_prefix_caching", default=True, help="Enable prefix caching"
+    "--enable_prefix_caching", action="store_true", default=True, help="Enable prefix caching"
 )
 parser.add_argument(
-    "--enable_chunked_prefill", default=True, help="Enable chunked prefill"
+    "--enable_chunked_prefill", action="store_true", default=True, help="Enable chunked prefill"
 )
 parser.add_argument(
     # https://docs.vllm.ai/en/latest/configuration/optimization.html#performance-tuning-with-chunked-prefill

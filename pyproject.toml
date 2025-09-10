@@ -42,6 +42,7 @@ dependencies = [
     "plotly",
     "kaleido",
     "pyyaml",
+    "python-dotenv",
     # Note: torch and torchvision with CUDA versions installed separately via --find-links
     # "torch==2.6.0+cu124"
     # "torchvision==0.21.0+cu124"
@@ -76,9 +77,10 @@ tokenize = "tokenize_dataset:main"
 train = "train_model:main"
 evaluate = "evaluate_checkpoints:main"
 launch-experiments = "launch_experiments:main"
+optimize-prompt = "optimize_prompt:main"
 
 [tool.setuptools]
-py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "utils"]
+py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "utils"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]

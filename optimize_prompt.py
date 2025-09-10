@@ -5,9 +5,9 @@ This script optimizes prompts for rephrasing web text data to improve educationa
 using the fineweb edu score classifier as the evaluation metric and GEPA optimizer.
 
 Usage:
-    python optimize_prompt.py --model-name Qwen/Qwen3-0.6B-FP8 --port 8000 --train-size 20 --val-size 5 --provider deepseek
-    python optimize_prompt.py -m Qwen/Qwen3-0.6B-FP8 -p 8001 -t 50 -v 10 --seed 123 --log-dir ./logs --provider openai
-    python optimize_prompt.py --model-name meta-llama/Llama-2-7b-hf --train-size 100 --val-size 20 --provider vllm
+    optimize-prompt --rephrasing-model vllm/Qwen/Qwen3-0.6B-FP8 --reflection-model deepseek/deepseek-chat --port 8000 --train-size 20 --val-size 5
+    optimize-prompt --rephrasing-model deepseek/deepseek-chat --reflection-model deepseek/deepseek-chat --train-size 50 --val-size 10 --seed 123 --log-dir ./logs
+    optimize-prompt --rephrasing-model vllm/meta-llama/Llama-2-7b-hf --reflection-model openrouter/meta-llama/llama-3.1-8b-instruct --train-size 100 --val-size 20
 """
 
 import random
@@ -25,11 +25,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
 
-# Load environment variables from .env file
-load_dotenv()
-
 from utils import LOG_BASE_PATH
 
+# Load environment variables from .env file
+load_dotenv()
 
 # Load fineweb edu classifier for scoring
 edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
@@ -327,6 +326,71 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: i
     
     return optimized_module
 
+def parse_model_string(model_string: str) -> tuple[str, str]:
+    """
+    Parse model string in format {provider}/{model_name} and return provider and model name.
+    
+    Args:
+        model_string: Model string in format "provider/model_name"
+    
+    Returns:
+        Tuple of (provider, model_name)
+    """
+    if "/" not in model_string:
+        raise ValueError(f"Model string must be in format 'provider/model_name', got: {model_string}")
+    
+    parts = model_string.split("/", 1)  # Split only on the first '/'
+    provider = parts[0]
+    model_name = parts[1]
+    
+    return provider, model_name
+
+def configure_model_provider(provider: str, model_name: str, max_tokens: int = 1024, temperature: float = 0.7, top_p: float = 0.8, port: int = 8000) -> dspy.LM:
+    """
+    Configure and create a DSPy model for the specified provider.
+    
+    Args:
+        provider: Provider name (vllm, openrouter, deepseek)
+        model_name: Model name
+        max_tokens: Maximum tokens for the model
+        temperature: Temperature for the model
+        port: Port for VLLM server
+    
+    Returns:
+        Configured DSPy LM instance
+    """
+    if provider == "vllm":
+        # Configure DSPy with local VLLM server (explicit OpenAI provider)
+        api_base = f'http://127.0.0.1:{port}/v1'
+        dspy_model_name = f"openai/{model_name}"
+        api_key = os.getenv("OPENAI_API_KEY", "dummy-key")  # VLLM doesn't need a real key
+    elif provider == "openrouter":
+        api_base = f'https://openrouter.ai/api/v1'
+        dspy_model_name = f"openrouter/{model_name}"
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise ValueError("OPENROUTER_API_KEY environment variable is required for OpenRouter provider")
+    elif provider == "deepseek":
+        api_base = f'https://api.deepseek.com/v1'
+        dspy_model_name = f"deepseek/{model_name}"
+        api_key = os.getenv("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise ValueError("DEEPSEEK_API_KEY environment variable is required for DeepSeek provider")
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
+    
+    return dspy.LM(
+        model=dspy_model_name,
+        api_key=api_key,
+        api_base=api_base,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=20,
+        presence_penalty=1.5 if "Qwen3" in model_name else None,
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}} if "Qwen3" in model_name else {},
+    )
+
 def setup_logging(log_dir: str) -> None:
     """
     Set up logging configuration with file and console handlers.
@@ -359,32 +423,31 @@ def setup_logging(log_dir: str) -> None:
 
 parser = argparse.ArgumentParser(description="Optimize prompts for rephrasing low-quality web data using DSPy GEPA")
 parser.add_argument(
-    "--model-name", "-m",
+    "--rephrasing-model",
     type=str,
-    default="deepseek-chat",
-    help="Model name for rephrasing (default: deepseek-chat)"
+    default="vllm/Qwen/Qwen3-0.6B-FP8",
+    help="Model name for rephrasing in format {provider}/{model_name} (default: vllm/Qwen/Qwen3-0.6B-FP8)"
 )
 parser.add_argument(
-    "--provider",
+    "--reflection-model",
     type=str,
-    default="deepseek",
-    choices=["deepseek", "openrouter", "vllm"],
-    help="LLM provider to use (default: deepseek)"
+    default="deepseek/deepseek-chat",
+    help="Model name for reflection in format {provider}/{model_name} (default: deepseek/deepseek-chat). Currently no vllm models support reflection."
 )
 parser.add_argument(
-    "--port", "-p",
+    "--port",
     type=int,
     default=8000,
     help="Port for VLLM server (default: 8000)"
 )
 parser.add_argument(
-    "--train-size", "-t",
+    "--train-size",
     type=int,
     default=50,
     help="Number of training examples (default: 50)"
 )
 parser.add_argument(
-    "--val-size", "-v",
+    "--val-size",
     type=int,
     default=20,
     help="Number of validation examples (default: 20)"
@@ -411,43 +474,43 @@ def main():
     
     logging.info("Starting prompt optimization with DSPy GEPA...")
     logging.info("Configuration:")
-    logging.info(f"  Model: {args.model_name}")
-    logging.info(f"  Provider: {args.provider}")
+    logging.info(f"  Rephrasing model: {args.rephrasing_model}")
+    logging.info(f"  Reflection model: {args.reflection_model}")
     logging.info(f"  Port: {args.port}")
     logging.info(f"  Training examples: {args.train_size}")
     logging.info(f"  Validation examples: {args.val_size}")
     logging.info(f"  Random seed: {args.seed}")
     logging.info(f"  Log directory: {args.log_dir}")
     
-    # Configure provider-specific settings
-    if args.provider == "vllm":
-        # Configure DSPy with local VLLM server (explicit OpenAI provider)
-        # TODO: Currently there are some issues with this: potentially a deadlock
-        os.environ['OPENAI_API_BASE'] = f'http://127.0.0.1:{args.port}/v1'
-        lm_model_name = f"openai/{args.model_name}"
-    elif args.provider == "openrouter":
-        os.environ['OPENAI_API_BASE'] = f'https://openrouter.ai/api/v1'
-        lm_model_name = f"openrouter/{args.model_name}"
-    elif args.provider == "deepseek":
-        os.environ['OPENAI_API_BASE'] = f'https://api.deepseek.com/v1'
-        lm_model_name = f"deepseek/{args.model_name}"
-    else:
-        raise ValueError(f"Unsupported provider: {args.provider}")
+    # Parse model strings
+    rephrasing_provider, rephrasing_model_name = parse_model_string(args.rephrasing_model)
+    reflection_provider, reflection_model_name = parse_model_string(args.reflection_model)
     
-    logging.info(f"Using model: {lm_model_name}")
-    
-    lm = dspy.LM(model=lm_model_name, max_tokens=2048, temperature=0.7)
+    # Create models directly
+    lm = configure_model_provider(
+        rephrasing_provider, 
+        rephrasing_model_name, 
+        max_tokens=8192, 
+        temperature=0.7, 
+        top_p=0.8,
+        port=args.port
+    )
     dspy.settings.configure(lm=lm)
     
-    # Configure reflection model (using the same server)
-    reflection_lm = dspy.LM(model=lm_model_name, max_tokens=1024, temperature=0.8)
+    reflection_lm = configure_model_provider(
+        reflection_provider, 
+        reflection_model_name, 
+        max_tokens=2048, 
+        temperature=0.8,
+        top_p=0.95,
+    )
 
     # Prepare training and validation datasets
     trainset, valset = prepare_dataset(args.train_size, args.val_size, args.seed)
 
-    if args.provider == "vllm":
+    if rephrasing_provider == "vllm":
         # Use context manager for VLLM server
-        with VLLMServerManager(args.model_name, args.port):
+        with VLLMServerManager(rephrasing_model_name, args.port):
             # Test the connection with a simple call
             logging.info("Testing VLLM server connection...")
             try:

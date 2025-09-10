@@ -13,16 +13,11 @@ uv venv --python 3.10
 ```
 git clone -b nanotron-working-branch git@github.com:huggingface/nanotron.git
 git clone -b lighteval-experiment-setup  git@github.com:huggingface/lighteval.git
-git clone -b fix-nanotron git@github.com:huggingface/datatrove.git
+git clone -b fix-nanotron git@github.com:joelniklaus/datatrove.git
 ```
 
 ### Enable training with recursive dataloaders
 In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to set `recursive=True`.
-
-### Add latest datatrove changes so we can use the InferenceRunner for rephrasing
-```
-(cd datatrove && git rebase origin/main)
-```
 
 ### Enter a GPU node for installation
 ```

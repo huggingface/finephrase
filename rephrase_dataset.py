@@ -527,6 +527,15 @@ parser.add_argument(
     "--max_num_seqs", type=int, default=256, help="Maximum number of sequences to batch"
 )
 parser.add_argument(
+    "--tp", type=int, default=1, help="Tensor parallelism size"
+)
+parser.add_argument(
+    "--pp", type=int, default=1, help="Pipeline parallelism size"
+)
+parser.add_argument(
+    "--dp", type=int, default=1, help="Data parallelism size"
+)
+parser.add_argument(
     "--run_local", action="store_true", help="Run pipeline locally instead of using Slurm"
 )
 
@@ -555,7 +564,9 @@ def main():
         max_concurrent_requests=args.max_concurrent_requests,
         max_concurrent_tasks=args.max_concurrent_tasks,
         metric_interval=args.metric_interval,
-        dp=args.gpus,
+        tp=args.tp,
+        pp=args.pp,
+        dp=args.dp,
         model_kwargs={
             "enable_prefix_caching": args.enable_prefix_caching,
             "enable_chunked_prefill": args.enable_chunked_prefill,
@@ -617,7 +628,7 @@ def main():
             time=args.time,
             partition="hopper-prod",
             cpus_per_task=10*args.gpus,
-            mem_per_cpu_gb=8,
+            mem_per_cpu_gb=20,
             qos=args.qos,
             env_command="sleep $((RANDOM % 30))",
             mail_user="joel@hf.co",

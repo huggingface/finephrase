@@ -4,54 +4,87 @@ SLURM job submission script for VLLM benchmarks.
 Submits jobs with different model, tensor parallelism, and length configurations.
 """
 
+import argparse
 import subprocess
 from pathlib import Path
-from datetime import datetime
 from typing import List, Tuple, Dict
+import sys
+import os
+
+# Add parent directory to path to import utils
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import LOG_BASE_PATH
 
 
 class BenchmarkJobSubmitter:
     def __init__(self, base_dir: str = "/fsx/joel_niklaus/projects/finephrase/vllm_benchmark"):
         self.base_dir = Path(base_dir)
-        self.job_dir = self.base_dir / "slurm_jobs"
-        self.job_dir.mkdir(exist_ok=True)
+        
+        # Log base path from utils
+        self.log_base_path = Path(LOG_BASE_PATH)
         
         # Configuration sets
         self.models = [
-            "Qwen/Qwen3-8B-FP8",
+            #"Qwen/Qwen3-8B-FP8",
+
+            #"Qwen/Qwen3-0.6B",
+            #"Qwen/Qwen3-1.7B",
             "Qwen/Qwen3-4B",
-            "Qwen/Qwen3-4B",
-            "Qwen/Qwen3-8B",
-            "Qwen/Qwen3-14B",
-            "Qwen/Qwen3-32B",
-            "google/gemma-3-270m-it",
-            "google/gemma-3-1b-it",
+            #"Qwen/Qwen3-8B",
+            #"Qwen/Qwen3-14B",
+            #"Qwen/Qwen3-32B",
+            #"google/gemma-3-270m-it",
+            #"google/gemma-3-1b-it",
             "google/gemma-3-4b-it",
-            "google/gemma-3-12b-it",
-            "google/gemma-3-27b-it",
-            "microsoft/Phi-4-mini-instruct",
-            "microsoft/phi-4",
-            "baidu/ERNIE-4.5-0.3B-PT",
-            "baidu/ERNIE-4.5-21B-A3B-PT",
+            #"google/gemma-3-12b-it",
+            #"google/gemma-3-27b-it",
+
+            #"microsoft/Phi-4-mini-instruct",
+            #"microsoft/phi-4",
+            #"baidu/ERNIE-4.5-0.3B-PT",
+            #"baidu/ERNIE-4.5-21B-A3B-PT",
         ]
         
         self.tp_values = [1, 2, 4]
+        self.tp_values = [1]
         
         # Length configurations: (INPUT_LEN, OUTPUT_LEN, MAX_MODEL_LEN)
         self.length_configs = [
             (2048, 1024 + 512, 4096),     # Short context
             (4096, 2048 + 1024, 8192),    # Medium context
-            (8192, 4096 + 2048, 16384),   # Long context  
+            (8192, 4096 + 2048, 16384),   # Long context
         ]
 
     def get_model_name_safe(self, model: str) -> str:
         """Convert model name to filesystem-safe string."""
         return model.replace("/", "_").replace("-", "_")
 
+    def get_log_dir_path(self, model: str, tp: int, length_config: Tuple[int, int, int]) -> Path:
+        """Generate log directory path for a specific configuration."""
+        input_len, output_len, max_model_len = length_config
+        model_safe = self.get_model_name_safe(model)
+        
+        # Create directory structure: LOG_BASE_PATH/benchmarking/{model}/tp{n}/{length_config}
+        length_config_str = f"{input_len}_{output_len}_{max_model_len}"
+        log_dir = self.log_base_path / "benchmarking" / model_safe / f"tp{tp}" / length_config_str
+        
+        # Create directory if it doesn't exist
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Also create subdirectories for SLURM output files and results
+        slurm_logs_dir = log_dir / "slurm_logs"
+        slurm_logs_dir.mkdir(exist_ok=True)
+        
+        results_dir = log_dir / "results"
+        results_dir.mkdir(exist_ok=True)
+        
+        return log_dir
+
     def get_slurm_script_content(self, model: str, tp: int, length_config: Tuple[int, int, int]) -> str:
         """Generate SLURM script content for a specific configuration."""
         input_len, output_len, max_model_len = length_config
         model_safe = self.get_model_name_safe(model)
+        log_dir = self.get_log_dir_path(model, tp, length_config)
         
         script_content = f"""#!/bin/bash
 #SBATCH --partition=hopper-prod
@@ -62,8 +95,7 @@ class BenchmarkJobSubmitter:
 #SBATCH --mem-per-cpu=20G
 #SBATCH --qos=normal
 #SBATCH --gres=gpu:{tp}
-#SBATCH --output={self.job_dir}/benchmark_%j_{model_safe}_tp{tp}_{input_len}_{output_len}.out
-#SBATCH --error={self.job_dir}/benchmark_%j_{model_safe}_tp{tp}_{input_len}_{output_len}.err
+#SBATCH --output={log_dir}/slurm_logs/%j.out
 
 # Environment setup
 export BASE="{self.base_dir}"
@@ -81,6 +113,7 @@ export NUM_BATCHED_TOKENS_LIST="512 1024 2048 4096"
 export NUM_PROMPTS_MAIN=200
 export NUM_PROMPTS_SUB=50
 export VLLM_LOGGING_LEVEL="DEBUG"
+export LOG_FOLDER="{log_dir}/results"
 
 # Job info
 echo "Starting benchmark job:"
@@ -107,11 +140,8 @@ echo "Job completed at: $(date)"
 
     def create_job_script(self, model: str, tp: int, length_config: Tuple[int, int, int]) -> Path:
         """Create a SLURM job script file for the given configuration."""
-        input_len, output_len, max_model_len = length_config
-        model_safe = self.get_model_name_safe(model)
-        
-        script_name = f"benchmark_{model_safe}_tp{tp}_{input_len}_{output_len}.sh"
-        script_path = self.job_dir / script_name
+        log_dir = self.get_log_dir_path(model, tp, length_config)
+        script_path = log_dir / "launch_script.slurm"
         
         script_content = self.get_slurm_script_content(model, tp, length_config)
         
@@ -148,7 +178,7 @@ echo "Job completed at: $(date)"
         print(f"Models: {len(self.models)}")
         print(f"TP values: {self.tp_values}")
         print(f"Length configs: {len(self.length_configs)}")
-        print(f"Job directory: {self.job_dir}")
+        print(f"Log base path: {self.log_base_path}/benchmarking")
         print("="*60)
         
         for model in self.models:
@@ -173,51 +203,25 @@ echo "Job completed at: $(date)"
                     }
                     
                     if dry_run:
-                        print(f"DRY RUN: Would submit {script_path.name}")
+                        print(f"DRY RUN: Would submit {model} | TP={tp} | {input_len}/{output_len}/{max_model_len} → {script_path}")
                         job_info["job_id"] = "DRY_RUN"
                     else:
                         # Submit job
                         job_id = self.submit_job(script_path)
                         if job_id:
                             job_info["job_id"] = job_id
-                            print(f"Submitted job {job_id}: {script_path.name}")
+                            print(f"Submitted job {job_id}: {model} | TP={tp} | {input_len}/{output_len}/{max_model_len}")
                         else:
-                            print(f"Failed to submit: {script_path.name}")
+                            print(f"Failed to submit: {model} | TP={tp} | {input_len}/{output_len}/{max_model_len}")
                     
                     submitted_jobs.append(job_info)
         
         return submitted_jobs
 
-    def save_job_summary(self, submitted_jobs: List[Dict]) -> None:
-        """Save a summary of submitted jobs to a file."""
-        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-        summary_file = self.job_dir / f"job_summary_{timestamp}.txt"
-        
-        with open(summary_file, 'w') as f:
-            f.write(f"VLLM Benchmark Jobs Submitted at {timestamp}\n")
-            f.write("="*60 + "\n\n")
-            
-            f.write(f"Total jobs: {len(submitted_jobs)}\n")
-            f.write(f"Successful submissions: {len([j for j in submitted_jobs if j['job_id'] and j['job_id'] != 'DRY_RUN'])}\n\n")
-            
-            f.write("Job Details:\n")
-            f.write("-" * 60 + "\n")
-            
-            for job in submitted_jobs:
-                input_len, output_len, max_model_len = job['length_config']
-                f.write(f"Job ID: {job['job_id']}\n")
-                f.write(f"  Model: {job['model']}\n")
-                f.write(f"  TP: {job['tp']}\n")
-                f.write(f"  Lengths: {input_len}/{output_len}/{max_model_len}\n")
-                f.write(f"  Script: {job['script_path']}\n")
-                f.write("\n")
-        
-        print(f"Job summary saved to: {summary_file}")
+
 
 
 def main():
-    import argparse
-    
     parser = argparse.ArgumentParser(description="Submit VLLM benchmark jobs to SLURM")
     parser.add_argument("--dry-run", action="store_true", 
                        help="Create job scripts but don't submit to SLURM")
@@ -230,24 +234,14 @@ def main():
     
     print("VLLM Benchmark Job Submitter")
     print(f"Base directory: {submitter.base_dir}")
-    print(f"Job scripts directory: {submitter.job_dir}")
+    print(f"Log directory: {submitter.log_base_path}/benchmarking")
     
     if args.dry_run:
         print("\n*** DRY RUN MODE - No jobs will be submitted ***\n")
     
-    # Submit all jobs
     submitted_jobs = submitter.submit_all_jobs(dry_run=args.dry_run)
     
-    # Save summary
-    submitter.save_job_summary(submitted_jobs)
-    
-    print("\nJob submission completed!")
-    
-    if not args.dry_run:
-        print(f"\nTo monitor jobs, use:")
-        print(f"  squeue -u $USER")
-        print(f"  ls {submitter.job_dir}/*.out")
-        print(f"  ls {submitter.job_dir}/*.err")
+    print(f"\nCompleted! {len(submitted_jobs)} jobs processed.")
 
 
 if __name__ == "__main__":

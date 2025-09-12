@@ -124,12 +124,7 @@ def find_best_log_file(results_dir: Path, best_config: Dict) -> Optional[Path]:
     max_num_seqs = best_config['max_num_seqs']
     max_num_batched_tokens = best_config['max_num_batched_tokens']
     
-    # First try the BEST_PROFILE file
-    best_profile_path = results_dir / "bm_log_BEST_PROFILE.txt"
-    if best_profile_path.exists():
-        return best_profile_path
-    
-    # Otherwise, look for the specific config file
+    # Look for the specific config file
     pattern = f"bm_log_{max_num_seqs}_{max_num_batched_tokens}_requestrate_inf.txt"
     log_path = results_dir / pattern
     
@@ -264,7 +259,7 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
             }
             
             successful_experiments.append(experiment)
-            print(f"✓ {model:<30}/tp{tp}/{length_config} - throughput: {best_config['best_throughput']:.2f}")
+            print(f"✓ {model:<30} /tp{tp}/{length_config:<20} - throughput: {best_config['best_throughput']:>6.2f}")
             
         except Exception as e:
             failed_experiments.append(f"{results_file} - Error: {e}")
@@ -383,10 +378,24 @@ def main():
     if failed_experiments:
         print(f"\n=== FAILED EXPERIMENTS ===")
         for failed in failed_experiments:
-            print(f"  {failed}")
+            # Split experiment path from reason for better alignment
+            if ' - ' in failed:
+                exp_path, reason = failed.split(' - ', 1)
+                # Extract model and config parts
+                parts = exp_path.split('/')
+                if len(parts) >= 3:
+                    model = parts[0]
+                    tp_config = '/'.join(parts[1:])
+                    print(f"  {model:<30} /{tp_config:<20} - {reason}")
+                else:
+                    print(f"  {failed}")
+            else:
+                print(f"  {failed}")
     
     # Save results
     if successful_experiments:
+        # Sort experiments by model, tp, and length_config
+        successful_experiments.sort(key=lambda x: (x['model'], x['tp'], x['length_config']))
         save_results_to_csv(successful_experiments, args.output)
         print(f"\n✓ Analysis complete! Results saved to {args.output}")
     else:

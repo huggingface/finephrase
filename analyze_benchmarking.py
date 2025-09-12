@@ -115,6 +115,27 @@ def parse_benchmark_log(log_path: Path) -> Optional[Dict]:
     except Exception as e:
         print(f"Error parsing {log_path}: {e}")
         return None
+def parse_gpu_memory_utilization(log_path: Path) -> Optional[float]:
+    """
+    Parse vLLM server log to extract gpu_memory_utilization value.
+    Looks for patterns like 'gpu_memory_utilization=0.98' or 'gpu_memory_utilization 0.98'.
+    """
+    try:
+        text = log_path.read_text()
+    except Exception:
+        return None
+
+    # Unified detection: gpu_memory_utilization followed by '=' or space
+    import re
+    m = re.search(r"gpu_memory_utilization(?:\s*=\s*|\s+)([0-9]*\.?[0-9]+)", text)
+    if m:
+        try:
+            return float(m.group(1))
+        except Exception:
+            pass
+
+    return None
+
 
 
 def find_best_log_file(results_dir: Path, best_config: Dict) -> Optional[Path]:
@@ -214,6 +235,10 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
             if metrics is None:
                 failed_experiments.append(f"{model}/tp{tp}/{length_config} - Failed to parse log file")
                 continue
+
+            # Parse gpu_memory_utilization from vllm server log for this best config
+            vllm_log_file = results_file.parent / f"vllm_log_{best_config['max_num_seqs']}_{best_config['max_num_batched_tokens']}.txt"
+            gpu_memory_utilization = parse_gpu_memory_utilization(vllm_log_file) if vllm_log_file.exists() else None
             
             # Compute per-TP metrics
             output_token_throughput = metrics.get("Output token throughput (tok/s)", 0)
@@ -243,6 +268,7 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 'output_len': output_len,
                 'max_model_len': max_model_len,
                 'max_num_batched_tokens': best_config['max_num_batched_tokens'],
+                'gpu_memory_utilization': gpu_memory_utilization if gpu_memory_utilization is not None else 0,
                 
                 # Per-TP throughput metrics
                 'output_token_throughput_per_tp': output_token_throughput_per_tp,
@@ -294,7 +320,7 @@ def save_results_to_csv(experiments: List[Dict], output_path: Path):
     # Define column order as specified
     columns = [
         # Model information
-        'model', 'tp', 'input_len', 'output_len', 'max_model_len', 'max_num_batched_tokens',
+        'model', 'tp', 'input_len', 'output_len', 'max_model_len', 'max_num_batched_tokens', 'gpu_memory_utilization',
         
         # Per-TP throughput metrics
         'output_token_throughput_per_tp', 'total_token_throughput_per_tp',

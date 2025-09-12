@@ -269,6 +269,10 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 'max_model_len': max_model_len,
                 'max_num_batched_tokens': best_config['max_num_batched_tokens'],
                 'gpu_memory_utilization': gpu_memory_utilization if gpu_memory_utilization is not None else 0,
+
+                # Derived productivity metrics (days to process 18B tokens)
+                # Inserted immediately after gpu_memory_utilization in CSV order below
+                # Computed using normalised total tokens per second (per-TP => per-GPU)
                 
                 # Per-TP throughput metrics
                 'output_token_throughput_per_tp': output_token_throughput_per_tp,
@@ -298,6 +302,24 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 'p99_e2el': metrics.get("P99 E2EL (ms)", 0),
             }
             
+            # Compute days-to-18B using per-TP (per-GPU) total token throughput
+            try:
+                target_tokens = 18_000_000_000
+                seconds_per_day = 60 * 60 * 24
+                per_gpu_toks_per_sec = total_token_throughput_per_tp
+                if per_gpu_toks_per_sec and per_gpu_toks_per_sec > 0:
+                    gpu_days = target_tokens / per_gpu_toks_per_sec / seconds_per_day
+                    node_days = target_tokens / (per_gpu_toks_per_sec * 8) / seconds_per_day
+                else:
+                    gpu_days = 0
+                    node_days = 0
+            except Exception:
+                gpu_days = 0
+                node_days = 0
+
+            experiment['gpu_days_to_process_18b_tokens'] = round(gpu_days, 2)
+            experiment['node_days_to_process_18b_tokens'] = round(node_days, 2)
+
             # Keep best throughput on record for uniform summary printing later
             experiment['best_throughput'] = best_config['best_throughput']
             successful_experiments.append(experiment)
@@ -321,6 +343,7 @@ def save_results_to_csv(experiments: List[Dict], output_path: Path):
     columns = [
         # Model information
         'model', 'tp', 'input_len', 'output_len', 'max_model_len', 'max_num_batched_tokens', 'gpu_memory_utilization',
+        'gpu_days_to_process_18b_tokens', 'node_days_to_process_18b_tokens',
         
         # Per-TP throughput metrics
         'output_token_throughput_per_tp', 'total_token_throughput_per_tp',

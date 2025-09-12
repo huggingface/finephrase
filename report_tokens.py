@@ -8,7 +8,7 @@ from datatrove.pipeline.tokens import TokensCounter
 
 import argparse
 
-from utils import LOG_BASE_PATH, get_reader, human_readable
+from utils import LOG_BASE_PATH, build_reader, human_readable
 
 
 class ReportTokens(PipelineStep):
@@ -71,8 +71,7 @@ def main():
     logs_path = f"{LOG_BASE_PATH}/token_counts/{args.data_paths.replace('/', '_')}"
     
     data_paths = args.data_paths.split(",")
-    
-    reader = [get_reader(data_path)(data_path, shuffle_files=True, limit=args.limit / args.n_tasks) for data_path in data_paths]
+    reader = [build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True) for data_path in data_paths]
 
     pipeline = [
         *(reader),

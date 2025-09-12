@@ -5,7 +5,7 @@ from datatrove.pipeline.filters import LambdaFilter, SamplerFilter
 from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.tokens import TokensCounter
 
-from utils import LOG_BASE_PATH, S3_BASE_PATH, get_reader
+from utils import LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 
 def score_predicate_lq(doc):
@@ -35,10 +35,10 @@ parser.add_argument(
     "--quality", type=str, choices=["lq", "hq"], required=True, help="Quality subset to select based on FineWeb-Edu score (lq: <=2, hq: >4)"
 )
 parser.add_argument(
-    "--name", "-n", type=str, default=None, help="Name of the filtering. If not provided, the name will be the last part of the data paths"
+    "--name", type=str, default=None, help="Name of the filtering. If not provided, the name will be the last part of the data paths"
 )
 parser.add_argument(
-    "--subset_tokens", type=int, help="Number of tokens to subset", default=36e9, required=False
+    "--subset_tokens", type=float, help="Number of tokens to subset", default=36e9, required=False
 )
 parser.add_argument(
     "--total_tokens", type=int, help="Total number of tokens. If not set, just counts tokens.", default=None
@@ -75,7 +75,7 @@ def main():
 
     _score_predicate = score_predicate_lq if args.quality == "lq" else score_predicate_hq
     
-    reader = [get_reader(data_path)(data_path, shuffle_files=True, limit=args.limit / args.n_tasks) for data_path in data_paths]
+    reader = [build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True) for data_path in data_paths]
     
     if args.total_tokens is None:
         # If total tokens is not set, we just count the tokens

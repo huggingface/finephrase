@@ -20,7 +20,7 @@ from datatrove.pipeline.base import PipelineStep
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.executor.local import LocalPipelineExecutor
 
-from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH
+from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 class EduScoreStatsLogger(PipelineStep):
     """
@@ -135,6 +135,7 @@ def create_templated_query_builder(prompt_template: str, max_tokens: int, temper
         content = content.replace("[TEXT]", document.text)
         
         # Truncate if content is too long to make sure the server doesn't throw an error
+        # TODO: Revisit this after benchmarking
         max_chars = 4 * max_tokens # rough heuristic for average token length
         if len(content) > max_chars:
             # Find the last newline before the cutoff
@@ -433,7 +434,7 @@ parser.add_argument(
     "--data_paths", type=str, help="Path to the data to rephrase.", required=True
 )
 parser.add_argument(
-    "--name", "-n", type=str, help="Name of the rephrasing experiment", required=True
+    "--name", type=str, help="Name of the rephrasing experiment", required=True
 )
 parser.add_argument(
     "--prompt_template", type=str, help="Path to prompt template file (relative to prompts/ directory)", required=True
@@ -466,6 +467,7 @@ parser.add_argument(
     "--enable_thinking", action="store_true", help="Enable thinking in chat template"
 )
 parser.add_argument(
+    # Allow for long inputs to account for the prompt and because the model may output shorter rephrases
     "--model_max_context", type=int, help="Maximum context length for the model", default=16384
 )
 parser.add_argument(
@@ -481,7 +483,8 @@ parser.add_argument(
     "--records_per_chunk", type=int, help="Number of records per chunk", default=1000
 )
 parser.add_argument(
-    "--max_tokens", type=int, help="Maximum tokens per request", default=8192 # Should be half of the model context length
+    # We only train on this many tokens, so no need to go beyond
+    "--max_tokens", type=int, help="Maximum tokens per request", default=4096 
 )
 parser.add_argument(
     "--server_type", type=str, help="Inference server type", choices=["vllm", "sglang", "dummy"], default="vllm"
@@ -536,6 +539,9 @@ parser.add_argument(
     "--dp", type=int, default=1, help="Data parallelism size"
 )
 parser.add_argument(
+    "--gpu_memory_utilization", type=float, default=0.98, help="GPU memory utilization"
+)
+parser.add_argument(
     "--run_local", action="store_true", help="Run pipeline locally instead of using Slurm"
 )
 
@@ -572,6 +578,7 @@ def main():
             "enable_chunked_prefill": args.enable_chunked_prefill,
             "max_num_batched_tokens": args.max_num_batched_tokens,
             "max_num_seqs": args.max_num_seqs,
+            "gpu_memory_utilization": args.gpu_memory_utilization,
         },
     )
 
@@ -591,7 +598,7 @@ def main():
         exit(1)
 
     pipeline = [
-            *[JsonlReader(data_path, text_key=args.text_key, limit=args.limit / args.n_tasks) for data_path in data_paths],
+            *[build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=False, text_key=args.text_key) for data_path in data_paths],
             InferenceRunner(
                 query_builder=create_templated_query_builder(
                     prompt_template, 

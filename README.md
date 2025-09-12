@@ -92,8 +92,6 @@ filter-fineweb-edu \
 
 Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 
-
-
 ### Tokenizing Datasets
 Prepare datasets for training by tokenizing them:
 

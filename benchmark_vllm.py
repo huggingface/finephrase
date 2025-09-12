@@ -16,36 +16,35 @@ from utils import LOG_BASE_PATH
 
 # Configuration constants
 DEFAULT_MODELS = [
+    "google/gemma-3-270m-it",
+    "google/gemma-3-1b-it",
+    "google/gemma-3-4b-it",
+    "google/gemma-3-12b-it",
+    "google/gemma-3-27b-it",
+
+    # Qwen models are significantly slower than gemma models
     #"Qwen/Qwen3-0.6B",
     #"Qwen/Qwen3-1.7B",
-    "Qwen/Qwen3-4B-Base",
+    #"Qwen/Qwen3-4B",
     #"Qwen/Qwen3-8B",
     #"Qwen/Qwen3-14B",
     #"Qwen/Qwen3-32B",
     #"Qwen/Qwen3-30B-A3B",
-    #"google/gemma-3-270m-it",
-    #"google/gemma-3-1b-it",
-    #"google/gemma-3-4b-it",
-    #"google/gemma-3-12b-it",
-    #"google/gemma-3-27b-it",
-
-    #"microsoft/Phi-4-mini-instruct",
-    #"microsoft/phi-4",
-    #"baidu/ERNIE-4.5-0.3B-PT",
-    #"baidu/ERNIE-4.5-21B-A3B-PT",
 ]
 
 DEFAULT_TP_VALUES = [1, 2, 4]
 
 # Length configurations: (INPUT_LEN, OUTPUT_LEN, MAX_MODEL_LEN)
 DEFAULT_LENGTH_CONFIGS = [
-    (2048, 1024 + 512, 4096),     # Short context
-    (4096, 2048 + 1024, 8192),    # Medium context
-    (8192, 4096 + 2048, 16384),   # Long context
+    #(2048, 1024 + 512, 4096),     # Short context
+    #(4096, 2048 + 1024, 8192),    # Medium context
+    #(8192, 4096 + 2048, 16384),   # Long context
+    (8192, 4096, 16384),   # Realistic context (allowing long inputs but limiting output length)
+    (16384, 4096, 32768),   # Realistic context (allowing long inputs but limiting output length)
 ]
 
 MAX_NUM_SEQS_LIST = "256"  # Throughput is not very sensitive to this parameter
-MAX_NUM_BATCHED_TOKENS_LIST = "512 1024 2048 4096" # Cannot be larger than max model length
+MAX_NUM_BATCHED_TOKENS_LIST = "512 1024 2048 4096 8192 16384" # Cannot be larger than max model length
 
 
 class BenchmarkJobSubmitter:
@@ -324,7 +323,7 @@ def main():
     
     submitted_jobs = submitter.submit_all_jobs(dry_run=args.dry_run)
     
-    print(f"\nCompleted! {len(submitted_jobs)} jobs processed.")
+    print(f"\nCompleted! {len(submitted_jobs)} jobs submitted.")
 
 
 if __name__ == "__main__":

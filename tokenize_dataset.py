@@ -8,7 +8,7 @@ from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
 from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
 
-from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH
+from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 
 class DocumentSplitter(PipelineStep):
@@ -120,7 +120,7 @@ parser.add_argument(
     "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=S3_BASE_PATH
 )
 parser.add_argument(
-    "--name", "-n", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"  
+    "--name", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"  
 )
 parser.add_argument(
     "--limit", type=int, help="limit the number of documents to tokenize", default=-1
@@ -185,7 +185,7 @@ def main():
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{args.name}",
         pipeline=[
-            *([JsonlReader(data_path, text_key=args.text_key, shuffle_files=True, limit=args.limit / args.n_tasks) for data_path in data_paths]),
+            *([build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True, text_key=args.text_key) for data_path in data_paths]),
             SamplerFilter(rate=args.sample, seed=args.sample_seed),
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),

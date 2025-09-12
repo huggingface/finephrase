@@ -80,9 +80,10 @@ train = "train_model:main"
 evaluate = "evaluate_checkpoints:main"
 launch-experiments = "launch_experiments:main"
 optimize-prompt = "optimize_prompt:main"
+benchmark-vllm = "benchmark_vllm:main"
 
 [tool.setuptools]
-py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "utils"]
+py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "benchmark_vllm", "utils"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]

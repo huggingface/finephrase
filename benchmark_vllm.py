@@ -8,12 +8,15 @@ import argparse
 import subprocess
 from pathlib import Path
 from typing import List, Tuple, Dict
-import sys
-import os
+from dotenv import load_dotenv
 
-# Add parent directory to path to import utils
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+load_dotenv() # Load the HF_TOKEN for gated models
+
 from utils import LOG_BASE_PATH
+
+
+MAX_NUM_SEQS_LIST = "256"  # Throughput is not very sensitive to this parameter
+MAX_NUM_BATCHED_TOKENS_LIST = "512 1024 2048 4096"
 
 
 class BenchmarkJobSubmitter:
@@ -25,17 +28,15 @@ class BenchmarkJobSubmitter:
         
         # Configuration sets
         self.models = [
-            #"Qwen/Qwen3-8B-FP8",
-
             #"Qwen/Qwen3-0.6B",
             #"Qwen/Qwen3-1.7B",
-            "Qwen/Qwen3-4B",
+            "Qwen/Qwen3-4B-Base",
             #"Qwen/Qwen3-8B",
             #"Qwen/Qwen3-14B",
             #"Qwen/Qwen3-32B",
             #"google/gemma-3-270m-it",
             #"google/gemma-3-1b-it",
-            "google/gemma-3-4b-it",
+            #"google/gemma-3-4b-it",
             #"google/gemma-3-12b-it",
             #"google/gemma-3-27b-it",
 
@@ -45,8 +46,8 @@ class BenchmarkJobSubmitter:
             #"baidu/ERNIE-4.5-21B-A3B-PT",
         ]
         
-        self.tp_values = [1, 2, 4]
         self.tp_values = [1]
+        self.tp_values = [1, 2, 4]
         
         # Length configurations: (INPUT_LEN, OUTPUT_LEN, MAX_MODEL_LEN)
         self.length_configs = [
@@ -108,10 +109,10 @@ export OUTPUT_LEN={output_len}
 export MAX_MODEL_LEN={max_model_len}
 export MIN_CACHE_HIT_PCT=5
 export MAX_LATENCY_ALLOWED_MS=100000000000
-export NUM_SEQS_LIST="128 256"
-export NUM_BATCHED_TOKENS_LIST="512 1024 2048 4096"
+export NUM_SEQS_LIST="{MAX_NUM_SEQS_LIST}"
+export NUM_BATCHED_TOKENS_LIST="{MAX_NUM_BATCHED_TOKENS_LIST}"
 export NUM_PROMPTS_MAIN=200
-export NUM_PROMPTS_SUB=50
+export NUM_PROMPTS_SUB=100
 export VLLM_LOGGING_LEVEL="DEBUG"
 export LOG_FOLDER="{log_dir}/results"
 

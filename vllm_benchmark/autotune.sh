@@ -21,6 +21,7 @@ NUM_SEQS_LIST=${NUM_SEQS_LIST:-"128 256"}
 NUM_BATCHED_TOKENS_LIST=${NUM_BATCHED_TOKENS_LIST:-"512 1024 2048 4096"}
 NUM_PROMPTS_MAIN=${NUM_PROMPTS_MAIN:-1000}
 NUM_PROMPTS_SUB=${NUM_PROMPTS_SUB:-100}
+ENABLE_PROFILING=${ENABLE_PROFILING:-0}
 
 LOG_FOLDER=${LOG_FOLDER:-"$BASE/auto-benchmark/$TAG"}
 RESULT="$LOG_FOLDER/result.txt"
@@ -41,6 +42,7 @@ echo "MAX_LATENCY_ALLOWED_MS=$MAX_LATENCY_ALLOWED_MS"
 echo "NUM_SEQS_LIST=$NUM_SEQS_LIST"
 echo "NUM_BATCHED_TOKENS_LIST=$NUM_BATCHED_TOKENS_LIST"
 echo "VLLM_LOGGING_LEVEL=$VLLM_LOGGING_LEVEL"
+echo "ENABLE_PROFILING=$ENABLE_PROFILING"
 echo "RESULT_FILE=$RESULT"
 echo "====================== AUTO TUNEPARAMETERS ===================="
 
@@ -277,42 +279,51 @@ done
 echo "finish permutations"
 
 # =================================================================================
-# FINAL PROFILING RUN FOR THE BEST CONFIGURATION
+# FINAL PROFILING RUN (optional)
 # =================================================================================
-if (( $(echo "$best_throughput > 0" | bc -l) )); then
-    echo
-    echo "Benchmark tuning finished. Now running profiling on the best configuration found..."
-    echo "Best config: max_num_seqs: $best_max_num_seqs, max_num_batched_tokens: $best_num_batched_tokens, throughput: $best_throughput"
-    echo
+if [[ "$ENABLE_PROFILING" == "1" || "$ENABLE_PROFILING" == "true" ]]; then
+    if (( $(echo "$best_throughput > 0" | bc -l) )); then
+        echo
+        echo "Benchmark tuning finished. Now running profiling on the best configuration found..."
+        echo "Best config: max_num_seqs: $best_max_num_seqs, max_num_batched_tokens: $best_num_batched_tokens, throughput: $best_throughput"
+        echo
 
-    vllm_log="$LOG_FOLDER/vllm_log_BEST_PROFILE.txt"
-    bm_log="$LOG_FOLDER/bm_log_BEST_PROFILE.txt"
+        vllm_log="$LOG_FOLDER/vllm_log_BEST_PROFILE.txt"
+        bm_log="$LOG_FOLDER/bm_log_BEST_PROFILE.txt"
 
-    # Start server with the best params and profiling ENABLED
-    echo "Starting server for profiling..."
-    start_server $gpu_memory_utilization $best_max_num_seqs $best_num_batched_tokens "$vllm_log" "$PROFILE_PATH"
+        # Start server with the best params and profiling ENABLED
+        echo "Starting server for profiling..."
+        start_server $gpu_memory_utilization $best_max_num_seqs $best_num_batched_tokens "$vllm_log" "$PROFILE_PATH"
 
-    # Run benchmark with the best params and the --profile flag
-    echo "Running benchmark with profiling..."
-    prefix_len=$(( INPUT_LEN * MIN_CACHE_HIT_PCT / 100 ))
-    adjusted_input_len=$(( INPUT_LEN - prefix_len ))
-    vllm bench serve \
-        --model $MODEL \
-        --dataset-name random \
-        --random-input-len $adjusted_input_len \
-        --random-output-len $OUTPUT_LEN \
-        --ignore-eos \
-        --disable-tqdm \
-        --request-rate $best_request_rate \
-        --percentile-metrics ttft,tpot,itl,e2el \
-        --goodput e2el:$MAX_LATENCY_ALLOWED_MS \
-        --num-prompts $NUM_PROMPTS_SUB \
-        --random-prefix-len $prefix_len \
-        --port $PORT \
-        --profile &> "$bm_log"
+        # Run benchmark with the best params and the --profile flag
+        echo "Running benchmark with profiling..."
+        prefix_len=$(( INPUT_LEN * MIN_CACHE_HIT_PCT / 100 ))
+        adjusted_input_len=$(( INPUT_LEN - prefix_len ))
+        vllm bench serve \
+            --model $MODEL \
+            --dataset-name random \
+            --random-input-len $adjusted_input_len \
+            --random-output-len $OUTPUT_LEN \
+            --ignore-eos \
+            --disable-tqdm \
+            --request-rate $best_request_rate \
+            --percentile-metrics ttft,tpot,itl,e2el \
+            --goodput e2el:$MAX_LATENCY_ALLOWED_MS \
+            --num-prompts $NUM_PROMPTS_SUB \
+            --random-prefix-len $prefix_len \
+            --port $PORT \
+            --profile &> "$bm_log"
+    else
+        echo "No configuration met the latency requirements. Skipping final profiling run."
+    fi
 else
-    echo "No configuration met the latency requirements. Skipping final profiling run."
+    echo "Profiling disabled. Skipping final profiling run."
 fi
-pkill -if vllm -u $USER || true
-echo "best_max_num_seqs: $best_max_num_seqs, best_num_batched_tokens: $best_num_batched_tokens, best_throughput: $best_throughput, profile saved in: $PROFILE_PATH"
-echo "best_max_num_seqs: $best_max_num_seqs, best_num_batched_tokens: $best_num_batched_tokens, best_throughput: $best_throughput, profile saved in: $PROFILE_PATH" >> "$RESULT"
+kill_vllm_on_port
+if [[ "$ENABLE_PROFILING" == "1" || "$ENABLE_PROFILING" == "true" ]]; then
+    echo "best_max_num_seqs: $best_max_num_seqs, best_num_batched_tokens: $best_num_batched_tokens, best_throughput: $best_throughput, profile saved in: $PROFILE_PATH"
+    echo "best_max_num_seqs: $best_max_num_seqs, best_num_batched_tokens: $best_num_batched_tokens, best_throughput: $best_throughput, profile saved in: $PROFILE_PATH" >> "$RESULT"
+else
+    echo "best_max_num_seqs: $best_max_num_seqs, best_num_batched_tokens: $best_num_batched_tokens, best_throughput: $best_throughput"
+    echo "best_max_num_seqs: $best_max_num_seqs, best_num_batched_tokens: $best_num_batched_tokens, best_throughput: $best_throughput" >> "$RESULT"
+fi

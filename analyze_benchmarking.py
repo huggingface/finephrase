@@ -222,12 +222,26 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
             output_token_throughput_per_tp = output_token_throughput / tp if tp > 0 else 0
             total_token_throughput_per_tp = total_token_throughput / tp if tp > 0 else 0
             
+            # Parse length_config into components
+            try:
+                input_len_str, output_len_str, max_model_len_str = length_config.split('_')
+                input_len = int(input_len_str)
+                output_len = int(output_len_str)
+                max_model_len = int(max_model_len_str)
+            except Exception:
+                input_len = 0
+                output_len = 0
+                max_model_len = 0
+
             # Create experiment record
             experiment = {
                 # Model information
                 'model': model,
                 'tp': tp,
                 'length_config': length_config,
+                'input_len': input_len,
+                'output_len': output_len,
+                'max_model_len': max_model_len,
                 'max_num_batched_tokens': best_config['max_num_batched_tokens'],
                 
                 # Per-TP throughput metrics
@@ -258,8 +272,9 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 'p99_e2el': metrics.get("P99 E2EL (ms)", 0),
             }
             
+            # Keep best throughput on record for uniform summary printing later
+            experiment['best_throughput'] = best_config['best_throughput']
             successful_experiments.append(experiment)
-            print(f"✓ {model:<30} /tp{tp}/{length_config:<20} - throughput: {best_config['best_throughput']:>6.2f}")
             
         except Exception as e:
             failed_experiments.append(f"{results_file} - Error: {e}")
@@ -279,7 +294,7 @@ def save_results_to_csv(experiments: List[Dict], output_path: Path):
     # Define column order as specified
     columns = [
         # Model information
-        'model', 'tp', 'length_config', 'max_num_batched_tokens',
+        'model', 'tp', 'input_len', 'output_len', 'max_model_len', 'max_num_batched_tokens',
         
         # Per-TP throughput metrics
         'output_token_throughput_per_tp', 'total_token_throughput_per_tp',
@@ -297,26 +312,14 @@ def save_results_to_csv(experiments: List[Dict], output_path: Path):
     ]
     
     with open(output_path, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=columns)
+        writer = csv.DictWriter(csvfile, fieldnames=columns, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(experiments)
 
 
-def save_failed_experiments(failed_experiments: List[str], output_path: Path):
-    """
-    Save failed experiments list to a text file for easy rerunning.
-    """
-    if not failed_experiments:
-        print("No failed experiments to save")
-        return
-    
-    with open(output_path, 'w') as f:
-        f.write("# Failed Benchmarking Experiments\n")
-        f.write("# Format: model/tp/length_config - reason\n")
-        f.write("# Use this list to identify experiments to rerun\n\n")
-        
-        for failed in failed_experiments:
-            f.write(f"{failed}\n")
+def format_summary_line(symbol: str, model: str, tp: int, length_config: str, right_text: str) -> str:
+    """Return a uniformly formatted summary line for success/failure lists."""
+    return f"{symbol} {model:<30} /tp{tp}/{length_config:<20} - {right_text}"
 
 
 def generate_rerun_command(failed_experiments: List[str]) -> str:
@@ -361,12 +364,7 @@ def main():
         default="benchmarking_results.csv",
         help="Output CSV file path (default: benchmarking_results.csv)"
     )
-    parser.add_argument(
-        "--failed-output", 
-        type=Path,
-        default="failed_experiments.txt",
-        help="Output file for failed experiments list (default: failed_experiments.txt)"
-    )
+    # Note: we no longer save failed experiments to a file.
     
     args = parser.parse_args()
     
@@ -375,22 +373,45 @@ def main():
     # Analyze results
     successful_experiments, failed_experiments = analyze_benchmarking_results(args.base_path)
     
+    # Print successful experiments section (uniform formatting)
+    if successful_experiments:
+        print(f"\n=== SUCCESSFUL EXPERIMENTS ===")
+        # Sort for stable output
+        successful_experiments.sort(key=lambda x: (x['model'], x['tp'], x['length_config']))
+        for exp in successful_experiments:
+            line = format_summary_line(
+                symbol="✓",
+                model=exp['model'],
+                tp=exp['tp'],
+                length_config=exp['length_config'],
+                right_text=f"throughput: {exp['best_throughput']:>6.2f}",
+            )
+            print(line)
+
+    # Print failed experiments section (uniform formatting)
     if failed_experiments:
         print(f"\n=== FAILED EXPERIMENTS ===")
         for failed in failed_experiments:
             # Split experiment path from reason for better alignment
             if ' - ' in failed:
                 exp_path, reason = failed.split(' - ', 1)
-                # Extract model and config parts
                 parts = exp_path.split('/')
                 if len(parts) >= 3:
                     model = parts[0]
-                    tp_config = '/'.join(parts[1:])
-                    print(f"  {model:<30} /{tp_config:<20} - {reason}")
+                    tp_str = parts[1]
+                    length_config = parts[2]
+                    try:
+                        tp = int(tp_str.replace('tp', ''))
+                    except Exception:
+                        # Fallback if parsing fails
+                        print(f"✗ {failed}")
+                        continue
+                    line = format_summary_line("✗", model, tp, length_config, reason)
+                    print(line)
                 else:
-                    print(f"  {failed}")
+                    print(f"✗ {failed}")
             else:
-                print(f"  {failed}")
+                print(f"✗ {failed}")
     
     # Save results
     if successful_experiments:
@@ -401,12 +422,8 @@ def main():
     else:
         print(f"\n✗ No successful experiments found")
     
-    # Save failed experiments list
+    # Generate rerun command for failures
     if failed_experiments:
-        save_failed_experiments(failed_experiments, args.failed_output)
-        print(f"✓ Failed experiments list saved to {args.failed_output}")
-        
-        # Generate rerun command
         rerun_command = generate_rerun_command(failed_experiments)
         if rerun_command:
             print(f"\n=== RERUN COMMAND ===")

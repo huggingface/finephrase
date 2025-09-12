@@ -208,4 +208,5 @@ __marimo__/
 
 plots/
 .litellm_cache/
+benchmarking_results.csv
 

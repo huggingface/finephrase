@@ -14,47 +14,115 @@ load_dotenv() # Load the HF_TOKEN for gated models
 
 from utils import LOG_BASE_PATH
 
+# Configuration constants
+DEFAULT_MODELS = [
+    #"Qwen/Qwen3-0.6B",
+    #"Qwen/Qwen3-1.7B",
+    "Qwen/Qwen3-4B-Base",
+    #"Qwen/Qwen3-8B",
+    #"Qwen/Qwen3-14B",
+    #"Qwen/Qwen3-32B",
+    #"Qwen/Qwen3-30B-A3B",
+    #"google/gemma-3-270m-it",
+    #"google/gemma-3-1b-it",
+    #"google/gemma-3-4b-it",
+    #"google/gemma-3-12b-it",
+    #"google/gemma-3-27b-it",
+
+    #"microsoft/Phi-4-mini-instruct",
+    #"microsoft/phi-4",
+    #"baidu/ERNIE-4.5-0.3B-PT",
+    #"baidu/ERNIE-4.5-21B-A3B-PT",
+]
+
+DEFAULT_TP_VALUES = [1, 2, 4]
+
+# Length configurations: (INPUT_LEN, OUTPUT_LEN, MAX_MODEL_LEN)
+DEFAULT_LENGTH_CONFIGS = [
+    (2048, 1024 + 512, 4096),     # Short context
+    (4096, 2048 + 1024, 8192),    # Medium context
+    (8192, 4096 + 2048, 16384),   # Long context
+]
 
 MAX_NUM_SEQS_LIST = "256"  # Throughput is not very sensitive to this parameter
-MAX_NUM_BATCHED_TOKENS_LIST = "512 1024 2048 4096"
+MAX_NUM_BATCHED_TOKENS_LIST = "512 1024 2048 4096" # Cannot be larger than max model length
 
 
 class BenchmarkJobSubmitter:
-    def __init__(self, base_dir: str = "/fsx/joel_niklaus/projects/finephrase/vllm_benchmark"):
+    def __init__(self, base_dir: str = "/fsx/joel_niklaus/projects/finephrase/vllm_benchmark", 
+                 experiments: List[str] = None):
         self.base_dir = Path(base_dir)
         
         # Log base path from utils
         self.log_base_path = Path(LOG_BASE_PATH)
         
-        # Configuration sets
-        self.models = [
-            #"Qwen/Qwen3-0.6B",
-            #"Qwen/Qwen3-1.7B",
-            "Qwen/Qwen3-4B-Base",
-            #"Qwen/Qwen3-8B",
-            #"Qwen/Qwen3-14B",
-            #"Qwen/Qwen3-32B",
-            #"google/gemma-3-270m-it",
-            #"google/gemma-3-1b-it",
-            #"google/gemma-3-4b-it",
-            #"google/gemma-3-12b-it",
-            #"google/gemma-3-27b-it",
-
-            #"microsoft/Phi-4-mini-instruct",
-            #"microsoft/phi-4",
-            #"baidu/ERNIE-4.5-0.3B-PT",
-            #"baidu/ERNIE-4.5-21B-A3B-PT",
-        ]
+        # Configuration sets - either from specific experiments or defaults
+        if experiments:
+            self.experiment_configs = self.parse_experiments(experiments)
+        else:
+            # Use default sweep configuration
+            self.experiment_configs = self.generate_default_experiments()
+    
+    def parse_experiments(self, experiments: List[str]) -> List[Dict]:
+        """
+        Parse experiment strings into configuration dictionaries.
+        Format: model/tp/length_config
+        Example: google_gemma_3_27b_it/tp1/8192_6144_16384
+        """
+        configs = []
+        for exp in experiments:
+            try:
+                parts = exp.strip().split('/')
+                if len(parts) != 3:
+                    print(f"Warning: Invalid experiment format '{exp}', expected 'model/tp/length_config'")
+                    continue
+                
+                model_safe, tp_str, length_config_str = parts
+                
+                # Convert model name back from safe format
+                model = model_safe.replace('_', '/', 1).replace('_', '-')
+                
+                # Extract TP value
+                if not tp_str.startswith('tp'):
+                    print(f"Warning: Invalid TP format '{tp_str}' in experiment '{exp}'")
+                    continue
+                tp = int(tp_str[2:])
+                
+                # Parse length config
+                length_parts = length_config_str.split('_')
+                if len(length_parts) != 3:
+                    print(f"Warning: Invalid length config format '{length_config_str}' in experiment '{exp}'")
+                    continue
+                
+                input_len = int(length_parts[0])
+                output_len = int(length_parts[1])
+                max_model_len = int(length_parts[2])
+                length_config = (input_len, output_len, max_model_len)
+                
+                configs.append({
+                    'model': model,
+                    'tp': tp,
+                    'length_config': length_config
+                })
+                
+            except Exception as e:
+                print(f"Error parsing experiment '{exp}': {e}")
+                continue
         
-        self.tp_values = [1]
-        self.tp_values = [1, 2, 4]
-        
-        # Length configurations: (INPUT_LEN, OUTPUT_LEN, MAX_MODEL_LEN)
-        self.length_configs = [
-            (2048, 1024 + 512, 4096),     # Short context
-            (4096, 2048 + 1024, 8192),    # Medium context
-            (8192, 4096 + 2048, 16384),   # Long context
-        ]
+        return configs
+    
+    def generate_default_experiments(self) -> List[Dict]:
+        """Generate default experiment configurations from constants."""
+        configs = []
+        for model in DEFAULT_MODELS:
+            for tp in DEFAULT_TP_VALUES:
+                for length_config in DEFAULT_LENGTH_CONFIGS:
+                    configs.append({
+                        'model': model,
+                        'tp': tp,
+                        'length_config': length_config
+                    })
+        return configs
 
     def get_model_name_safe(self, model: str) -> str:
         """Convert model name to filesystem-safe string."""
@@ -112,7 +180,7 @@ export MAX_LATENCY_ALLOWED_MS=100000000000
 export NUM_SEQS_LIST="{MAX_NUM_SEQS_LIST}"
 export NUM_BATCHED_TOKENS_LIST="{MAX_NUM_BATCHED_TOKENS_LIST}"
 export NUM_PROMPTS_MAIN=200
-export NUM_PROMPTS_SUB=100
+export NUM_PROMPTS_SUB=200
 export VLLM_LOGGING_LEVEL="DEBUG"
 export LOG_FOLDER="{log_dir}/results"
 
@@ -175,47 +243,46 @@ echo "Job completed at: $(date)"
         """Submit all benchmark jobs with different configurations."""
         submitted_jobs = []
         
-        print(f"Preparing to submit {len(self.models) * len(self.tp_values) * len(self.length_configs)} jobs...")
-        print(f"Models: {len(self.models)}")
-        print(f"TP values: {self.tp_values}")
-        print(f"Length configs: {len(self.length_configs)}")
+        print(f"Preparing to submit {len(self.experiment_configs)} jobs...")
+        print(f"Experiments: {len(self.experiment_configs)}")
         print(f"Log base path: {self.log_base_path}/benchmarking")
         print("="*60)
         
-        for model in self.models:
-            for tp in self.tp_values:
-                for length_config in self.length_configs:
-                    input_len, output_len, max_model_len = length_config
-                    
-                    # Skip if total length exceeds max model length
-                    if input_len + output_len > max_model_len:
-                        print(f"Skipping {model} TP={tp} ({input_len}+{output_len}>{max_model_len})")
-                        continue
-                    
-                    # Create job script
-                    script_path = self.create_job_script(model, tp, length_config)
-                    
-                    job_info = {
-                        "model": model,
-                        "tp": tp,
-                        "length_config": length_config,
-                        "script_path": str(script_path),
-                        "job_id": None
-                    }
-                    
-                    if dry_run:
-                        print(f"DRY RUN: Would submit {model} | TP={tp} | {input_len}/{output_len}/{max_model_len} → {script_path}")
-                        job_info["job_id"] = "DRY_RUN"
-                    else:
-                        # Submit job
-                        job_id = self.submit_job(script_path)
-                        if job_id:
-                            job_info["job_id"] = job_id
-                            print(f"Submitted job {job_id}: {model} | TP={tp} | {input_len}/{output_len}/{max_model_len}")
-                        else:
-                            print(f"Failed to submit: {model} | TP={tp} | {input_len}/{output_len}/{max_model_len}")
-                    
-                    submitted_jobs.append(job_info)
+        for config in self.experiment_configs:
+            model = config['model']
+            tp = config['tp']
+            length_config = config['length_config']
+            input_len, output_len, max_model_len = length_config
+            
+            # Skip if total length exceeds max model length
+            if input_len + output_len > max_model_len:
+                print(f"Skipping {model:<30} | TP={tp} | ({input_len}+{output_len}>{max_model_len})")
+                continue
+            
+            # Create job script
+            script_path = self.create_job_script(model, tp, length_config)
+            
+            job_info = {
+                "model": model,
+                "tp": tp,
+                "length_config": length_config,
+                "script_path": str(script_path),
+                "job_id": None
+            }
+            
+            if dry_run:
+                print(f"DRY RUN: Would submit {model:<30} | TP={tp} | {input_len}/{output_len}/{max_model_len} → {script_path}")
+                job_info["job_id"] = "DRY_RUN"
+            else:
+                # Submit job
+                job_id = self.submit_job(script_path)
+                if job_id:
+                    job_info["job_id"] = job_id
+                    print(f"Submitted job {job_id}: {model:<30} | TP={tp} | {input_len}/{output_len}/{max_model_len}")
+                else:
+                    print(f"Failed to submit: {model:<30} | TP={tp} | {input_len}/{output_len}/{max_model_len}")
+            
+            submitted_jobs.append(job_info)
         
         return submitted_jobs
 
@@ -228,14 +295,27 @@ def main():
                        help="Create job scripts but don't submit to SLURM")
     parser.add_argument("--base-dir", default="/fsx/joel_niklaus/projects/finephrase/vllm_benchmark",
                        help="Base directory for benchmark scripts")
+    parser.add_argument("--experiments", type=str,
+                       help="Comma-separated list of experiments to run (format: model/tp/length_config)")
     
     args = parser.parse_args()
     
-    submitter = BenchmarkJobSubmitter(base_dir=args.base_dir)
+    # Parse experiments list if provided
+    experiments = None
+    if args.experiments:
+        experiments = [exp.strip() for exp in args.experiments.split(',')]
+        print(f"Running specific experiments: {experiments}")
+    
+    submitter = BenchmarkJobSubmitter(base_dir=args.base_dir, experiments=experiments)
     
     print("VLLM Benchmark Job Submitter")
     print(f"Base directory: {submitter.base_dir}")
     print(f"Log directory: {submitter.log_base_path}/benchmarking")
+    
+    if experiments:
+        print(f"Running {len(experiments)} specific experiments")
+    else:
+        print("Running default sweep configuration")
     
     if args.dry_run:
         print("\n*** DRY RUN MODE - No jobs will be submitted ***\n")

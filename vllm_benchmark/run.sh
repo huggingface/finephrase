@@ -1,9 +1,9 @@
 #!/bin/bash
 
 export BASE="/fsx/joel_niklaus/projects/finephrase/vllm_benchmark"
-export MODEL="Qwen/Qwen3-8B-FP8"
+export MODEL="google/gemma-3-1b-it"
 export SYSTEM="GPU"
-export TP=1
+export TP=2
 export DOWNLOAD_DIR=""
 export INPUT_LEN=8192
 export OUTPUT_LEN=$((4096 + 2048))

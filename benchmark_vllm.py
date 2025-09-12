@@ -183,6 +183,7 @@ export NUM_PROMPTS_MAIN=200
 export NUM_PROMPTS_SUB=200
 export VLLM_LOGGING_LEVEL="DEBUG"
 export LOG_FOLDER="{log_dir}/results"
+export PORT=$((8000 + SLURM_JOB_ID % 1000))
 
 # Job info
 echo "Starting benchmark job:"
@@ -193,6 +194,7 @@ echo "Output Length: $OUTPUT_LEN"
 echo "Max Model Length: $MAX_MODEL_LEN"
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $SLURM_NODELIST"
+echo "Port: $PORT"
 echo "Started at: $(date)"
 echo "================================"
 

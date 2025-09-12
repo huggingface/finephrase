@@ -6,6 +6,7 @@
 TAG=$(date +"%Y_%m_%d_%H_%M")
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 VLLM_LOGGING_LEVEL=${VLLM_LOGGING_LEVEL:-INFO}
+PORT=${PORT:-8004}
 BASE=${BASE:-"$SCRIPT_DIR/../../.."}
 MODEL=${MODEL:-"meta-llama/Llama-3.1-8B-Instruct"}
 SYSTEM=${SYSTEM:-"TPU"}
@@ -67,6 +68,18 @@ best_num_batched_tokens=0
 best_goodput=0
 best_request_rate=0
 
+kill_vllm_on_port() {
+    # Terminates only the vLLM server bound to the configured PORT.
+    # This avoids killing other concurrently running benchmark jobs on the same node
+    # which may be using different ports.
+    local pid
+    pid=$(lsof -t -iTCP:$PORT -sTCP:LISTEN 2>/dev/null || true)
+    if [[ -n "$pid" ]]; then
+        kill $pid || true
+        sleep 2
+    fi
+}
+
 start_server() {
     local gpu_memory_utilization=$1
     local max_num_seqs=$2
@@ -74,14 +87,14 @@ start_server() {
     local vllm_log=$4
     local profile_dir=$5
 
-    pkill -if vllm -u $USER || true
+    kill_vllm_on_port
 
     # Define the common arguments as a bash array.
     # Each argument and its value are separate elements.
     local common_args_array=(
         "$MODEL"
         "--disable-log-requests"
-        "--port" "8004"
+        "--port" "$PORT"
         "--gpu-memory-utilization" "$gpu_memory_utilization"
         "--max-num-seqs" "$max_num_seqs"
         "--max-num-batched-tokens" "$max_num_batched_tokens"
@@ -107,7 +120,7 @@ start_server() {
     # wait for 10 minutes...
     server_started=0
     for i in {1..60}; do
-        RESPONSE=$(curl -s -X GET "http://0.0.0.0:8004/health" -w "%{http_code}" -o /dev/stdout)
+        RESPONSE=$(curl -s -X GET "http://0.0.0.0:$PORT/health" -w "%{http_code}" -o /dev/stdout)
         STATUS_CODE=$(echo "$RESPONSE" | tail -n 1)
         if [[ "$STATUS_CODE" -eq 200 ]]; then
             server_started=1
@@ -134,7 +147,7 @@ run_benchmark() {
     echo "vllm_log: $vllm_log"
     echo
     rm -f $vllm_log
-    pkill -if vllm -u $USER || true
+    kill_vllm_on_port
 
     echo "starting server..."
     # Call start_server without a profile_dir to avoid profiling overhead
@@ -166,7 +179,7 @@ run_benchmark() {
         --goodput e2el:$MAX_LATENCY_ALLOWED_MS \
         --num-prompts $NUM_PROMPTS_MAIN \
         --random-prefix-len $prefix_len \
-        --port 8004 &> "$bm_log"
+        --port $PORT &> "$bm_log"
     throughput=$(grep "Request throughput (req/s):" "$bm_log" | sed 's/[^0-9.]//g')
     e2el=$(grep "P99 E2EL (ms):" "$bm_log" | awk '{print $NF}')
     goodput=$(grep "Request goodput (req/s):" "$bm_log" | sed 's/[^0-9.]//g')
@@ -181,7 +194,7 @@ run_benchmark() {
         request_rate=$((${throughput%.*} + 1))
         while ((request_rate > 0)); do
             # clear prefix cache
-            curl -X POST http://0.0.0.0:8004/reset_prefix_cache
+            curl -X POST http://0.0.0.0:$PORT/reset_prefix_cache
             sleep 5
             bm_log="$LOG_FOLDER/bm_log_${max_num_seqs}_${max_num_batched_tokens}_requestrate_${request_rate}.txt"
             vllm bench serve \
@@ -196,7 +209,7 @@ run_benchmark() {
                 --goodput e2el:$MAX_LATENCY_ALLOWED_MS \
                 --num-prompts $NUM_PROMPTS_SUB \
                 --random-prefix-len $prefix_len \
-                --port 8004 &> "$bm_log"
+                --port $PORT &> "$bm_log"
             throughput=$(grep "Request throughput (req/s):" "$bm_log" | sed 's/[^0-9.]//g')
             e2el=$(grep "P99 E2EL (ms):" "$bm_log" | awk '{print $NF}')
             goodput=$(grep "Request goodput (req/s):" "$bm_log" | sed 's/[^0-9.]//g')
@@ -225,7 +238,7 @@ run_benchmark() {
 
     echo "best_max_num_seqs: $best_max_num_seqs, best_num_batched_tokens: $best_num_batched_tokens, best_throughput: $best_throughput"
 
-    pkill -if vllm -u $USER || true
+    kill_vllm_on_port
     sleep 10
     echo "===================="
     return 0
@@ -295,7 +308,7 @@ if (( $(echo "$best_throughput > 0" | bc -l) )); then
         --goodput e2el:$MAX_LATENCY_ALLOWED_MS \
         --num-prompts $NUM_PROMPTS_SUB \
         --random-prefix-len $prefix_len \
-        --port 8004 \
+        --port $PORT \
         --profile &> "$bm_log"
 else
     echo "No configuration met the latency requirements. Skipping final profiling run."

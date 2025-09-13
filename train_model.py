@@ -6,12 +6,10 @@ import subprocess
 import yaml
 from datetime import datetime
 
-from utils import LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
+from utils import BASE_PATH, LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
-TRAINING_LOGS_PATH = f"{LOG_BASE_PATH}/training/logs"
-LAUNCH_CONFIGS_PATH = f"{LOG_BASE_PATH}/training/launch-configs"
-SLURM_SCRIPT_PATH = f"{LOG_BASE_PATH}/training/slurm-scripts"
+TRAINING_RUNS_PATH = f"{LOG_BASE_PATH}/training"
 
 NANOTRON_PATH = f"{PROJECT_PATH}/nanotron"
 S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
@@ -186,8 +184,9 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, 
 
     Returns: the id of the launched slurm job
     """
-    os.makedirs(f"{SLURM_SCRIPT_PATH}/{run_name}", exist_ok=True)
-    with open(f"{SLURM_SCRIPT_PATH}/{run_name}/{job_id}-{timestamp}.sh", "w") as f:
+    run_dir = f"{TRAINING_RUNS_PATH}/{run_name}"
+    slurm_logs_dir = f"{run_dir}/slurm_logs"
+    with open(f"{run_dir}/launch_script.slurm", "w") as f:
         f.write(launch_file_contents)
         f.flush()
       
@@ -196,11 +195,11 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, 
     if job_id:
       srun_args = ["srun", "--jobid", job_id, "--ntasks-per-node", "1", "--nodes", str(nodes)]
       if background:
-        srun_args += ["--output", f"{TRAINING_LOGS_PATH}/{run_name}/train-{timestamp}.out", "--error", f"{TRAINING_LOGS_PATH}/{run_name}/train-{timestamp}.err"]
+        srun_args += ["--output", f"{slurm_logs_dir}/train-{timestamp}.out", "--error", f"{slurm_logs_dir}/train-{timestamp}.err"]
         # Run the job in background - DOES NOT WAIT
         subprocess.Popen(srun_args + list(args) + [f.name])
         subprocess
-        print(f"Running in background. Logs: {TRAINING_LOGS_PATH}/{run_name}/train-{timestamp}.out {TRAINING_LOGS_PATH}/{run_name}/train-{timestamp}.err")
+        print(f"Running in background. Logs: {slurm_logs_dir}/train-{timestamp}.out {slurm_logs_dir}/train-{timestamp}.err")
       else:
         # Run in foreground till job is done - WAITS
         subprocess.check_call(srun_args + list(args) + [f.name])
@@ -215,7 +214,7 @@ parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, defa
 parser.add_argument("-d", help="Dependency job", type=str, default=None)
 parser.add_argument("--seed", help="Seed", type=int, default=6)
 parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
-parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=17_000)
+parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=8_500)
 parser.add_argument("--priority", "--qos", "-p", help="QoS to use", type=str, default="normal")
 parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
 parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")
@@ -309,14 +308,13 @@ def main():
     
     # Save the updated config
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    os.makedirs(f"{LAUNCH_CONFIGS_PATH}/{run_name}", exist_ok=True)
-    config_path_yaml = f"{LAUNCH_CONFIGS_PATH}/{run_name}/{timestamp}.yaml"
+    run_dir = f"{TRAINING_RUNS_PATH}/{run_name}"
+    os.makedirs(run_dir, exist_ok=True)
+    os.makedirs(f"{run_dir}/slurm_logs", exist_ok=True)
+    config_path_yaml = f"{run_dir}/config.yaml"
     
     with open(config_path_yaml, "w") as f:
         yaml.dump(config, f)
-    
-    # Create logs directory
-    os.makedirs(f"{TRAINING_LOGS_PATH}/{run_name}", exist_ok=True)
     
     # Build dataset download command if needed
     dataset_download_cmd = ""
@@ -337,12 +335,12 @@ def main():
 #SBATCH --cpus-per-task={NUM_CPUS_IN_NODE}
 #SBATCH --gres=gpu:{NUM_GPUS}
 #SBATCH --partition=hopper-prod
-#SBATCH --output={TRAINING_LOGS_PATH}/{run_name}/train-{timestamp}-%x-%j
+#SBATCH --output={run_dir}/slurm_logs/train-{timestamp}-%x-%j
 #SBATCH --qos={args.priority}
 #SBATCH --begin=now+0minutes
 #SBATCH --time={args.time}
 #SBATCH --exclusive
-#SBATCH --exclude=ip-26-0-160-242,ip-26-0-161-138,ip-26-0-160-103,ip-26-0-162-46
+#SBATCH --exclude=ip-26-0-160-103,ip-26-0-160-242,ip-26-0-161-138,ip-26-0-161-178,ip-26-0-162-46
 {"#SBATCH --dependency=afterok:" + args.d if args.d else ""}
 {"#SBATCH --reservation=" + args.reservation if args.reservation else ""}
 
@@ -405,10 +403,10 @@ echo "END TIME: $(date)"
     # Launch the job
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     job_id = launch_slurm_job(sbatch_script, args.job_id, args.nodes, args.background, run_name, timestamp)
-    log_path = f"{TRAINING_LOGS_PATH}/{run_name}/train-{timestamp}-{job_name}-{job_id}"
+    slurm_log_path = f"{run_dir}/slurm_logs/train-{timestamp}-{job_name}-{job_id}"
     
     print(f"Launched with Slurm job id = {job_id}")
-    print(f"To view the logs, use the command: tail -f {log_path}")
+    print(f"To view the logs, use: tail -f {slurm_log_path}")
 
 if __name__ == "__main__":
     main()

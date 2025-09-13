@@ -1,5 +1,4 @@
 import os
-from datatrove.pipeline.readers import JsonlReader, ParquetReader
 
 
 USER = os.environ.get('USER')
@@ -12,6 +11,8 @@ S3_BASE_PATH = f"s3://{PROJECT_NAME}/experiments"
 LOCAL_TMP_PATH_ON_NODE = f"/scratch/{USER}/tmp/{PROJECT_NAME}"
 
 def get_reader(path):
+    from datatrove.pipeline.readers import JsonlReader, ParquetReader
+
     if path.startswith("hf://"):
         # hf datasets are usually in Parquet format
         return ParquetReader

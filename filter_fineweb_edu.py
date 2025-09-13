@@ -1,10 +1,5 @@
 import argparse
 
-from datatrove.executor import SlurmPipelineExecutor
-from datatrove.pipeline.filters import LambdaFilter, SamplerFilter
-from datatrove.pipeline.writers import JsonlWriter
-from datatrove.pipeline.tokens import TokensCounter
-
 from utils import LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 
@@ -76,6 +71,11 @@ def main():
     _score_predicate = score_predicate_lq if args.quality == "lq" else score_predicate_hq
     
     reader = [build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True) for data_path in data_paths]
+
+    from datatrove.executor import SlurmPipelineExecutor
+    from datatrove.pipeline.filters import LambdaFilter, SamplerFilter
+    from datatrove.pipeline.writers import JsonlWriter
+    from datatrove.pipeline.tokens import TokensCounter
     
     if args.total_tokens is None:
         # If total tokens is not set, we just count the tokens

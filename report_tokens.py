@@ -1,10 +1,6 @@
-import os
 
-from datatrove.data import DocumentsPipeline
-from datatrove.executor.local import LocalPipelineExecutor
-from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.base import PipelineStep
-from datatrove.pipeline.tokens import TokensCounter
+from datatrove.data import DocumentsPipeline
 
 import argparse
 
@@ -72,6 +68,10 @@ def main():
     
     data_paths = args.data_paths.split(",")
     reader = [build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True) for data_path in data_paths]
+
+    from datatrove.executor.local import LocalPipelineExecutor
+    from datatrove.executor.slurm import SlurmPipelineExecutor
+    from datatrove.pipeline.tokens import TokensCounter
 
     pipeline = [
         *(reader),

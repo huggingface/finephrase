@@ -1,12 +1,7 @@
 import argparse
 
 from datatrove.pipeline.base import PipelineStep
-from datatrove.executor import SlurmPipelineExecutor
-from datatrove.pipeline.filters import SamplerFilter
-from datatrove.pipeline.readers import JsonlReader
-from datatrove.pipeline.writers import JsonlWriter
-from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
-from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
+
 
 from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
@@ -181,6 +176,12 @@ def main():
     print(f"Data paths: {data_paths}")
 
     logging_base_path = f"{LOG_BASE_PATH}/tokenization/{args.name}"
+
+    from datatrove.executor import SlurmPipelineExecutor
+    from datatrove.pipeline.filters import SamplerFilter
+    from datatrove.pipeline.writers import JsonlWriter
+    from datatrove.pipeline.tokens.tokenizer import DocumentTokenizer
+    from datatrove.pipeline.tokens.merger import DocumentTokenizerMerger
     
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{args.name}",

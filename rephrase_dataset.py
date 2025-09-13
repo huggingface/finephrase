@@ -14,11 +14,8 @@ from typing import Any
 
 from datatrove.data import Document, DocumentsPipeline
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
-from datatrove.pipeline.readers import JsonlReader
-from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.base import PipelineStep
-from datatrove.executor.slurm import SlurmPipelineExecutor
-from datatrove.executor.local import LocalPipelineExecutor
+
 
 from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
@@ -561,6 +558,11 @@ def main():
     
     if args.debug:
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
+
+    from datatrove.pipeline.readers import JsonlReader
+    from datatrove.pipeline.writers import JsonlWriter
+    from datatrove.executor.slurm import SlurmPipelineExecutor
+    from datatrove.executor.local import LocalPipelineExecutor
 
     config: InferenceConfig = InferenceConfig(
         server_type=args.server_type,

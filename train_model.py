@@ -214,7 +214,7 @@ parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, defa
 parser.add_argument("-d", help="Dependency job", type=str, default=None)
 parser.add_argument("--seed", help="Seed", type=int, default=6)
 parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
-parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=9_500)
+parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=10_000)
 parser.add_argument("--priority", "--qos", "-p", help="QoS to use", type=str, default="normal")
 parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
 parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")
@@ -233,7 +233,7 @@ def main():
 
     # Tokens per step == 4096 * batch_accumulation_per_replica * micro_batch_size * dp
     total_tokens_consumed = round(4096 * 4 * 2 * NUM_GPUS * args.nodes * args.train_steps / 1e9) # in billions
-    print(f"Total tokens consumed: {total_tokens_consumed}B")
+    print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
     
     # Update the config with the provided arguments
     run_name = args.run_name.replace(" ", "_")

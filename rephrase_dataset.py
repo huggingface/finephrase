@@ -16,7 +16,6 @@ from datatrove.data import Document, DocumentsPipeline
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 from datatrove.pipeline.base import PipelineStep
 
-
 from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 class EduScoreStatsLogger(PipelineStep):

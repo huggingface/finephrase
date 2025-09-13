@@ -71,7 +71,7 @@ filter-fineweb-edu \
   --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
   --name fineweb-edu-hq-20BT \
-  --subset_tokens 20e9 \
+  --subset_tokens 21.5e9 \
   --total_tokens 217715141792
 ```
 
@@ -81,7 +81,7 @@ filter-fineweb-edu \
   --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
   --name fineweb-edu-lq-20BT \
-  --subset_tokens 20e9 \
+  --subset_tokens 21.5e9 \
   --total_tokens 1644271223950
 ```
 

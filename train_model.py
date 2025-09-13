@@ -214,7 +214,7 @@ parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, defa
 parser.add_argument("-d", help="Dependency job", type=str, default=None)
 parser.add_argument("--seed", help="Seed", type=int, default=6)
 parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
-parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=8_500)
+parser.add_argument("--train_steps", "-ts", help="Training steps", type=int, default=9_500)
 parser.add_argument("--priority", "--qos", "-p", help="QoS to use", type=str, default="normal")
 parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
 parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")

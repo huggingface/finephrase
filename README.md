@@ -70,8 +70,8 @@ Use `filter-fineweb-edu` to create datasets with specific educational quality sc
 filter-fineweb-edu \
   --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
-  --name fineweb-edu-hq-18BT \
-  --subset_tokens 18e9 \
+  --name fineweb-edu-hq-20BT \
+  --subset_tokens 20e9 \
   --total_tokens 217715141792
 ```
 
@@ -80,8 +80,8 @@ filter-fineweb-edu \
 filter-fineweb-edu \
   --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
-  --name fineweb-edu-lq-18BT \
-  --subset_tokens 18e9 \
+  --name fineweb-edu-lq-20BT \
+  --subset_tokens 20e9 \
   --total_tokens 1644271223950
 ```
 
@@ -96,8 +96,8 @@ Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 Prepare datasets for training by tokenizing them:
 
 ```
-tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq-18BT --name fineweb-edu-hq-18BT --sample 1
-tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-18BT --name fineweb-edu-lq-18BT --sample 1
+tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fineweb-edu-hq-20BT --sample 1
+tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fineweb-edu-lq-20BT --sample 1
 ```
 
 ## Model Training & Evaluation
@@ -106,15 +106,15 @@ tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-18BT -
 Train 1B parameter models on your tokenized datasets:
 
 ```
-train s3://finephrase/experiments/tokenized/fineweb-edu-hq-18BT finweb-edu-hq-18BT
-train s3://finephrase/experiments/tokenized/fineweb-edu-lq-18BT finweb-edu-lq-18BT
+train s3://finephrase/experiments/tokenized/fineweb-edu-hq-20BT finweb-edu-hq-20BT
+train s3://finephrase/experiments/tokenized/fineweb-edu-lq-20BT finweb-edu-lq-20BT
 ```
 
 ### Evaluating Checkpoints
 Run evaluations manually if automatic ones fail during training:
 
 ```
-evaluate fineweb-edu-hq-18BT-18B-seed-606,fineweb-edu-lq-18BT-18B-seed-606
+evaluate fineweb-edu-hq-20BT-20B-seed-606,fineweb-edu-lq-20BT-20B-seed-606
 ```
 
 ## Data Generation
@@ -123,7 +123,7 @@ evaluate fineweb-edu-hq-18BT-18B-seed-606,fineweb-edu-lq-18BT-18B-seed-606
 Generate synthetic training data by rephrasing existing content:
 
 ```
-rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-18BT --prompt_template dspy/5-max_full_evals.md --name dspy-5-max_full_evals --limit 1000
+rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt_template dspy/5-max_full_evals.md --name dspy-5-max_full_evals --limit 1000
 ```
 
 **Available prompts for data quality improvement:**

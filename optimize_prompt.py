@@ -354,10 +354,10 @@ def setup_logging(log_dir: str) -> None:
     log_path = Path(log_dir)
     log_path.mkdir(parents=True, exist_ok=True)
     
-    # Create log filename with timestamp
-    from datetime import datetime
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = log_path / f"optimize_prompt_{timestamp}.log"
+    # Create log filename with timestamp under slurm_logs (to match other modules)
+    slurm_logs_path = log_path / "slurm_logs"
+    slurm_logs_path.mkdir(parents=True, exist_ok=True)
+    log_file = slurm_logs_path / f"optimize_prompt.log"
     
     # Configure logging
     logging.basicConfig(
@@ -416,12 +416,44 @@ parser.add_argument(
     default=5,
     help="Budget for GEPA optimization (max_full_evals, default: 5)"
 )
+parser.add_argument(
+    "--name",
+    type=str,
+    required=True,
+    help="Run name; used as the per-run directory inside --log-dir",
+)
+parser.add_argument(
+    "--run_local",
+    action="store_true",
+    help="Run locally instead of using Slurm",
+)
+parser.add_argument(
+    "--time",
+    type=str,
+    default="20:00:00",
+    help="Slurm time limit (default: 20:00:00)",
+)
+parser.add_argument(
+    "--partition",
+    type=str,
+    default="hopper-cpu",
+    help="Slurm partition (default: hopper-cpu)",
+)
+parser.add_argument(
+    "--qos",
+    type=str,
+    default="normal",
+    help="Slurm QoS (default: normal)",
+)
+parser.add_argument(
+    "--dep_job_id",
+    type=str,
+    default=None,
+    help="Optional Slurm dependency job id",
+)
 
-def main():
-    """Main optimization function."""
-    args = parser.parse_args()
-    
-    # Setup logging
+def run_optimization(args) -> None:
+    """Execute the prompt optimization end-to-end."""
     setup_logging(args.log_dir)
     
     logging.info("Starting prompt optimization with DSPy GEPA...")
@@ -446,7 +478,7 @@ def main():
     )
     dspy.settings.configure(lm=lm)
     
-    reflection_lm = configure_model_provider(reflection_provider, reflection_model_name, max_tokens=8192)
+    reflection_lm = configure_model_provider(reflection_provider, reflection_model_name, max_tokens=16384)
 
     # Test the rephrasing model connection
     logging.info("Testing models connection...")
@@ -455,13 +487,70 @@ def main():
     test_response = reflection_lm("Test message for reflection model", max_tokens=10)
     logging.info(f"Reflection model test successful: {test_response}")
 
-
     # Prepare training and validation datasets
     trainset, valset = prepare_dataset(args.train_size, args.val_size, args.seed)
 
     optimized_module = optimize_rephraser(trainset, valset, reflection_lm, args.seed, args.budget)
 
-    optimized_module.save(f"{args.log_dir}/optimized_module_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl")
+    # Save optimized module
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    optimized_module.save(f"{args.log_dir}/optimized_module_{timestamp}.pkl")
+
+    # Save final optimized prompt(s)
+    try:
+        prompt_written = False
+        for _name, pred in optimized_module.named_predictors():
+            if getattr(getattr(pred, "signature", None), "instructions", None):
+                prompt_path = Path(args.log_dir) / "optimized_prompt.md"
+                with open(prompt_path, "w", encoding="utf-8") as f:
+                    f.write(pred.signature.instructions)
+                prompt_written = True
+                break
+        if not prompt_written:
+            # Fallback: save string representation
+            prompt_path = Path(args.log_dir) / "optimized_prompt.md"
+            with open(prompt_path, "w", encoding="utf-8") as f:
+                f.write(str(optimized_module))
+    except Exception as e:
+        logging.error(f"Failed to save optimized_prompt: {e}")
+
+
+def main():
+    """Main optimization entrypoint with a per-run directory; unified logging."""
+    args = parser.parse_args()
+
+    # Per-run directory inside prompt_optimization: use --name
+    run_dir = f"{args.log_dir}/{args.name}"
+    Path(run_dir).mkdir(parents=True, exist_ok=True)
+    # Ensure downstream uses the per-run directory
+    args.log_dir = run_dir
+
+    # Build a simple pipeline step that runs the optimization once
+    def _run_step(_data, rank: int = 0, world_size: int = 1):
+        run_optimization(args)
+        return []
+
+    from datatrove.executor.local import LocalPipelineExecutor
+    from datatrove.executor.slurm import SlurmPipelineExecutor
+
+    if args.run_local:
+        executor = LocalPipelineExecutor(pipeline=[_run_step])
+    else:
+        executor = SlurmPipelineExecutor(
+            pipeline=[_run_step],
+            tasks=1,
+            time=args.time,
+            partition=args.partition,
+            cpus_per_task=20,
+            mem_per_cpu_gb=4,
+            qos=args.qos,
+            logging_dir=run_dir,
+            job_name=f"optimize-prompt-{args.name}",
+            env_command="sleep $((RANDOM % 30))",
+            depends_job_id=args.dep_job_id,
+        )
+
+    executor.run()
 
 
 if __name__ == "__main__":

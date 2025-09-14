@@ -12,6 +12,7 @@ Usage:
 
 import random
 import dspy
+import litellm
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import Optional, Any
@@ -26,6 +27,10 @@ from utils import LOG_BASE_PATH
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Ensure LiteLLM does not forward unsupported params (e.g., max_retries) to providers
+litellm.drop_params = True
+litellm.set_verbose = False
 
 # Load fineweb edu classifier for scoring
 edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
@@ -311,7 +316,8 @@ def configure_model_provider(provider: str, model_name: str, max_tokens: int = 4
             raise ValueError("DEEPSEEK_API_KEY environment variable is required for DeepSeek provider")
     elif provider == "huggingface":
         api_base = f'https://router.huggingface.co/v1'
-        dspy_model_name = f"huggingface/{model_name}"
+        # Route via OpenAI adapter to avoid forwarding liteLLM-only params to HF router
+        dspy_model_name = f"openai/{model_name}"
         api_key = os.getenv("HF_TOKEN")
         if not api_key:
             raise ValueError("HF_TOKEN environment variable is required for HuggingFace provider")
@@ -440,11 +446,7 @@ def main():
     )
     dspy.settings.configure(lm=lm)
     
-    reflection_lm = configure_model_provider(
-        reflection_provider, 
-        reflection_model_name, 
-        max_tokens=8192, 
-    )
+    reflection_lm = configure_model_provider(reflection_provider, reflection_model_name, max_tokens=8192)
 
     # Test the rephrasing model connection
     logging.info("Testing models connection...")

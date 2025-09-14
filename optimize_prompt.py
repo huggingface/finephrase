@@ -5,10 +5,9 @@ This script optimizes prompts for rephrasing web text data to improve educationa
 using the fineweb edu score classifier as the evaluation metric and GEPA optimizer.
 
 Usage:
-    optimize-prompt --rephrasing-model sglang/Qwen/Qwen3-0.6B-FP8 --reflection-model deepseek/deepseek-chat --port 8000 --train-size 20 --val-size 5
     optimize-prompt --rephrasing-model deepseek/deepseek-chat --reflection-model deepseek/deepseek-chat --train-size 50 --val-size 10 --seed 123 --log-dir ./logs
-    optimize-prompt --rephrasing-model vllm/meta-llama/Llama-2-7b-hf --reflection-model openrouter/meta-llama/llama-3.1-8b-instruct --train-size 100 --val-size 20
-    optimize-prompt --rephrasing-model sglang/meta-llama/Llama-2-7b-hf --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20
+    optimize-prompt --rephrasing-model openrouter/meta-llama/llama-3.1-8b-instruct --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20
+    optimize-prompt --rephrasing-model huggingface/google/gemma-3-27b-it --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20
 """
 
 import random
@@ -16,9 +15,6 @@ import dspy
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import Optional, Any
-import subprocess
-import time
-import requests
 import os
 import argparse
 import logging
@@ -101,125 +97,6 @@ def gepa_metric(
         logging.error(f"Error in metric evaluation: {e}")
         return 0.0
 
-from abc import ABC, abstractmethod
-
-class ServerManager(ABC):
-    """Abstract base class for server lifecycle management."""
-    
-    def __init__(self, model_name: str, port: int = 8000):
-        self.model_name = model_name
-        self.port = port
-        self.process = None
-    
-    def __enter__(self):
-        """Start server when entering context."""
-        logging.info(f"Starting {self.__class__.__name__} for {self.model_name} on port {self.port}...")
-        
-        cmd = self._build_command()
-        logging.info(f"Running command: {' '.join(cmd)}")
-        self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        logging.info(f"Server process started with PID: {self.process.pid}")
-        
-        # Wait for server to start
-        max_retries = 60  # Increased wait time for model loading
-        for i in range(max_retries):
-            # Check if process is still running
-            if self.process.poll() is not None:
-                # Process has terminated, get the output
-                stdout, stderr = self.process.communicate()
-                logging.error(f"Server process terminated unexpectedly!")
-                logging.error(f"STDOUT: {stdout.decode('utf-8')}")
-                logging.error(f"STDERR: {stderr.decode('utf-8')}")
-                raise RuntimeError(f"Server process terminated with code {self.process.returncode}")
-            
-            if self._check_server_ready():
-                logging.info(f"{self.__class__.__name__} started successfully on port {self.port}")
-                return self
-            
-            time.sleep(5)  # Increased wait time between retries
-            logging.info(f"Waiting for {self.__class__.__name__} to start... ({i+1}/{max_retries})")
-        
-        # If we get here, the server failed to start
-        self._cleanup()
-        raise RuntimeError(f"Failed to start {self.__class__.__name__}")
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Clean up server when exiting context."""
-        self._cleanup()
-    
-    @abstractmethod
-    def _build_command(self) -> list:
-        """Build the command to start the server."""
-        pass
-    
-    @abstractmethod
-    def _check_server_ready(self) -> bool:
-        """Check if the server is ready to accept requests."""
-        pass
-    
-    def _cleanup(self):
-        """Terminate the server process."""
-        if self.process:
-            logging.info(f"Shutting down {self.__class__.__name__}...")
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                logging.warning(f"Force killing {self.__class__.__name__}...")
-                self.process.kill()
-                self.process.wait()
-            self.process = None
-
-class VLLMServerManager(ServerManager):
-    """Context manager for VLLM server lifecycle management."""
-    
-    def _build_command(self) -> list:
-        """Build the VLLM server command."""
-        return [
-            "vllm", "serve", self.model_name,
-            "--port", str(self.port),
-            "--host", "127.0.0.1"
-        ]
-    
-    def _check_server_ready(self) -> bool:
-        """Check if the VLLM server is ready."""
-        try:
-            # Try both health endpoints that VLLM might use
-            for endpoint in ["/health", "/v1/models"]:
-                try:
-                    response = requests.get(f"http://127.0.0.1:{self.port}{endpoint}")
-                    if response.status_code == 200:
-                        return True
-                except requests.exceptions.ConnectionError:
-                    continue
-            return False
-        except Exception:
-            return False
-
-class SGLangServerManager(ServerManager):
-    """Context manager for SGLang server lifecycle management."""
-    
-    def _build_command(self) -> list:
-        """Build the SGLang server command."""
-        return [
-            "python3", "-m", "sglang.launch_server",
-            "--model-path", self.model_name,
-            "--allow-auto-truncate",
-            "--context-length", "8192",  # Default context length
-            "--port", str(self.port),
-            "--log-level-http", "warning"
-        ]
-    
-    def _check_server_ready(self) -> bool:
-        """Check if the SGLang server is ready."""
-        try:
-            # SGLang typically uses the /v1/models endpoint
-            response = requests.get(f"http://127.0.0.1:{self.port}/v1/models")
-            return response.status_code == 200
-        except requests.exceptions.ConnectionError:
-            return False
-        except Exception:
-            return False
 
 def load_fineweb_samples(n_samples: int = 100) -> list:
     """Load random samples from FineWeb dataset."""
@@ -300,7 +177,7 @@ def prepare_dataset(train_size: int, val_size: int, seed: int = 42) -> tuple[lis
     
     return trainset, valset
 
-def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: int = 42):
+def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: int = 42, budget: int = 5):
     """
     Optimize the rephraser module using GEPA.
     
@@ -309,6 +186,7 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: i
         valset: Validation examples for evaluation
         reflection_lm: Language model for reflection
         seed: Random seed for reproducibility
+        budget: Budget for GEPA optimization (max_full_evals)
     
     Returns:
         Optimized rephraser module
@@ -319,9 +197,7 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: i
     # Configure GEPA optimizer
     gepa = dspy.GEPA(
         metric=gepa_metric,
-        #auto="light",  # Light budget for quick experimentation
-        max_full_evals=5,
-        #max_metric_calls=10,
+        max_full_evals=budget,
         reflection_lm=reflection_lm,
         reflection_minibatch_size=1,
         candidate_selection_strategy="pareto",
@@ -406,26 +282,22 @@ def parse_model_string(model_string: str) -> tuple[str, str]:
     
     return provider, model_name
 
-def configure_model_provider(provider: str, model_name: str, max_tokens: int = 1024, temperature: float = 0.7, top_p: float = 0.8, port: int = 8000) -> dspy.LM:
+def configure_model_provider(provider: str, model_name: str, max_tokens: int = 4096, temperature: float = None, top_p: float = None, top_k: int = None) -> dspy.LM:
     """
     Configure and create a DSPy model for the specified provider.
     
     Args:
-        provider: Provider name (vllm, sglang, openrouter, deepseek, huggingface)
+        provider: Provider name (openrouter, deepseek, huggingface)
         model_name: Model name
         max_tokens: Maximum tokens for the model
-        temperature: Temperature for the model
-        port: Port for local servers (VLLM/SGLang)
+        temperature: Temperature for the model (optional)
+        top_p: Top-p for the model (optional)
+        top_k: Top-k for the model (optional)
     
     Returns:
         Configured DSPy LM instance
     """
-    if provider in ["vllm", "sglang"]:
-        # Configure DSPy with local VLLM/SGLang server (explicit OpenAI provider)
-        api_base = f'http://127.0.0.1:{port}/v1'
-        dspy_model_name = f"openai/{model_name}"
-        api_key = os.getenv("OPENAI_API_KEY", "dummy-key")  # VLLM doesn't need a real key
-    elif provider == "openrouter":
+    if provider == "openrouter":
         api_base = f'https://openrouter.ai/api/v1'
         dspy_model_name = f"openrouter/{model_name}"
         api_key = os.getenv("OPENROUTER_API_KEY")
@@ -446,37 +318,24 @@ def configure_model_provider(provider: str, model_name: str, max_tokens: int = 1
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     
-    return dspy.LM(
-        model=dspy_model_name,
-        api_key=api_key,
-        api_base=api_base,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=20,
-        presence_penalty=1.5 if "Qwen3" in model_name else None,
-        extra_body={"chat_template_kwargs": {"enable_thinking": False}} if "Qwen3" in model_name else {},
-        default_headers={"X-HF-Bill-To": "huggingface"} if provider == "huggingface" else None,
-    )
+    # Build kwargs for dspy.LM, only including optional parameters if they are set
+    lm_kwargs = {
+        "model": dspy_model_name,
+        "api_key": api_key,
+        "api_base": api_base,
+        "max_tokens": max_tokens,
+        "default_headers": {"X-HF-Bill-To": "huggingface"} if provider == "huggingface" else None,
+    }
+    
+    if temperature is not None:
+        lm_kwargs["temperature"] = temperature
+    if top_p is not None:
+        lm_kwargs["top_p"] = top_p
+    if top_k is not None:
+        lm_kwargs["top_k"] = top_k
+    
+    return dspy.LM(**lm_kwargs)
 
-def get_server_manager(provider: str, model_name: str, port: int) -> ServerManager:
-    """
-    Get the appropriate server manager for the given provider.
-    
-    Args:
-        provider: Provider name (vllm, sglang)
-        model_name: Model name
-        port: Port for the server
-    
-    Returns:
-        Server manager instance
-    """
-    if provider == "vllm":
-        return VLLMServerManager(model_name, port)
-    elif provider == "sglang":
-        return SGLangServerManager(model_name, port)
-    else:
-        raise ValueError(f"No server manager available for provider: {provider}")
 
 def setup_logging(log_dir: str) -> None:
     """
@@ -512,20 +371,14 @@ parser = argparse.ArgumentParser(description="Optimize prompts for rephrasing lo
 parser.add_argument(
     "--rephrasing-model",
     type=str,
-    default="huggingface/Qwen/Qwen3-0.6B",
-    help="Model name for rephrasing in format {provider}/{model_name} (default: vllm/Qwen/Qwen3-0.6B-FP8)"
+    default="huggingface/google/gemma-3-27b-it",
+    help="Model name for rephrasing in format {provider}/{model_name} (default: huggingface/google/gemma-3-27b-it)"
 )
 parser.add_argument(
     "--reflection-model",
     type=str,
-    default="deepseek/deepseek-chat",
-    help="Model name for reflection in format {provider}/{model_name} (default: deepseek/deepseek-chat). Currently no vllm/sglang models support reflection."
-)
-parser.add_argument(
-    "--port",
-    type=int,
-    default=8000,
-    help="Port for VLLM server (default: 8000)"
+    default="huggingface/deepseek-ai/DeepSeek-V3.1",
+    help="Model name for reflection in format {provider}/{model_name} (default: huggingface/deepseek-ai/DeepSeek-V3.1)."
 )
 parser.add_argument(
     "--train-size",
@@ -548,8 +401,14 @@ parser.add_argument(
 parser.add_argument(
     "--log-dir",
     type=str,
-    default=LOG_BASE_PATH,
-    help=f"Directory to save log files (default: {LOG_BASE_PATH})"
+    default=f"{LOG_BASE_PATH}/prompt_optimization",
+    help=f"Directory to save log files (default: {LOG_BASE_PATH}/prompt_optimization)"
+)
+parser.add_argument(
+    "--budget",
+    type=int,
+    default=5,
+    help="Budget for GEPA optimization (max_full_evals, default: 5)"
 )
 
 def main():
@@ -563,10 +422,10 @@ def main():
     logging.info("Configuration:")
     logging.info(f"  Rephrasing model: {args.rephrasing_model}")
     logging.info(f"  Reflection model: {args.reflection_model}")
-    logging.info(f"  Port: {args.port}")
     logging.info(f"  Training examples: {args.train_size}")
     logging.info(f"  Validation examples: {args.val_size}")
     logging.info(f"  Random seed: {args.seed}")
+    logging.info(f"  Budget (max_full_evals): {args.budget}")
     logging.info(f"  Log directory: {args.log_dir}")
     
     # Parse model strings
@@ -577,41 +436,30 @@ def main():
     lm = configure_model_provider(
         rephrasing_provider, 
         rephrasing_model_name, 
-        max_tokens=8192, 
-        temperature=0.7, 
-        top_p=0.8,
-        port=args.port
+        max_tokens=4096, # we only train on 4096 tokens
     )
     dspy.settings.configure(lm=lm)
     
     reflection_lm = configure_model_provider(
         reflection_provider, 
         reflection_model_name, 
-        max_tokens=2048, 
-        temperature=0.8,
-        top_p=0.95,
+        max_tokens=8192, 
     )
+
+    # Test the rephrasing model connection
+    logging.info("Testing models connection...")
+    test_response = lm("Test message for rephrasing model", max_tokens=10)
+    logging.info(f"Rephrasing model test successful: {test_response}")
+    test_response = reflection_lm("Test message for reflection model", max_tokens=10)
+    logging.info(f"Reflection model test successful: {test_response}")
+
 
     # Prepare training and validation datasets
     trainset, valset = prepare_dataset(args.train_size, args.val_size, args.seed)
 
-    if rephrasing_provider in ["vllm", "sglang"]:
-        # Use context manager for local server (VLLM or SGLang)
-        server_manager = get_server_manager(rephrasing_provider, rephrasing_model_name, args.port)
-        with server_manager:
-            # Test the connection with a simple call
-            logging.info(f"Testing {rephrasing_provider} server connection...")
-            try:
-                test_response = lm("Test message", max_tokens=10)
-                logging.info(f"Server test successful: {test_response}")
-            except Exception as e:
-                logging.error(f"Server test failed: {e}")
-                raise
-            optimized_module = optimize_rephraser(trainset, valset, reflection_lm, args.seed)
-    else:
-        optimized_module = optimize_rephraser(trainset, valset, reflection_lm, args.seed)
+    optimized_module = optimize_rephraser(trainset, valset, reflection_lm, args.seed, args.budget)
 
-    optimized_module.save(f"{LOG_BASE_PATH}/optimized_module_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl")
+    optimized_module.save(f"{args.log_dir}/optimized_module_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl")
 
 
 if __name__ == "__main__":

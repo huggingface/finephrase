@@ -106,15 +106,15 @@ tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT -
 Train 1B parameter models on your tokenized datasets:
 
 ```
-train s3://finephrase/experiments/tokenized/fineweb-edu-hq-20BT finweb-edu-hq-20BT
-train s3://finephrase/experiments/tokenized/fineweb-edu-lq-20BT finweb-edu-lq-20BT
+train s3://finephrase/experiments/tokenized/fineweb-edu-hq-20BT fineweb-edu-hq-20BT
+train s3://finephrase/experiments/tokenized/fineweb-edu-lq-20BT fineweb-edu-lq-20BT
 ```
 
 ### Evaluating Checkpoints
 Run evaluations manually if automatic ones fail during training:
 
 ```
-evaluate fineweb-edu-hq-20BT-20B-seed-606,fineweb-edu-lq-20BT-20B-seed-606
+evaluate fineweb-edu-hq-20BT-21B-seed-606,fineweb-edu-lq-20BT-21B-seed-606
 ```
 
 ## Data Generation

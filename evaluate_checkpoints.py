@@ -14,7 +14,7 @@ import itertools
 from datatrove.io import get_datafolder
 from loguru import logger
 
-from utils import LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
+from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
 S3_EVALS_RESULTS_PREFIX = f"{S3_BASE_PATH}/evals-test"
@@ -231,13 +231,13 @@ def read_tasks_from_file(tasks_list_path: str) -> Set[str]:
 parser = argparse.ArgumentParser("Launch evals for a set of checkpoints.")
 
 parser.add_argument(
-    "model_name", type=str, help="Model name on s3. Example: 1p46G-control-english-fw-ft-bl-28BT-seed-6. Use commas for multiple models", required=True
+    "model_name", type=str, help="Model name on s3. Example: 1p46G-control-english-fw-ft-bl-28BT-seed-6. Use commas for multiple models"
 )
 parser.add_argument(
     "--s3_prefix", type=str, help="s3://path/to/models/ by default", default=f"{S3_BASE_PATH}/checkpoints"
 )
 parser.add_argument(
-    "--checkpoints", "-ckpts", type=str, help="Comma separated list of checkpoints to run, or \"all\"", default="all"
+    "--checkpoints", type=str, help="Comma separated list of checkpoints to run, or \"all\"", default="all"
 )
 parser.add_argument("--model-template", type=str, help="Template to use for the model name", default="{model_name}")
 parser.add_argument("--run-all", action="store_true", default=False, help="Run in sequence")
@@ -247,9 +247,9 @@ parser.add_argument("--offline-datasets", action="store_true", help="Turns off d
 parser.add_argument("--seed", help="Defines seeds to use in model template. Comma separated list of seeds", default="6")
 parser.add_argument("--qos", type=str, default="normal", help="qos to use")
 parser.add_argument("--time_limit", type=str, default="1:50:00", help="slurm time limit. 1:50:00 by default")
-parser.add_argument("--parallel", "-p", type=int, default=5, help="How many eval tasks to run simultaneously")
-parser.add_argument("--batch_size", "-bs", type=int, default=None, help="Batch size")
-parser.add_argument("--gpus", "-g", type=int, default=GPUS_PER_NODE, help="How many gpus to use")
+parser.add_argument("--parallel", type=int, default=5, help="How many eval tasks to run simultaneously")
+parser.add_argument("--batch_size", type=int, default=None, help="Batch size")
+parser.add_argument("--gpus", type=int, default=GPUS_PER_NODE, help="How many gpus to use")
 parser.add_argument("--logging_dir", type=str, default=S3_EVALS_RESULTS_PREFIX, help="S3 repo to push results to")
 parser.add_argument("-d", help="dependency job", type=str, default=None)
 parser.add_argument("--overwrite", "-ow", action="store_true", default=False, help="Overwrite existing eval results. Will skip completed checkpoints by default")
@@ -350,7 +350,7 @@ def main():
 
 # Ensure cache is on fsx not on admin
 export HF_DATASETS_OFFLINE={1 if args.offline_datasets else 0}
-export TMPDIR=/scratch/{USER}/tmp
+export TMPDIR={LOCAL_TMP_PATH_ON_NODE}
 source {PROJECT_PATH}/.venv/bin/activate
 mkdir -p $TMPDIR
 
@@ -388,7 +388,7 @@ echo "Tasks to evaluate: $TASKS_TO_EVAL"
 
 RANDOM_NUMBER=$((RANDOM % 60 + 5))
 # Local directory for downloading the checkpoint
-LOCAL_DOWNLOAD_CHECKPOINT_FOLDER=/scratch/{USER}/eval-checkpoints/{formatted_model_name}-$RANDOM_NUMBER/$STEP
+LOCAL_DOWNLOAD_CHECKPOINT_FOLDER={LOCAL_TMP_PATH_ON_NODE}/eval-checkpoints/{formatted_model_name}-$RANDOM_NUMBER/$STEP
 mkdir -p $LOCAL_DOWNLOAD_CHECKPOINT_FOLDER
 
 # Copying checkpoint from s3 to the node's scratch space

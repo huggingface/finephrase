@@ -450,6 +450,13 @@ echo "Cleanup complete."
 
 echo "END TIME: $(date)"
 """
+        # Save the launch script to the eval_launch_script_path
+        launch_script_filename = f"eval-{formatted_model_name}{task_suffix}-{current_time}.slurm"
+        launch_script_full_path = os.path.join(eval_launch_script_path, launch_script_filename)
+        with open(launch_script_full_path, "w") as f:
+            f.write(launch_script)
+        os.chmod(launch_script_full_path, 0o755)
+
         launched_id = launch_slurm_job(launch_script, debug=args.debug)
         
         # Create summary of what's being evaluated

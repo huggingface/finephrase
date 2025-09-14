@@ -231,7 +231,7 @@ def read_tasks_from_file(tasks_list_path: str) -> Set[str]:
 parser = argparse.ArgumentParser("Launch evals for a set of checkpoints.")
 
 parser.add_argument(
-    "model_name", type=str, help="Model name on s3. Example: 1p46G-control-english-fw-ft-bl-28BT-seed-6. Use commas for multiple models"
+    "model_name", type=str, help="Model name on s3. Example: fineweb-edu-lq-20BT-21B-seed-606. Use commas for multiple models"
 )
 parser.add_argument(
     "--s3_prefix", type=str, help="s3://path/to/models/ by default", default=f"{S3_BASE_PATH}/checkpoints"

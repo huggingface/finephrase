@@ -27,6 +27,7 @@ module load cuda/12.4
 
 ### Install dependencies (order is important)
 ```
+uv pip install setuptools
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch==2.6.0+cu124"
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ "torchvision==0.21.0+cu124"
 uv pip install --no-build-isolation  "flash_attn==2.7.4.post1"

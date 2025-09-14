@@ -99,13 +99,17 @@ start_server() {
         "--port" "$PORT"
         "--gpu-memory-utilization" "$gpu_memory_utilization"
         "--max-num-seqs" "$max_num_seqs"
-        "--max-num-batched-tokens" "$max_num_batched_tokens"
         "--tensor-parallel-size" "$TP"
         "--enable-prefix-caching"
         "--load-format" "dummy"
         "--download-dir" "$DOWNLOAD_DIR"
         "--max-model-len" "$MAX_MODEL_LEN"
     )
+
+    # Optionally include max-num-batched-tokens unless 'none' or empty
+    if [[ -n "$max_num_batched_tokens" && "$max_num_batched_tokens" != "none" ]]; then
+        common_args_array+=( "--max-num-batched-tokens" "$max_num_batched_tokens" )
+    fi
 
     # Use the array expansion "${common_args_array[@]}"
     # This correctly passes each element as a separate argument.

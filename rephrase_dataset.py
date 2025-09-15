@@ -233,6 +233,31 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
                 final_output_text = final_output_text.strip()
         
         return thinking_text, final_output_text
+
+    def parse_structured_generated_text(text: str) -> str:
+        """
+        Extract the generated text from the structured output format:
+        [[ ## generated_text ## ]]
+        {text}
+        [[ ## completed ## ]]
+
+        If markers are missing, fall back to the full text.
+        """
+        if not text:
+            return ""
+        start_marker = "[[ ## generated_text ## ]]"
+        end_marker = "[[ ## completed ## ]]"
+        start_idx = text.find(start_marker)
+        if start_idx == -1:
+            return text.strip()
+        start_idx += len(start_marker)
+        # Skip a potential leading newline
+        if start_idx < len(text) and text[start_idx] == "\n":
+            start_idx += 1
+        end_idx = text.find(end_marker, start_idx)
+        if end_idx == -1:
+            end_idx = len(text)
+        return text[start_idx:end_idx].strip()
     
     def format_thinking_display(thinking_text: str) -> str:
         """
@@ -290,7 +315,9 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
                         break
         
         # Parse thinking and final output
-        thinking_text, final_output_text = parse_thinking_output(output_text)
+        thinking_text, final_output_raw = parse_thinking_output(output_text)
+        # Extract the generated text segment if present
+        final_output_text = parse_structured_generated_text(final_output_raw)
         
         # Calculate metrics for input, thinking, and final output
         input_token_count = count_tokens(document.text)

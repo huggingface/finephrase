@@ -12,6 +12,7 @@ Usage:
 
 import random
 import dspy
+import json
 import litellm
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -21,7 +22,6 @@ import argparse
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
-from datetime import datetime
 
 from utils import LOG_BASE_PATH
 
@@ -480,10 +480,20 @@ def run_optimization(args) -> None:
         rephrasing_provider, 
         rephrasing_model_name, 
         max_tokens=4096, # we only train on 4096 tokens
+        temperature=1.0,
+        top_p=0.95,
+        top_k=64,
     )
     dspy.settings.configure(lm=lm)
     
-    reflection_lm = configure_model_provider(reflection_provider, reflection_model_name, max_tokens=16384)
+    reflection_lm = configure_model_provider(
+        reflection_provider, 
+        reflection_model_name, 
+        max_tokens=16384, 
+        temperature=0.6, 
+        top_p=0.95, 
+        top_k=64
+    )
 
     # Test the rephrasing model connection
     logging.info("Testing models connection...")
@@ -498,27 +508,55 @@ def run_optimization(args) -> None:
     signature_cls = Rephraser if args.task == "rephrase" else Summarizer
     optimized_module = optimize_task_module(trainset, valset, reflection_lm, args.seed, args.budget, signature_cls=signature_cls)
 
-    # Save optimized module
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    optimized_module.save(f"{args.log_dir}/optimized_module_{timestamp}.pkl")
+    optimized_module.save(f"{args.log_dir}/optimized_module.pkl")
 
-    # Save final optimized prompt(s)
+    # Save the last LM interaction
     try:
-        prompt_written = False
-        for _name, pred in optimized_module.named_predictors():
-            if getattr(getattr(pred, "signature", None), "instructions", None):
-                prompt_path = Path(args.log_dir) / "optimized_prompt.md"
-                with open(prompt_path, "w", encoding="utf-8") as f:
-                    f.write(pred.signature.instructions)
-                prompt_written = True
-                break
-        if not prompt_written:
-            # Fallback: save string representation
-            prompt_path = Path(args.log_dir) / "optimized_prompt.md"
-            with open(prompt_path, "w", encoding="utf-8") as f:
-                f.write(str(optimized_module))
+        if getattr(lm, "history", None):
+            last_entry = lm.history[-1]
+            logging.info(f"Last LM interaction: {last_entry}")
+            # Keep only JSON-serializable fields
+            record = {
+                "timestamp": last_entry.get("timestamp"),
+                "uuid": last_entry.get("uuid"),
+                "model": last_entry.get("model"),
+                "response_model": last_entry.get("response_model"),
+                "model_type": last_entry.get("model_type"),
+                "messages": last_entry.get("messages"),
+                "outputs": last_entry.get("outputs"),
+                "kwargs": last_entry.get("kwargs"),
+            }
+            with open(Path(args.log_dir) / "last_lm_interaction.json", "w", encoding="utf-8") as f:
+                json.dump(record, f, ensure_ascii=False, indent=2)
+
+            # Write system.md and user.md
+            messages = last_entry.get("messages") or []
+            system_content = ""
+            user_content = ""
+            for m in messages:
+                if m.get("role") == "system" and isinstance(m.get("content"), str):
+                    system_content = m["content"]
+                if m.get("role") == "user" and isinstance(m.get("content"), str):
+                    user_content = m["content"]
+
+            # Extract user prompt segment per requested structure: split by two newlines and take last part
+            if user_content:
+                parts = user_content.split("\n\n")
+                user_extracted = parts[-1] if parts else user_content
+            else:
+                user_extracted = ""
+
+            prompts_dir = Path(args.log_dir) / "prompts"
+            prompts_dir.mkdir(parents=True, exist_ok=True)
+
+            with open(prompts_dir / "system.md", "w", encoding="utf-8") as f:
+                f.write(system_content)
+            # Compose user prompt to include the original_text placeholder and the trailing instruction
+            user_prompt_template = "[[ ## original_text ## ]]\n[TEXT]\n\n" + user_extracted
+            with open(prompts_dir / "user.md", "w", encoding="utf-8") as f:
+                f.write(user_prompt_template)
     except Exception as e:
-        logging.error(f"Failed to save optimized_prompt: {e}")
+        logging.warning(f"Failed to save last LM interaction: {e}", exc_info=True)
 
 
 def main():
@@ -548,7 +586,7 @@ def main():
     from datatrove.executor.slurm import SlurmPipelineExecutor
 
     if args.run_local:
-        executor = LocalPipelineExecutor(pipeline=[_run_step])
+        executor = LocalPipelineExecutor(pipeline=[_run_step], logging_dir=run_dir)
     else:
         executor = SlurmPipelineExecutor(
             pipeline=[_run_step],

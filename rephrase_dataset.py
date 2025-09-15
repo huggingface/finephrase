@@ -403,7 +403,7 @@ parser.add_argument(
     "--output_path", type=str, help="Path to the base output folder.", default=S3_BASE_PATH
 )
 parser.add_argument(
-    "--model_name_or_path", type=str, help="Model name or path for inference", default="Qwen/Qwen3-0.6B-FP8"
+    "--model_name_or_path", type=str, help="Model name or path for inference", default="google/gemma-3-270m-it"
 )
 parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to rephrase", default=-1
@@ -412,13 +412,13 @@ parser.add_argument(
     "--n_tasks", type=int, help="Number of parallel tasks", default=1
 )
 parser.add_argument(
-    "--temperature", type=float, help="Temperature for inference", default=0.7
+    "--temperature", type=float, help="Temperature for inference", default=1
 )
 parser.add_argument(
-    "--top_p", type=float, help="Top-p (nucleus sampling) for inference", default=0.8
+    "--top_p", type=float, help="Top-p (nucleus sampling) for inference", default=0.95
 )
 parser.add_argument(
-    "--top_k", type=int, help="Top-k sampling for inference", default=20
+    "--top_k", type=int, help="Top-k sampling for inference", default=64
 )
 parser.add_argument(
     "--presence_penalty", type=float, help="Presence penalty for inference", default=1.5
@@ -483,20 +483,7 @@ parser.add_argument(
     "--enable_chunked_prefill", action="store_true", default=True, help="Enable chunked prefill"
 )
 parser.add_argument(
-    # https://docs.vllm.ai/en/latest/configuration/optimization.html#performance-tuning-with-chunked-prefill
-    "--max_num_batched_tokens", type=int, default=256, help="Maximum number of tokens to batch"
-)
-parser.add_argument(
-    "--max_num_seqs", type=int, default=256, help="Maximum number of sequences to batch"
-)
-parser.add_argument(
     "--tp", type=int, default=1, help="Tensor parallelism size"
-)
-parser.add_argument(
-    "--pp", type=int, default=1, help="Pipeline parallelism size"
-)
-parser.add_argument(
-    "--dp", type=int, default=1, help="Data parallelism size"
 )
 parser.add_argument(
     "--gpu_memory_utilization", type=float, default=0.98, help="GPU memory utilization"
@@ -536,13 +523,9 @@ def main():
         max_concurrent_tasks=args.max_concurrent_tasks,
         metric_interval=args.metric_interval,
         tp=args.tp,
-        pp=args.pp,
-        dp=args.dp,
         model_kwargs={
             "enable_prefix_caching": args.enable_prefix_caching,
             "enable_chunked_prefill": args.enable_chunked_prefill,
-            "max_num_batched_tokens": args.max_num_batched_tokens,
-            "max_num_seqs": args.max_num_seqs,
             "gpu_memory_utilization": args.gpu_memory_utilization,
         },
     )

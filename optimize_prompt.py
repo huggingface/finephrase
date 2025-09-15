@@ -15,7 +15,6 @@ import dspy
 import json
 import litellm
 from datasets import load_dataset
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import Optional, Any
 import os
 import argparse
@@ -23,7 +22,7 @@ import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
-from utils import LOG_BASE_PATH
+from utils import LOG_BASE_PATH, calculate_edu_score
 
 # Load environment variables from .env file
 load_dotenv()
@@ -32,25 +31,6 @@ load_dotenv()
 litellm.drop_params = True
 litellm.set_verbose = False
 
-# Load fineweb edu classifier for scoring
-edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
-edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
-
-def calculate_edu_score(text: str) -> float:
-    """Calculate fineweb edu score for text."""
-    if not text.strip():
-        return 0.0
-    
-    try:
-        inputs = edu_tokenizer(text, return_tensors="pt", padding="longest", truncation=True)
-        outputs = edu_model(**inputs)
-        logits = outputs.logits.squeeze(-1).float().detach().numpy()
-        score = logits.item()
-        return max(0.0, min(score, 5.0))  # Clamp between 0 and 5
-    except Exception:
-        return 0.0
-
-# Define the rephrasing module
 class Rephraser(dspy.Signature):
     """Rephrase low-quality web text into higher quality, more educational content."""
     

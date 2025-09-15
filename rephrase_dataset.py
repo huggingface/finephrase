@@ -12,62 +12,17 @@ import argparse
 import os
 from typing import Any
 
-from datatrove.data import Document, DocumentsPipeline
+from datatrove.data import Document
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
-from datatrove.pipeline.base import PipelineStep
 
-from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
-
-class EduScoreStatsLogger(PipelineStep):
-    """
-    Pipeline step that logs education score statistics from document metadata.
-    """
-    
-    type = "📊 - STATS"
-    name = "Education Score Stats Logger"
-    
-    def __init__(self):
-        super().__init__()
-    
-    def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
-        """
-        Log education score statistics and pass documents through unchanged.
-        
-        Args:
-            data: Input documents pipeline
-            rank: Worker rank
-            world_size: Total number of workers
-            
-        Yields:
-            Documents unchanged after logging stats
-        """
-        for doc in data:
-            with self.track_time():
-                # Extract education scores from metadata
-                input_edu_score = doc.metadata.get("input", {}).get("score", 0.0)
-                thinking_edu_score = doc.metadata.get("thinking", {}).get("score", 0.0)
-                output_edu_score = doc.metadata.get("score", 0.0)
-                edu_score_difference = doc.metadata.get("edu_score_difference", 0.0)
-                edu_score_improvement = doc.metadata.get("edu_score_improvement", 0)
-
-                input_token_count = doc.metadata.get("input", {}).get("token_count", 0)
-                thinking_token_count = doc.metadata.get("thinking", {}).get("token_count", 0)
-                output_token_count = doc.metadata.get("token_count", 0)
-                token_reduction = doc.metadata.get("token_reduction", 0)
-                
-                # Log the statistics
-                self.stat_update("input_edu_score", value=input_edu_score)
-                self.stat_update("thinking_edu_score", value=thinking_edu_score)
-                self.stat_update("output_edu_score", value=output_edu_score)
-                self.stat_update("edu_score_difference", value=edu_score_difference)
-                self.stat_update("edu_score_improvement", value=edu_score_improvement)
-
-                self.stat_update("input_token_count", value=input_token_count)
-                self.stat_update("thinking_token_count", value=thinking_token_count)
-                self.stat_update("output_token_count", value=output_token_count)
-                self.stat_update("token_reduction", value=token_reduction)
-                
-            yield doc
+from utils import (
+    LOCAL_TMP_PATH_ON_NODE,
+    LOG_BASE_PATH,
+    S3_BASE_PATH,
+    build_reader,
+    EduScoreStatsLogger,
+    calculate_edu_score_dict,
+)
 
 
 def load_prompt_template(template_path: str) -> str:
@@ -173,8 +128,8 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
     Returns:
         Postprocess function that processes LLM output and saves to metadata
     """
-    # Lazily initialized caches
-    tokenizer, edu_tokenizer, edu_model = None, None, None
+    # Lazily initialized cache for token counting tokenizer
+    tokenizer = None
 
     def count_tokens(text: str) -> int:
         """Count tokens in text using tokenizer; lazily load on first use."""
@@ -187,24 +142,6 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
                 return len(tokenizer.encode(text))
         return 0
     
-    def calculate_edu_score(text: str) -> dict:
-        """Calculate fineweb edu score; lazily load model on first use."""
-        nonlocal edu_tokenizer, edu_model
-        if not text or not text.strip():
-            return {"score": 0.0, "int_score": 0}
-        if edu_tokenizer is None or edu_model is None:
-            from transformers import AutoTokenizer, AutoModelForSequenceClassification
-            edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
-            edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
-        try:
-            inputs = edu_tokenizer(text, return_tensors="pt", padding="longest", truncation=True)
-            outputs = edu_model(**inputs)
-            logits = outputs.logits.squeeze(-1).float().detach().numpy()
-            score = logits.item()
-            int_score = int(round(max(0, min(score, 5))))
-            return {"score": score, "int_score": int_score}
-        except Exception:
-            return {"score": 0.0, "int_score": 0}
 
     def parse_thinking_output(text: str) -> tuple[str, str]:
         """
@@ -324,9 +261,9 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         thinking_token_count = count_tokens(thinking_text)
         final_output_token_count = count_tokens(final_output_text)
         
-        input_edu_scores = calculate_edu_score(document.text)
-        thinking_edu_scores = calculate_edu_score(thinking_text)
-        final_output_edu_scores = calculate_edu_score(final_output_text)
+        input_edu_scores = calculate_edu_score_dict(document.text)
+        thinking_edu_scores = calculate_edu_score_dict(thinking_text)
+        final_output_edu_scores = calculate_edu_score_dict(final_output_text)
         
         # Collect input-related metadata fields to move
         input_metadata_fields = ["dump", "url", "date", "file_path", "language", "language_score", "filter_reason"]

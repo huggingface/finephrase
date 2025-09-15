@@ -4,13 +4,13 @@ Synthetic pretraining data by rephrasing the web
 ## Setup
 
 ### Install uv and setup a venv
-```
+```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv --python 3.10
 ```
 
 ### Clone the core repos from correct branch
-```
+```bash
 git clone -b nanotron-working-branch git@github.com:huggingface/nanotron.git
 git clone -b lighteval-experiment-setup  git@github.com:huggingface/lighteval.git
 git clone -b fix-nanotron git@github.com:joelniklaus/datatrove.git
@@ -20,13 +20,13 @@ git clone -b fix-nanotron git@github.com:joelniklaus/datatrove.git
 In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to set `recursive=True`.
 
 ### Enter a GPU node for installation
-```
+```bash
 srun --gpus=1 --qos=high --time="02:00:00" --pty bash
 module load cuda/12.4
 ```
 
 ### Install dependencies (order is important)
-```
+```bash
 uv pip install setuptools
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch==2.6.0+cu124"
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ "torchvision==0.21.0+cu124"
@@ -36,7 +36,7 @@ uv pip install -e .
 ```
 
 ### Test the installation
-```
+```bash
 python -c "import nanotron"
 ```
 
@@ -59,7 +59,7 @@ All commands support `--help` to see available options.
 ### Token Statistics
 Get comprehensive token statistics for any dataset:
 
-```
+```bash
 report-tokens --data_paths s3://path/to/dataset1,hf://datasets/owner/dataset2
 ```
 
@@ -67,7 +67,7 @@ report-tokens --data_paths s3://path/to/dataset1,hf://datasets/owner/dataset2
 Use `filter-fineweb-edu` to create datasets with specific educational quality scores.
 
 **HQ data** (rounded int_score 4,5 or score > 3.5):
-```
+```bash
 filter-fineweb-edu \
   --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
@@ -77,7 +77,7 @@ filter-fineweb-edu \
 ```
 
 **LQ data** (rounded int_score 0,1 or score < 1.5):
-```
+```bash
 filter-fineweb-edu \
   --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
@@ -96,7 +96,7 @@ Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 ### Tokenizing Datasets
 Prepare datasets for training by tokenizing them:
 
-```
+```bash
 tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fineweb-edu-hq-20BT --sample 1
 tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fineweb-edu-lq-20BT --sample 1
 ```
@@ -106,7 +106,7 @@ tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT -
 ### Training Models
 Train 1B parameter models on your tokenized datasets:
 
-```
+```bash
 train s3://finephrase/experiments/tokenized/fineweb-edu-hq-20BT fineweb-edu-hq-20BT
 train s3://finephrase/experiments/tokenized/fineweb-edu-lq-20BT fineweb-edu-lq-20BT
 ```
@@ -114,8 +114,16 @@ train s3://finephrase/experiments/tokenized/fineweb-edu-lq-20BT fineweb-edu-lq-2
 ### Evaluating Checkpoints
 Run evaluations manually if automatic ones fail during training:
 
-```
+```bash
 evaluate fineweb-edu-hq-20BT-21B-seed-606,fineweb-edu-lq-20BT-21B-seed-606
+```
+
+## Prompt Optimization
+
+Optimize prompts for text generation tasks using DSPy GEPA:
+
+```bash
+optimize-prompt --budget 5 --train-size 50 --val-size 20 --test-size 1000
 ```
 
 ## Data Generation
@@ -123,7 +131,7 @@ evaluate fineweb-edu-hq-20BT-21B-seed-606,fineweb-edu-lq-20BT-21B-seed-606
 ### Rephrasing Datasets
 Generate synthetic training data by rephrasing existing content:
 
-```
+```bash
 rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt_template dspy/5-max_full_evals.md --name dspy-5-max_full_evals --limit 1000
 ```
 
@@ -162,7 +170,7 @@ launch-experiments config/rephrase_benchmark.yaml --run-names "qwen_0.6b_thinkin
 ### Visualizing Rephrasing Statistics
 Generate bar charts comparing educational score improvements across rephrasing experiments:
 
-```
+```bash
 python /fsx/joel_niklaus/projects/finephrase/plot_rephrasing_stats.py
 ```
 

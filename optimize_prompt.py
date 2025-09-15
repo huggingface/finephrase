@@ -1,15 +1,15 @@
 """
-Prompt optimization script using DSPy GEPA for rephrasing low-quality web data.
+Prompt optimization script using DSPy GEPA for rephrasing and summarizing low-quality web data.
 
-This script optimizes prompts for rephrasing web text data to improve educational quality,
+This script optimizes prompts for rephrasing and summarizing web text data to improve educational quality,
 using the fineweb edu score classifier as the evaluation metric and GEPA optimizer.
 After optimization, it evaluates the optimized prompt on a separate set of new FineWeb samples
 and reports edu scores and their differences.
 
 Usage:
-    optimize-prompt --rephrasing-model deepseek/deepseek-chat --reflection-model deepseek/deepseek-chat --train-size 50 --val-size 10 --test-size 1000 --seed 123 --log-dir ./logs
-    optimize-prompt --rephrasing-model openrouter/meta-llama/llama-3.1-8b-instruct --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20 --test-size 500
-    optimize-prompt --rephrasing-model huggingface/google/gemma-3-27b-it --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20 --test-size 1000
+    optimize-prompt --generation-model deepseek/deepseek-chat --reflection-model deepseek/deepseek-chat --train-size 50 --val-size 10 --test-size 1000 --seed 123 --log-dir ./logs
+    optimize-prompt --generation-model openrouter/meta-llama/llama-3.1-8b-instruct --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20 --test-size 500
+    optimize-prompt --generation-model huggingface/google/gemma-3-27b-it --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20 --test-size 1000
 """
 
 import random
@@ -331,10 +331,10 @@ def setup_logging(log_dir: str) -> None:
 
 parser = argparse.ArgumentParser(description="Optimize prompts for web-text tasks (rephrase, summarize) using DSPy GEPA")
 parser.add_argument(
-    "--rephrasing-model",
+    "--generation-model",
     type=str,
     default="huggingface/google/gemma-3-27b-it",
-    help="Model name for rephrasing in format {provider}/{model_name} (default: huggingface/google/gemma-3-27b-it)"
+    help="Model name for generation in format {provider}/{model_name} (default: huggingface/google/gemma-3-27b-it)"
 )
 parser.add_argument(
     "--reflection-model",
@@ -377,12 +377,6 @@ parser.add_argument(
     type=int,
     default=5,
     help="Budget for GEPA optimization (max_full_evals, default: 5)"
-)
-parser.add_argument(
-    "--name",
-    type=str,
-    required=True,
-    help="Run name; used as the per-run directory inside --log-dir",
 )
 parser.add_argument(
     "--run_local",
@@ -433,7 +427,7 @@ def run_optimization(args) -> None:
     logging.info("Starting prompt optimization with DSPy GEPA...")
     logging.info("Configuration:")
     logging.info(f"  Task: {args.task}")
-    logging.info(f"  Rephrasing model: {args.rephrasing_model}")
+    logging.info(f"  Generation model: {args.generation_model}")
     logging.info(f"  Reflection model: {args.reflection_model}")
     logging.info(f"  Training examples: {args.train_size}")
     logging.info(f"  Validation examples: {args.val_size}")
@@ -443,13 +437,13 @@ def run_optimization(args) -> None:
     logging.info(f"  Log directory: {args.log_dir}")
     
     # Parse model strings
-    rephrasing_provider, rephrasing_model_name = parse_model_string(args.rephrasing_model)
+    generation_provider, generation_model_name = parse_model_string(args.generation_model)
     reflection_provider, reflection_model_name = parse_model_string(args.reflection_model)
     
     # Create models directly
     lm = configure_model_provider(
-        rephrasing_provider, 
-        rephrasing_model_name, 
+        generation_provider, 
+        generation_model_name, 
         max_tokens=4096, # we only train on 4096 tokens
         temperature=1.0,
         top_p=0.95,
@@ -466,10 +460,9 @@ def run_optimization(args) -> None:
         top_k=64
     )
 
-    # Test the rephrasing model connection
     logging.info("Testing models connection...")
-    test_response = lm("Test message for rephrasing model", max_tokens=10)
-    logging.info(f"Rephrasing model test successful: {test_response}")
+    test_response = lm("Test message for generation model", max_tokens=10)
+    logging.info(f"Generation model test successful: {test_response}")
     test_response = reflection_lm("Test message for reflection model", max_tokens=10)
     logging.info(f"Reflection model test successful: {test_response}")
 
@@ -594,8 +587,8 @@ def main():
         args.budget = 1
         args.run_local = True
 
-    # Per-run directory inside prompt_optimization: use --name
-    run_name = f"{args.task}-budget-{args.budget}-{args.name}"
+    # Per-run directory inside prompt_optimization
+    run_name = f"{args.task}-budget-{args.budget}-train-{args.train_size}-val-{args.val_size}"
     run_dir = f"{args.log_dir}/{run_name}"
     Path(run_dir).mkdir(parents=True, exist_ok=True)
     # Ensure downstream uses the per-run directory

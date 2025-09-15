@@ -3,11 +3,13 @@ Prompt optimization script using DSPy GEPA for rephrasing low-quality web data.
 
 This script optimizes prompts for rephrasing web text data to improve educational quality,
 using the fineweb edu score classifier as the evaluation metric and GEPA optimizer.
+After optimization, it evaluates the optimized prompt on a separate set of new FineWeb samples
+and reports edu scores and their differences.
 
 Usage:
-    optimize-prompt --rephrasing-model deepseek/deepseek-chat --reflection-model deepseek/deepseek-chat --train-size 50 --val-size 10 --seed 123 --log-dir ./logs
-    optimize-prompt --rephrasing-model openrouter/meta-llama/llama-3.1-8b-instruct --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20
-    optimize-prompt --rephrasing-model huggingface/google/gemma-3-27b-it --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20
+    optimize-prompt --rephrasing-model deepseek/deepseek-chat --reflection-model deepseek/deepseek-chat --train-size 50 --val-size 10 --test-size 1000 --seed 123 --log-dir ./logs
+    optimize-prompt --rephrasing-model openrouter/meta-llama/llama-3.1-8b-instruct --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20 --test-size 500
+    optimize-prompt --rephrasing-model huggingface/google/gemma-3-27b-it --reflection-model deepseek/deepseek-chat --train-size 100 --val-size 20 --test-size 1000
 """
 
 import random
@@ -21,6 +23,7 @@ import argparse
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
+from statistics import mean
 
 from utils import LOG_BASE_PATH, calculate_edu_score
 
@@ -109,53 +112,58 @@ def load_fineweb_samples(n_samples: int = 100) -> list:
     logging.info(f"Loaded {len(samples)} valid samples")
     return samples
 
-def prepare_dataset(train_size: int, val_size: int, seed: int = 42) -> tuple[list, list]:
+
+def prepare_datasets(train_size: int, val_size: int, test_size: int, seed: int = 42) -> tuple[list, list, list]:
     """
-    Prepare training and validation datasets from FineWeb.
+    Prepare non-overlapping training, validation, and test datasets from FineWeb.
     
     Args:
         train_size: Number of training examples to prepare
         val_size: Number of validation examples to prepare
+        test_size: Number of test examples to prepare
         seed: Random seed for reproducibility
     
     Returns:
-        Tuple of (trainset, valset) with non-overlapping examples
+        Tuple of (trainset, valset, testset) with non-overlapping examples
     """
     # Set random seed for reproducibility
     random.seed(seed)
-    
-    # Load training and validation examples from FineWeb (non-overlapping sets)
-    total_samples_needed = train_size + val_size
-    logging.info(f"Loading {total_samples_needed} total samples from FineWeb...")
+
+    total_samples_needed = train_size + val_size + test_size
+    logging.info(f"Loading {total_samples_needed} total samples from FineWeb (train/val/test)...")
     all_samples = load_fineweb_samples(n_samples=total_samples_needed)
-    
+
     # Ensure we have enough samples
     if len(all_samples) < total_samples_needed:
         logging.warning(f"Only {len(all_samples)} samples available, but {total_samples_needed} requested")
         logging.info("Adjusting sizes proportionally...")
-        ratio = len(all_samples) / total_samples_needed
+        ratio = len(all_samples) / max(total_samples_needed, 1)
         adjusted_train_size = int(train_size * ratio)
-        adjusted_val_size = len(all_samples) - adjusted_train_size
+        adjusted_val_size = int(val_size * ratio)
+        adjusted_test_size = max(len(all_samples) - adjusted_train_size - adjusted_val_size, 0)
         logging.info(f"  New training size: {adjusted_train_size}")
         logging.info(f"  New validation size: {adjusted_val_size}")
+        logging.info(f"  New test size: {adjusted_test_size}")
     else:
         adjusted_train_size = train_size
         adjusted_val_size = val_size
-    
-    # Split into non-overlapping train and validation sets
+        adjusted_test_size = test_size
+
+    # Split into non-overlapping train, validation, and test sets
     trainset = all_samples[:adjusted_train_size]
     valset = all_samples[adjusted_train_size:adjusted_train_size + adjusted_val_size]
-    
+    testset = all_samples[adjusted_train_size + adjusted_val_size:adjusted_train_size + adjusted_val_size + adjusted_test_size]
+
     logging.info("Dataset split completed:")
     logging.info(f"  Training examples: {len(trainset)}")
     logging.info(f"  Validation examples: {len(valset)}")
-    logging.info(f"  No overlap: {len(set(id(x) for x in trainset) & set(id(x) for x in valset)) == 0}")
-    
-    return trainset, valset
+    logging.info(f"  Test examples: {len(testset)}")
+
+    return trainset, valset, testset
 
 def optimize_task_module(trainset: list, valset: list, reflection_lm: Any, seed: int = 42, budget: int = 5, signature_cls=Rephraser):
     """
-    Optimize the rephraser module using GEPA.
+    Optimize the task module using GEPA and return the optimized module.
     
     Args:
         trainset: Training examples for optimization
@@ -192,30 +200,6 @@ def optimize_task_module(trainset: list, valset: list, reflection_lm: Any, seed:
     )
     
     logging.info("Optimization completed!")
-    
-    # Test the optimized module on a few examples
-    logging.info("Testing optimized module:")
-    test_examples = valset[:min(3, len(valset))]
-
-    example_length = 2000
-    
-    for i, example in enumerate(test_examples):
-        logging.info(f"--- Example {i+1} ---")
-        original_score = calculate_edu_score(example.original_text)
-        logging.info(f"Original (edu score: {original_score:.2f}):")
-        original_preview = example.original_text[:example_length] + "..." if len(example.original_text) > example_length else example.original_text
-        logging.info(f"Original text: {original_preview}")
-        
-        result = optimized_module(original_text=example.original_text)
-        output_text = result.generated_text
-        output_score = calculate_edu_score(output_text)
-        
-        output_preview = output_text[:example_length] + "..." if len(output_text) > example_length else output_text
-        logging.info(f"Output (edu score: {output_score:.2f}):")
-        logging.info(f"Output text: {output_preview}")
-        
-        improvement = output_score - original_score
-        logging.info(f"Improvement: {improvement:.2f}")
     
     # Print optimization statistics if available
     if hasattr(optimized_module, 'detailed_results'):
@@ -371,6 +355,12 @@ parser.add_argument(
     help="Number of validation examples (default: 20)"
 )
 parser.add_argument(
+    "--test-size",
+    type=int,
+    default=1000,
+    help="Number of new FineWeb samples for post-optimization evaluation (default: 1000)"
+)
+parser.add_argument(
     "--seed",
     type=int,
     default=42,
@@ -447,6 +437,7 @@ def run_optimization(args) -> None:
     logging.info(f"  Reflection model: {args.reflection_model}")
     logging.info(f"  Training examples: {args.train_size}")
     logging.info(f"  Validation examples: {args.val_size}")
+    logging.info(f"  Test examples (post-eval): {args.test_size}")
     logging.info(f"  Random seed: {args.seed}")
     logging.info(f"  Budget (max_full_evals): {args.budget}")
     logging.info(f"  Log directory: {args.log_dir}")
@@ -482,8 +473,8 @@ def run_optimization(args) -> None:
     test_response = reflection_lm("Test message for reflection model", max_tokens=10)
     logging.info(f"Reflection model test successful: {test_response}")
 
-    # Prepare training and validation datasets
-    trainset, valset = prepare_dataset(args.train_size, args.val_size, args.seed)
+    # Prepare non-overlapping training, validation, and test datasets
+    trainset, valset, testset = prepare_datasets(args.train_size, args.val_size, args.test_size, args.seed)
 
     signature_cls = Rephraser if args.task == "rephrase" else Summarizer
     optimized_module = optimize_task_module(trainset, valset, reflection_lm, args.seed, args.budget, signature_cls=signature_cls)
@@ -494,8 +485,6 @@ def run_optimization(args) -> None:
     try:
         if getattr(lm, "history", None):
             last_entry = lm.history[-1]
-            logging.info(f"Last LM interaction: {last_entry}")
-            # Keep only JSON-serializable fields
             record = {
                 "timestamp": last_entry.get("timestamp"),
                 "uuid": last_entry.get("uuid"),
@@ -538,6 +527,60 @@ def run_optimization(args) -> None:
     except Exception as e:
         logging.warning(f"Failed to save last LM interaction: {e}", exc_info=True)
 
+    # Evaluate on non-overlapping test set: log one example, compute and save stats over all
+    logging.info("Evaluating optimized module on the held-out test set...")
+    
+    n_test = len(testset)
+    if n_test == 0:
+        logging.warning("Test set is empty; skipping evaluation and stats computation.")
+        stats = {
+            "n": 0,
+            "mean_original_edu_score": 0.0,
+            "mean_generated_edu_score": 0.0,
+            "mean_edu_score_improvement": 0.0,
+        }
+    else:
+        example_length = 2000
+        # Show a single example
+        example = testset[0]
+        original_score = calculate_edu_score(example.original_text)
+        original_preview = example.original_text[:example_length] + "..." if len(example.original_text) > example_length else example.original_text
+        logging.info("--- Test Example 1 ---")
+        logging.info(f"Original (edu score: {original_score:.2f}):")
+        logging.info(f"Original text: {original_preview}")
+
+        result = optimized_module(original_text=example.original_text)
+        output_text = result.generated_text
+        output_score = calculate_edu_score(output_text)
+        output_preview = output_text[:example_length] + "..." if len(output_text) > example_length else output_text
+        logging.info(f"Output (edu score: {output_score:.2f}):")
+        logging.info(f"Output text: {output_preview}")
+        logging.info(f"Improvement: {output_score - original_score:.2f}")
+
+        # Compute statistics across full test set
+        original_scores = []
+        generated_scores = []
+        improvements = []
+        for ex in testset:
+            orig = calculate_edu_score(ex.original_text)
+            gen_text = optimized_module(original_text=ex.original_text).generated_text
+            gen = calculate_edu_score(gen_text)
+            original_scores.append(orig)
+            generated_scores.append(gen)
+            improvements.append(gen - orig)
+
+        stats = {
+            "n": n_test,
+            "mean_original_edu_score": float(mean(original_scores)) if original_scores else 0.0,
+            "mean_generated_edu_score": float(mean(generated_scores)) if generated_scores else 0.0,
+            "mean_edu_score_improvement": float(mean(improvements)) if improvements else 0.0,
+        }
+
+    stats_path = Path(args.log_dir) / "edu_score_stats.json"
+    with open(stats_path, "w", encoding="utf-8") as f:
+        json.dump(stats, f, ensure_ascii=False, indent=2)
+    logging.info(f"Saved edu score statistics to {stats_path}")
+
 
 def main():
     """Main optimization entrypoint with a per-run directory; unified logging."""
@@ -547,6 +590,7 @@ def main():
     if getattr(args, "debug", False):
         args.train_size = 2
         args.val_size = 2
+        args.test_size = 2
         args.budget = 1
         args.run_local = True
 

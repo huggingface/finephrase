@@ -55,18 +55,14 @@ class Rephraser(dspy.Signature):
     """Rephrase low-quality web text into higher quality, more educational content."""
     
     original_text = dspy.InputField(desc="The original low-quality web text to rephrase")
-    rephrased_text = dspy.OutputField(desc="The rephrased, higher-quality version of the text")
+    generated_text = dspy.OutputField(desc="The rephrased, higher-quality version of the text")
 
-class RephraseModule(dspy.Module):
-    def __init__(self):
-        super().__init__()
-        self.rephrase = dspy.ChainOfThought(Rephraser)
-    
-    def forward(self, original_text):
-        result = self.rephrase(original_text=original_text)
-        return dspy.Prediction(rephrased_text=result.rephrased_text)
+class Summarizer(dspy.Signature):
+    """Summarize the input text into a concise, clear summary that preserves key points."""
 
-# Define the evaluation metric for GEPA
+    original_text = dspy.InputField(desc="The original text to summarize")
+    generated_text = dspy.OutputField(desc="A concise summary of the original text")
+
 def gepa_metric(
     gold: dspy.Example,
     pred: dspy.Prediction,
@@ -79,24 +75,19 @@ def gepa_metric(
     Returns a numeric score for compatibility with DSPy's evaluation system.
     """
     try:
-        # Get the original and rephrased text
+        # Get the original and generated text
         original_text = gold.original_text
-        rephrased_text = pred.rephrased_text
+        generated_text = pred.generated_text
         
         # Calculate edu scores for both
         original_score = calculate_edu_score(original_text)
-        rephrased_score = calculate_edu_score(rephrased_text)
+        generated_score = calculate_edu_score(generated_text)
         
-        # Return the improvement in educational score (normalized to 0-1)
-        # Add a small bonus for any improvement to encourage optimization
-        improvement = rephrased_score - original_score
-        if improvement > 0:
-            score = min(1.0, 0.5 + (improvement / 5.0))  # Base 0.5 + improvement bonus
-        else:
-            score = max(0.0, 0.5 + (improvement / 5.0))  # Penalty for degradation
+        # Return the improvement in educational score
+        improvement = generated_score - original_score
         
         # Log feedback for debugging (since we can't return it in dict format)
-        logging.debug(f"Evaluation: Original={original_score:.2f}, Rephrased={rephrased_score:.2f}, Improvement={improvement:.2f}, Score={score:.2f}")
+        logging.debug(f"Evaluation: Original={original_score:.2f}, Output={generated_score:.2f}, Improvement={improvement:.2f}")
         return improvement
     except Exception as e:
         logging.error(f"Error in metric evaluation: {e}")
@@ -182,7 +173,7 @@ def prepare_dataset(train_size: int, val_size: int, seed: int = 42) -> tuple[lis
     
     return trainset, valset
 
-def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: int = 42, budget: int = 5):
+def optimize_task_module(trainset: list, valset: list, reflection_lm: Any, seed: int = 42, budget: int = 5, signature_cls=Rephraser):
     """
     Optimize the rephraser module using GEPA.
     
@@ -194,10 +185,10 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: i
         budget: Budget for GEPA optimization (max_full_evals)
     
     Returns:
-        Optimized rephraser module
+        Optimized task module
     """
     # Initialize the student module
-    student = RephraseModule()
+    student = dspy.Predict(signature_cls)
     
     # Configure GEPA optimizer
     gepa = dspy.GEPA(
@@ -236,13 +227,14 @@ def optimize_rephraser(trainset: list, valset: list, reflection_lm: Any, seed: i
         logging.info(f"Original text: {original_preview}")
         
         result = optimized_module(original_text=example.original_text)
-        rephrased_score = calculate_edu_score(result.rephrased_text)
+        output_text = result.generated_text
+        output_score = calculate_edu_score(output_text)
         
-        rephrased_preview = result.rephrased_text[:example_length] + "..." if len(result.rephrased_text) > example_length else result.rephrased_text
-        logging.info(f"Rephrased (edu score: {rephrased_score:.2f}):")
-        logging.info(f"Rephrased text: {rephrased_preview}")
+        output_preview = output_text[:example_length] + "..." if len(output_text) > example_length else output_text
+        logging.info(f"Output (edu score: {output_score:.2f}):")
+        logging.info(f"Output text: {output_preview}")
         
-        improvement = rephrased_score - original_score
+        improvement = output_score - original_score
         logging.info(f"Improvement: {improvement:.2f}")
     
     # Print optimization statistics if available
@@ -373,7 +365,7 @@ def setup_logging(log_dir: str) -> None:
 
 
 
-parser = argparse.ArgumentParser(description="Optimize prompts for rephrasing low-quality web data using DSPy GEPA")
+parser = argparse.ArgumentParser(description="Optimize prompts for web-text tasks (rephrase, summarize) using DSPy GEPA")
 parser.add_argument(
     "--rephrasing-model",
     type=str,
@@ -452,9 +444,16 @@ parser.add_argument(
     help="Optional Slurm dependency job id",
 )
 parser.add_argument(
+    "--task",
+    type=str,
+    default="rephrase",
+    choices=["rephrase", "summarize"],
+    help="Task to optimize: rephrase or summarize (default: rephrase)",
+)
+parser.add_argument(
     "--debug",
     action="store_true",
-    help="Enable debug mode: set train-size=5, val-size=5, budget=1, and run_local=true",
+    help="Enable debug mode: set train-size=2, val-size=2, budget=1, and run_local=true",
 )
 
 def run_optimization(args) -> None:
@@ -463,6 +462,7 @@ def run_optimization(args) -> None:
     
     logging.info("Starting prompt optimization with DSPy GEPA...")
     logging.info("Configuration:")
+    logging.info(f"  Task: {args.task}")
     logging.info(f"  Rephrasing model: {args.rephrasing_model}")
     logging.info(f"  Reflection model: {args.reflection_model}")
     logging.info(f"  Training examples: {args.train_size}")
@@ -495,7 +495,8 @@ def run_optimization(args) -> None:
     # Prepare training and validation datasets
     trainset, valset = prepare_dataset(args.train_size, args.val_size, args.seed)
 
-    optimized_module = optimize_rephraser(trainset, valset, reflection_lm, args.seed, args.budget)
+    signature_cls = Rephraser if args.task == "rephrase" else Summarizer
+    optimized_module = optimize_task_module(trainset, valset, reflection_lm, args.seed, args.budget, signature_cls=signature_cls)
 
     # Save optimized module
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -526,13 +527,14 @@ def main():
 
     # Debug mode overrides for quick local runs
     if getattr(args, "debug", False):
-        args.train_size = 5
-        args.val_size = 5
+        args.train_size = 2
+        args.val_size = 2
         args.budget = 1
         args.run_local = True
 
     # Per-run directory inside prompt_optimization: use --name
-    run_dir = f"{args.log_dir}/{args.name}"
+    run_name = f"{args.task}-budget-{args.budget}-{args.name}"
+    run_dir = f"{args.log_dir}/{run_name}"
     Path(run_dir).mkdir(parents=True, exist_ok=True)
     # Ensure downstream uses the per-run directory
     args.log_dir = run_dir
@@ -557,7 +559,7 @@ def main():
             mem_per_cpu_gb=4,
             qos=args.qos,
             logging_dir=run_dir,
-            job_name=f"optimize-prompt-{args.name}",
+            job_name=f"optimize-prompt-{run_name}",
             env_command="sleep $((RANDOM % 30))",
             depends_job_id=args.dep_job_id,
         )

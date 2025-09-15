@@ -24,6 +24,7 @@ import logging
 from pathlib import Path
 from dotenv import load_dotenv
 from statistics import mean
+from tqdm import tqdm
 
 from utils import LOG_BASE_PATH, calculate_edu_score
 
@@ -328,6 +329,128 @@ def setup_logging(log_dir: str) -> None:
     logging.info(f"Logging initialized. Log file: {log_file}")
 
 
+def save_lm_interaction_history(lm: Any, log_dir: str) -> None:
+    """
+    Save the last language model interaction history and extract prompts.
+    
+    Args:
+        lm: Language model instance with history attribute
+        log_dir: Directory to save the interaction logs and prompts
+    """
+    try:
+        if getattr(lm, "history", None):
+            last_entry = lm.history[-1]
+            record = {
+                "timestamp": last_entry.get("timestamp"),
+                "uuid": last_entry.get("uuid"),
+                "model": last_entry.get("model"),
+                "response_model": last_entry.get("response_model"),
+                "model_type": last_entry.get("model_type"),
+                "messages": last_entry.get("messages"),
+                "outputs": last_entry.get("outputs"),
+                "kwargs": last_entry.get("kwargs"),
+            }
+            with open(Path(log_dir) / "last_lm_interaction.json", "w", encoding="utf-8") as f:
+                json.dump(record, f, ensure_ascii=False, indent=2)
+
+            # Write system.md and user.md
+            messages = last_entry.get("messages") or []
+            system_content = ""
+            user_content = ""
+            for m in messages:
+                if m.get("role") == "system" and isinstance(m.get("content"), str):
+                    system_content = m["content"]
+                if m.get("role") == "user" and isinstance(m.get("content"), str):
+                    user_content = m["content"]
+
+            # Extract user prompt segment per requested structure: split by two newlines and take last part
+            if user_content:
+                parts = user_content.split("\n\n")
+                user_extracted = parts[-1] if parts else user_content
+            else:
+                user_extracted = ""
+
+            prompts_dir = Path(log_dir) / "prompts"
+            prompts_dir.mkdir(parents=True, exist_ok=True)
+
+            with open(prompts_dir / "system.md", "w", encoding="utf-8") as f:
+                f.write(system_content)
+            # Compose user prompt to include the original_text placeholder and the trailing instruction
+            user_prompt_template = "[[ ## original_text ## ]]\n[TEXT]\n\n" + user_extracted
+            with open(prompts_dir / "user.md", "w", encoding="utf-8") as f:
+                f.write(user_prompt_template)
+    except Exception as e:
+        logging.warning(f"Failed to save last LM interaction: {e}", exc_info=True)
+
+
+def evaluate_optimized_module(optimized_module: Any, testset: list, log_dir: str) -> dict:
+    """
+    Evaluate the optimized module on the test set and compute statistics.
+    
+    Args:
+        optimized_module: The optimized DSPy module to evaluate
+        testset: List of test examples to evaluate on
+        log_dir: Directory to save evaluation statistics
+    
+    Returns:
+        Dictionary containing evaluation statistics
+    """
+    logging.info("Evaluating optimized module on the held-out test set...")
+    
+    n_test = len(testset)
+    if n_test == 0:
+        logging.warning("Test set is empty; skipping evaluation and stats computation.")
+        stats = {
+            "n": 0,
+            "mean_original_edu_score": 0.0,
+            "mean_generated_edu_score": 0.0,
+            "mean_edu_score_improvement": 0.0,
+        }
+    else:
+        example_length = 2000
+        # Show a single example
+        example = testset[0]
+        original_score = calculate_edu_score(example.original_text)
+        original_preview = example.original_text[:example_length] + "..." if len(example.original_text) > example_length else example.original_text
+        logging.info("--- Test Example 1 ---")
+        logging.info(f"Original (edu score: {original_score:.2f}):")
+        logging.info(f"Original text: {original_preview}")
+
+        result = optimized_module(original_text=example.original_text)
+        output_text = result.generated_text
+        output_score = calculate_edu_score(output_text)
+        output_preview = output_text[:example_length] + "..." if len(output_text) > example_length else output_text
+        logging.info(f"Output (edu score: {output_score:.2f}):")
+        logging.info(f"Output text: {output_preview}")
+        logging.info(f"Improvement: {output_score - original_score:.2f}")
+
+        # Compute statistics across full test set
+        original_scores = []
+        generated_scores = []
+        improvements = []
+        
+        for ex in tqdm(testset, desc="Evaluating test examples"):
+            orig = calculate_edu_score(ex.original_text)
+            gen_text = optimized_module(original_text=ex.original_text).generated_text
+            gen = calculate_edu_score(gen_text)
+            original_scores.append(orig)
+            generated_scores.append(gen)
+            improvements.append(gen - orig)
+
+        stats = {
+            "n": n_test,
+            "mean_original_edu_score": float(mean(original_scores)) if original_scores else 0.0,
+            "mean_generated_edu_score": float(mean(generated_scores)) if generated_scores else 0.0,
+            "mean_edu_score_improvement": float(mean(improvements)) if improvements else 0.0,
+        }
+
+    stats_path = Path(log_dir) / "edu_score_stats.json"
+    with open(stats_path, "w", encoding="utf-8") as f:
+        json.dump(stats, f, ensure_ascii=False, indent=2)
+    logging.info(f"Saved edu score statistics to {stats_path}")
+    
+    return stats
+
 
 parser = argparse.ArgumentParser(description="Optimize prompts for web-text tasks (rephrase, summarize) using DSPy GEPA")
 parser.add_argument(
@@ -474,105 +597,9 @@ def run_optimization(args) -> None:
 
     optimized_module.save(f"{args.log_dir}/optimized_module.pkl")
 
-    # Save the last LM interaction
-    try:
-        if getattr(lm, "history", None):
-            last_entry = lm.history[-1]
-            record = {
-                "timestamp": last_entry.get("timestamp"),
-                "uuid": last_entry.get("uuid"),
-                "model": last_entry.get("model"),
-                "response_model": last_entry.get("response_model"),
-                "model_type": last_entry.get("model_type"),
-                "messages": last_entry.get("messages"),
-                "outputs": last_entry.get("outputs"),
-                "kwargs": last_entry.get("kwargs"),
-            }
-            with open(Path(args.log_dir) / "last_lm_interaction.json", "w", encoding="utf-8") as f:
-                json.dump(record, f, ensure_ascii=False, indent=2)
+    save_lm_interaction_history(lm, args.log_dir)
 
-            # Write system.md and user.md
-            messages = last_entry.get("messages") or []
-            system_content = ""
-            user_content = ""
-            for m in messages:
-                if m.get("role") == "system" and isinstance(m.get("content"), str):
-                    system_content = m["content"]
-                if m.get("role") == "user" and isinstance(m.get("content"), str):
-                    user_content = m["content"]
-
-            # Extract user prompt segment per requested structure: split by two newlines and take last part
-            if user_content:
-                parts = user_content.split("\n\n")
-                user_extracted = parts[-1] if parts else user_content
-            else:
-                user_extracted = ""
-
-            prompts_dir = Path(args.log_dir) / "prompts"
-            prompts_dir.mkdir(parents=True, exist_ok=True)
-
-            with open(prompts_dir / "system.md", "w", encoding="utf-8") as f:
-                f.write(system_content)
-            # Compose user prompt to include the original_text placeholder and the trailing instruction
-            user_prompt_template = "[[ ## original_text ## ]]\n[TEXT]\n\n" + user_extracted
-            with open(prompts_dir / "user.md", "w", encoding="utf-8") as f:
-                f.write(user_prompt_template)
-    except Exception as e:
-        logging.warning(f"Failed to save last LM interaction: {e}", exc_info=True)
-
-    # Evaluate on non-overlapping test set: log one example, compute and save stats over all
-    logging.info("Evaluating optimized module on the held-out test set...")
-    
-    n_test = len(testset)
-    if n_test == 0:
-        logging.warning("Test set is empty; skipping evaluation and stats computation.")
-        stats = {
-            "n": 0,
-            "mean_original_edu_score": 0.0,
-            "mean_generated_edu_score": 0.0,
-            "mean_edu_score_improvement": 0.0,
-        }
-    else:
-        example_length = 2000
-        # Show a single example
-        example = testset[0]
-        original_score = calculate_edu_score(example.original_text)
-        original_preview = example.original_text[:example_length] + "..." if len(example.original_text) > example_length else example.original_text
-        logging.info("--- Test Example 1 ---")
-        logging.info(f"Original (edu score: {original_score:.2f}):")
-        logging.info(f"Original text: {original_preview}")
-
-        result = optimized_module(original_text=example.original_text)
-        output_text = result.generated_text
-        output_score = calculate_edu_score(output_text)
-        output_preview = output_text[:example_length] + "..." if len(output_text) > example_length else output_text
-        logging.info(f"Output (edu score: {output_score:.2f}):")
-        logging.info(f"Output text: {output_preview}")
-        logging.info(f"Improvement: {output_score - original_score:.2f}")
-
-        # Compute statistics across full test set
-        original_scores = []
-        generated_scores = []
-        improvements = []
-        for ex in testset:
-            orig = calculate_edu_score(ex.original_text)
-            gen_text = optimized_module(original_text=ex.original_text).generated_text
-            gen = calculate_edu_score(gen_text)
-            original_scores.append(orig)
-            generated_scores.append(gen)
-            improvements.append(gen - orig)
-
-        stats = {
-            "n": n_test,
-            "mean_original_edu_score": float(mean(original_scores)) if original_scores else 0.0,
-            "mean_generated_edu_score": float(mean(generated_scores)) if generated_scores else 0.0,
-            "mean_edu_score_improvement": float(mean(improvements)) if improvements else 0.0,
-        }
-
-    stats_path = Path(args.log_dir) / "edu_score_stats.json"
-    with open(stats_path, "w", encoding="utf-8") as f:
-        json.dump(stats, f, ensure_ascii=False, indent=2)
-    logging.info(f"Saved edu score statistics to {stats_path}")
+    evaluate_optimized_module(optimized_module, testset, args.log_dir)
 
 
 def main():

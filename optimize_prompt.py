@@ -451,6 +451,11 @@ parser.add_argument(
     default=None,
     help="Optional Slurm dependency job id",
 )
+parser.add_argument(
+    "--debug",
+    action="store_true",
+    help="Enable debug mode: set train-size=5, val-size=5, budget=1, and run_local=true",
+)
 
 def run_optimization(args) -> None:
     """Execute the prompt optimization end-to-end."""
@@ -518,6 +523,13 @@ def run_optimization(args) -> None:
 def main():
     """Main optimization entrypoint with a per-run directory; unified logging."""
     args = parser.parse_args()
+
+    # Debug mode overrides for quick local runs
+    if getattr(args, "debug", False):
+        args.train_size = 5
+        args.val_size = 5
+        args.budget = 1
+        args.run_local = True
 
     # Per-run directory inside prompt_optimization: use --name
     run_dir = f"{args.log_dir}/{args.name}"

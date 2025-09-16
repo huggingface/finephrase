@@ -105,23 +105,9 @@ class DspyGepaOptimizer(PipelineStep):
             top_p=0.95, 
             top_k=64
         )
-        
-        # Test models connection
-        logging.info("Testing models connection...")
-        test_response = self.lm("Test message for generation model", max_tokens=10)
-        logging.info(f"Generation model test successful: {test_response}")
-        test_response = self.reflection_lm("Test message for reflection model", max_tokens=10)
-        logging.info(f"Reflection model test successful: {test_response}")
-        
-        # Prepare datasets
-        self.trainset, self.valset, self.testset = self.prepare_datasets(self.train_size, self.val_size, self.test_size, self.seed)
-        
+
         # Set signature class
         self.signature_cls = Rephraser if self.task == "rephrase" else Summarizer
-
-        from transformers import AutoTokenizer, AutoModelForSequenceClassification
-        self.edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceFW/fineweb-edu-classifier")
-        self.edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceFW/fineweb-edu-classifier").eval()
         
 
     def calculate_edu_score(self, text: str) -> float:
@@ -136,19 +122,15 @@ class DspyGepaOptimizer(PipelineStep):
             # Create slurm logs directory
             slurm_logs_path = Path(self.run_dir) / "slurm_logs"
             slurm_logs_path.mkdir(parents=True, exist_ok=True)
-            
-            logging.info("Starting prompt optimization with DSPy GEPA...")
-            logging.info("Configuration:")
-            logging.info(f"  Task: {self.task}")
-            logging.info(f"  Generation model: {self.generation_model}")
-            logging.info(f"  Reflection model: {self.reflection_model}")
-            logging.info(f"  Training examples: {self.train_size}")
-            logging.info(f"  Validation examples: {self.val_size}")
-            logging.info(f"  Test examples (post-eval): {self.test_size}")
-            logging.info(f"  Random seed: {self.seed}")
-            logging.info(f"  Budget (max_full_evals): {self.budget}")
-            logging.info(f"  Log directory: {self.run_dir}")
 
+            # Prepare datasets
+            self.trainset, self.valset, self.testset = self.prepare_datasets(self.train_size, self.val_size, self.test_size, self.seed)
+
+            # Load edu classifier
+            from transformers import AutoTokenizer, AutoModelForSequenceClassification
+            self.edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceFW/fineweb-edu-classifier")
+            self.edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceFW/fineweb-edu-classifier").eval()
+        
             # Run optimization
             optimized_module = self.optimize_task_module()
 
@@ -609,7 +591,7 @@ parser.add_argument(
 parser.add_argument(
     "--debug",
     action="store_true",
-    help="Enable debug mode: set train-size=2, val-size=2, budget=1, and run_local=true",
+    help="Enable debug mode: set train-size=2, val-size=2, budget=1, and run_local=true (default: False)",
 )
 
 def main():
@@ -617,7 +599,7 @@ def main():
     args = parser.parse_args()
 
     # Debug mode overrides for quick local runs
-    if getattr(args, "debug", False):
+    if args.debug:
         args.train_size = 2
         args.val_size = 2
         args.test_size = 2

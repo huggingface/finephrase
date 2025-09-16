@@ -484,12 +484,6 @@ parser.add_argument(
     help="Slurm time limit (default: 20:00:00)",
 )
 parser.add_argument(
-    "--partition",
-    type=str,
-    default="hopper-cpu",
-    help="Slurm partition (default: hopper-cpu)",
-)
-parser.add_argument(
     "--qos",
     type=str,
     default="normal",
@@ -608,7 +602,7 @@ def main():
             pipeline=[_run_step],
             tasks=1,
             time=args.time,
-            partition=args.partition,
+            partition="hopper-prod",
             cpus_per_task=20,
             mem_per_cpu_gb=4,
             qos=args.qos,
@@ -616,6 +610,7 @@ def main():
             job_name=f"optimize-prompt-{run_name}",
             env_command="sleep $((RANDOM % 30))",
             depends_job_id=args.dep_job_id,
+            sbatch_args={"gres": f"gpu:1"}
         )
 
     executor.run()

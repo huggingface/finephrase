@@ -483,9 +483,6 @@ parser.add_argument(
     "--time", type=str, default="20:00:00", help="Slurm time limit"
 )
 parser.add_argument(
-    "--partition", type=str, default="hopper-cpu", help="Slurm partition"
-)
-parser.add_argument(
     "--qos", type=str, default="normal", help="Slurm QoS"
 )
 parser.add_argument(

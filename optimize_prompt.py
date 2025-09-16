@@ -595,7 +595,6 @@ parser.add_argument(
 )
 
 def main():
-    """Main optimization entrypoint with a per-run directory; unified logging."""
     args = parser.parse_args()
 
     # Debug mode overrides for quick local runs
@@ -632,7 +631,7 @@ def main():
             tasks=1,
             time=args.time,
             partition="hopper-prod",
-            cpus_per_task=20,
+            cpus_per_task=10,
             mem_per_cpu_gb=4,
             qos=args.qos,
             logging_dir=optimizer_step.run_dir,

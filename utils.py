@@ -1,7 +1,6 @@
 import os
 import logging
 from datatrove.pipeline.base import PipelineStep
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
 USER = os.environ.get('USER')
@@ -69,7 +68,7 @@ def human_readable(num):
 
 
 
-def calculate_edu_score(text: str, tokenizer: AutoTokenizer, model: AutoModelForSequenceClassification) -> float:
+def calculate_edu_score(text: str, tokenizer, model) -> float:
     """Return the fineweb-edu score in [0, 5] for given text."""
     if not text or not text.strip():
         return 0.0
@@ -86,7 +85,7 @@ def calculate_edu_score(text: str, tokenizer: AutoTokenizer, model: AutoModelFor
         return 0.0
 
 
-def calculate_edu_score_dict(text: str, tokenizer: AutoTokenizer, model: AutoModelForSequenceClassification) -> dict:
+def calculate_edu_score_dict(text: str, tokenizer, model) -> dict:
     """Return a dict with continuous and integer fineweb-edu scores."""
     score = calculate_edu_score(text, tokenizer, model)
     int_score = int(round(max(0.0, min(score, 5.0))))

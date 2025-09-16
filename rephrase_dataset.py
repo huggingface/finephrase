@@ -149,6 +149,11 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
     """
     # Lazily initialized cache for token counting tokenizer
     tokenizer = None
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+    edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceFW/fineweb-edu-classifier")
+    edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceFW/fineweb-edu-classifier").eval()
+        
 
     def count_tokens(text: str) -> int:
         """Count tokens in text using tokenizer; lazily load on first use."""
@@ -280,9 +285,9 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         thinking_token_count = count_tokens(thinking_text)
         final_output_token_count = count_tokens(final_output_text)
         
-        input_edu_scores = calculate_edu_score_dict(document.text)
-        thinking_edu_scores = calculate_edu_score_dict(thinking_text)
-        final_output_edu_scores = calculate_edu_score_dict(final_output_text)
+        input_edu_scores = calculate_edu_score_dict(document.text, edu_tokenizer, edu_model)
+        thinking_edu_scores = calculate_edu_score_dict(thinking_text, edu_tokenizer, edu_model)
+        final_output_edu_scores = calculate_edu_score_dict(final_output_text, edu_tokenizer, edu_model)
         
         # Collect input-related metadata fields to move
         input_metadata_fields = ["dump", "url", "date", "file_path", "language", "language_score", "filter_reason"]

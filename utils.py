@@ -1,5 +1,7 @@
 import os
+import logging
 from datatrove.pipeline.base import PipelineStep
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
 USER = os.environ.get('USER')
@@ -65,39 +67,28 @@ def human_readable(num):
 # Fineweb EDU score utilities
 # -----------------------------
 
-_EDU_TOKENIZER = None
-_EDU_MODEL = None
 
 
-def _load_edu_classifier():
-    """Lazily load and cache the fineweb-edu classifier."""
-    global _EDU_TOKENIZER, _EDU_MODEL
-    if _EDU_TOKENIZER is None or _EDU_MODEL is None:
-        from transformers import AutoTokenizer, AutoModelForSequenceClassification
-        model_repo = "HuggingFaceFW/fineweb-edu-classifier"
-        _EDU_TOKENIZER = AutoTokenizer.from_pretrained(model_repo)
-        _EDU_MODEL = AutoModelForSequenceClassification.from_pretrained(model_repo)
-    return _EDU_TOKENIZER, _EDU_MODEL
-
-
-def calculate_edu_score(text: str) -> float:
+def calculate_edu_score(text: str, tokenizer: AutoTokenizer, model: AutoModelForSequenceClassification) -> float:
     """Return the fineweb-edu score in [0, 5] for given text."""
     if not text or not text.strip():
         return 0.0
     try:
-        tokenizer, model = _load_edu_classifier()
+        import torch
+        
         inputs = tokenizer(text, return_tensors="pt", padding="longest", truncation=True)
-        outputs = model(**inputs)
-        logits = outputs.logits.squeeze(-1).float().detach().numpy()
-        score = float(logits.item())
+        with torch.no_grad():
+            outputs = model(**inputs)
+        score = float(outputs.logits.squeeze(-1).float().detach().numpy().item())
         return max(0.0, min(score, 5.0))
-    except Exception:
+    except Exception as e:
+        logging.warning(f"calculate_edu_score failed; returning 0.0. Error: {e}", exc_info=True)
         return 0.0
 
 
-def calculate_edu_score_dict(text: str) -> dict:
+def calculate_edu_score_dict(text: str, tokenizer: AutoTokenizer, model: AutoModelForSequenceClassification) -> dict:
     """Return a dict with continuous and integer fineweb-edu scores."""
-    score = calculate_edu_score(text)
+    score = calculate_edu_score(text, tokenizer, model)
     int_score = int(round(max(0.0, min(score, 5.0))))
     return {"score": score, "int_score": int_score}
 

@@ -132,7 +132,7 @@ optimize-prompt --budget 5 --train-size 50 --val-size 20 --test-size 1000
 Generate synthetic training data by rephrasing existing content:
 
 ```bash
-rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt_template dspy/5-max_full_evals.md --name dspy-5-max_full_evals --limit 1000
+rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase-budget-20.md --name dspy-rephrase-budget-20 --limit 100
 ```
 
 **Available prompts for data quality improvement:**

@@ -49,28 +49,41 @@ def load_prompt_template(template_path: str) -> str:
         return f.read().strip()
 
 
-def create_templated_query_builder(prompt_template: str, max_tokens: int, temperature: float = 0.7, top_p: float = 0.8, top_k: int = 20, presence_penalty: float = 1.5, enable_thinking: bool = False):
+def create_templated_query_builder(
+    system_prompt: str,
+    max_tokens: int,
+    temperature: float = 0.7,
+    top_p: float = 0.8,
+    top_k: int = 20,
+    presence_penalty: float = 1.5,
+    enable_thinking: bool = False,
+):
     """
-    Create a query builder function that uses a prompt template.
+    Create a query builder function that uses a system prompt (as a system message)
+    and a user prompt (as a user message) formatted with the document text.
     
     Args:
-        prompt_template:    The prompt template content with placeholders
-        max_tokens:         Maximum tokens for the response
-        temperature:        Temperature for inference
-        top_p:              Top-p (nucleus sampling) for inference
-        top_k:              Top-k sampling for inference
-        presence_penalty:   Presence penalty for inference
-        enable_thinking:    Enable thinking in chat template
+        system_prompt:          The system prompt content
+        max_tokens:             Maximum tokens for the response
+        temperature:            Temperature for inference
+        top_p:                  Top-p (nucleus sampling) for inference
+        top_k:                  Top-k sampling for inference
+        presence_penalty:       Presence penalty for inference
+        enable_thinking:        Enable thinking in chat template
         
     Returns:
         Query builder function
     """
 
-    assert prompt_template, "Prompt template is required"
+    assert system_prompt, "System prompt is required"
+
+    # Default user prompt if none is provided
+    user_prompt = "[[ ## original_text ## ]]\n[TEXT]\n\n"
+    user_prompt += "Respond with the corresponding output fields, starting with the field `[[ ## generated_text ## ]]`, and then ending with the marker for `[[ ## completed ## ]]`."
 
     def query_builder(runner: InferenceRunner, document: Document) -> dict[str, Any]:
         """
-        Query builder that applies a prompt template to document content.
+        Query builder that applies the system and user templates to construct chat messages.
         
         Args:
             runner:     Inference runner instance
@@ -79,32 +92,37 @@ def create_templated_query_builder(prompt_template: str, max_tokens: int, temper
         Returns:
             Query payload for the inference server
         """
-        # Replace common placeholders in the template
-        content = prompt_template
-        content = content.replace("[DOCUMENT SEGMENT]", document.text)
-        content = content.replace("[ORIGINAL DOCUMENT]", document.text)
-        content = content.replace("[TEXT]", document.text)
-        
-        # Truncate if content is too long to make sure the server doesn't throw an error
-        # TODO: Revisit this after benchmarking
-        max_chars = 4 * max_tokens # rough heuristic for average token length
-        if len(content) > max_chars:
-            # Find the last newline before the cutoff
-            cutoff_content = content[:max_chars]
+        # Prepare user content by replacing common placeholders
+        user_prompt = load_prompt_template("dspy/user.md")
+        user_content = user_prompt.replace("[DOCUMENT SEGMENT]", document.text)
+        user_content = user_content.replace("[ORIGINAL DOCUMENT]", document.text)
+        user_content = user_content.replace("[TEXT]", document.text)
+
+        # Truncate user content if too long to avoid server errors
+        max_chars = 4 * max_tokens  # rough heuristic for average token length
+        max_chars *= 2 # Since our model_max_length is 16384 and our max_tokens is 4096, we can afford to use more input tokens
+        if len(user_content) > max_chars:
+            cutoff_content = user_content[:max_chars]
             last_newline = cutoff_content.rfind('\n')
             if last_newline != -1:
-                content = content[:last_newline]
+                user_content = user_content[:last_newline]
             else:
-                content = content[:max_chars]
+                user_content = user_content[:max_chars]
 
         return {
             "messages": [
                 {
-                    "role": "user", 
+                    "role": "system",
                     "content": [
-                        {"type": "text", "text": content},
+                        {"type": "text", "text": system_prompt},
                     ],
-                }
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": user_content},
+                    ],
+                },
             ],
             "max_tokens": max_tokens,
             "temperature": temperature,
@@ -397,7 +415,7 @@ parser.add_argument(
     "--name", type=str, help="Name of the rephrasing experiment", required=True
 )
 parser.add_argument(
-    "--prompt_template", type=str, help="Path to prompt template file (relative to prompts/ directory)", required=True
+    "--prompt", type=str, help="Path to prompt template file (relative to prompts/ directory)", required=True
 )
 parser.add_argument(
     "--output_path", type=str, help="Path to the base output folder.", default=S3_BASE_PATH
@@ -532,8 +550,8 @@ def main():
 
     # Load prompt template if specified
     try:
-        prompt_template = load_prompt_template(args.prompt_template)
-        print(f"Loaded prompt template: {args.prompt_template}")
+        prompt_template = load_prompt_template(args.prompt)
+        print(f"Loaded prompt template: {args.prompt}")
     except FileNotFoundError as e:
         print(f"Error: {e}")
         print("Available templates:")
@@ -573,7 +591,7 @@ def main():
         ]
 
     if args.run_local:
-        rephrase_executor = LocalPipelineExecutor(pipeline=pipeline)
+        rephrase_executor = LocalPipelineExecutor(pipeline=pipeline, logging_dir=logs_path)
     else:
         rephrase_executor = SlurmPipelineExecutor(
             job_name=f"rephrase-{args.name}",

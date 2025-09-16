@@ -67,8 +67,9 @@ def _load_edu_classifier():
     global _EDU_TOKENIZER, _EDU_MODEL
     if _EDU_TOKENIZER is None or _EDU_MODEL is None:
         from transformers import AutoTokenizer, AutoModelForSequenceClassification
-        _EDU_TOKENIZER = AutoTokenizer.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
-        _EDU_MODEL = AutoModelForSequenceClassification.from_pretrained("HuggingFaceTB/fineweb-edu-classifier")
+        model_repo = "HuggingFaceFW/fineweb-edu-classifier"
+        _EDU_TOKENIZER = AutoTokenizer.from_pretrained(model_repo)
+        _EDU_MODEL = AutoModelForSequenceClassification.from_pretrained(model_repo)
     return _EDU_TOKENIZER, _EDU_MODEL
 
 

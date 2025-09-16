@@ -1,32 +1,33 @@
 # Rephrasing benchmark experiment configuration
-# Tests different models on 100M tokens
-
-experiment_name: "rephrasing_benchmark_100M_no_thinking"
+experiment_name: "rephrase_budget-20-prompt"
 script: "rephrase"
 continue_on_failure: true
 
 # Fixed arguments that apply to all runs
 fixed_args:
   # Data and output configuration
-  data_paths: "s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2"
-  limit: 2_000_000  # On average a document contains 500 tokens, so this will give us ~100M tokens
+  data_paths: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  limit: -1
   
   # Processing configuration
-  n_tasks: 4
+  n_tasks: 2
   gpus: 1 # It seems dp on multiple gpus is not working
+  tp: 1
+  enable_prefix_caching: true
+  enable_chunked_prefill: true
 
   # Model configuration 
-  prompt_template: "dspy/5-max_full_evals.md"  # Adjust prompt as needed
-  temperature: 0.6
-  top_p: 0.8
-  top_k: 20
-  presence_penalty: 1.5
-  max_tokens: 8192
+  # TODO adapt rephrase script to allow for system and user prompts
+  prompt: "dspy/5-max_full_evals.md"  # Adjust prompt as needed
+  max_tokens: 4096
   model_max_context: 16384
-  enable_thinking: false
+
+  temperature: 1
+  top_p: 0.95
+  top_k: 64
+  presence_penalty: 1.5
   
   # Infrastructure configuration
-  records_per_chunk: 500
   max_concurrent_requests: 500
   max_concurrent_tasks: 500
   server_type: "vllm"
@@ -42,21 +43,10 @@ fixed_args:
 
 # Variable arguments - creates different experiment runs
 runs:
-  - name: "qwen_0.6b_fp8"
+  - name: "gemma_3_270m_it"
     args:
-      model_name_or_path: "Qwen/Qwen3-0.6B-FP8"
-  - name: "qwen_1.5b_fp8"
+      model_name_or_path: "google/gemma-3-270m-it"
+  - name: "gemma_3_27b_it"
     args:
-      model_name_or_path: "Qwen/Qwen2.5-1.5B"
-  - name: "qwen_4b_fp8"
-    args:
-      model_name_or_path: "Qwen/Qwen3-4B-FP8"
-  - name: "qwen_8b_fp8"
-    args:
-      model_name_or_path: "Qwen/Qwen3-8B-FP8"
-  - name: "qwen_14b_fp8"
-    args:
-      model_name_or_path: "Qwen/Qwen3-14B-FP8"
-  - name: "qwen_32b_fp8"
-    args:
-      model_name_or_path: "Qwen/Qwen3-32B-FP8"
+      model_name_or_path: "google/gemma-3-27b-it"
+

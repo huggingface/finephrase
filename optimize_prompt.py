@@ -300,35 +300,6 @@ def configure_model_provider(provider: str, model_name: str, max_tokens: int = 4
     return dspy.LM(**lm_kwargs)
 
 
-def setup_logging(log_dir: str) -> None:
-    """
-    Set up logging configuration with file and console handlers.
-    
-    Args:
-        log_dir: Directory to save log files
-    """
-    # Create log directory if it doesn't exist
-    log_path = Path(log_dir)
-    log_path.mkdir(parents=True, exist_ok=True)
-    
-    # Create log filename with timestamp under slurm_logs (to match other modules)
-    slurm_logs_path = log_path / "slurm_logs"
-    slurm_logs_path.mkdir(parents=True, exist_ok=True)
-    log_file = slurm_logs_path / f"optimize_prompt.log"
-    
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler()  # Also output to console
-        ]
-    )
-    
-    logging.info(f"Logging initialized. Log file: {log_file}")
-
-
 def save_lm_interaction_history(lm: Any, log_dir: str) -> None:
     """
     Save the last language model interaction history and extract prompts.
@@ -545,7 +516,8 @@ parser.add_argument(
 
 def run_optimization(args) -> None:
     """Execute the prompt optimization end-to-end."""
-    setup_logging(args.log_dir)
+    slurm_logs_path = Path(args.log_dir) / "slurm_logs"
+    slurm_logs_path.mkdir(parents=True, exist_ok=True)
     
     logging.info("Starting prompt optimization with DSPy GEPA...")
     logging.info("Configuration:")

@@ -14,7 +14,7 @@ import itertools
 from datatrove.io import get_datafolder
 from loguru import logger
 
-from utils import LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
+from utils import FAULTY_NODES, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
 S3_EVALS_RESULTS_PREFIX = f"{S3_BASE_PATH}/evals-test"
@@ -346,6 +346,7 @@ def main():
 #SBATCH --error={eval_logs_path}/eval-%A_%a.out
 {"#SBATCH --dependency=" + ",".join(deps) if deps else ""}
 #SBATCH --requeue
+#SBATCH --exclude={FAULTY_NODES}
 ###########################################
 
 # Ensure cache is on fsx not on admin

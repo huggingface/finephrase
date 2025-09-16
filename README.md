@@ -21,7 +21,7 @@ In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to 
 
 ### Enter a GPU node for installation
 ```bash
-srun --gpus=1 --qos=high --time="02:00:00" --pty bash
+srun --gpus=1 --qos=high --time="04:00:00" --pty bash
 module load cuda/12.4
 ```
 
@@ -123,7 +123,7 @@ evaluate fineweb-edu-hq-20BT-21B-seed-606,fineweb-edu-lq-20BT-21B-seed-606
 Optimize prompts for text generation tasks using DSPy GEPA:
 
 ```bash
-optimize-prompt --budget 5 --train-size 50 --val-size 20 --test-size 1000
+optimize-prompt --budget 10 --train-size 50 --val-size 20 --test-size 1000
 ```
 
 ## Data Generation

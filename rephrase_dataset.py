@@ -16,6 +16,7 @@ from datatrove.data import Document
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 
 from utils import (
+    FAULTY_NODES,
     LOCAL_TMP_PATH_ON_NODE,
     LOG_BASE_PATH,
     S3_BASE_PATH,
@@ -501,10 +502,10 @@ parser.add_argument(
     "--tp", type=int, default=1, help="Tensor parallelism size"
 )
 parser.add_argument(
-    "--gpu_memory_utilization", type=float, default=0.98, help="GPU memory utilization"
+    "--gpu_memory_utilization", type=float, default=0.97, help="GPU memory utilization"
 )
 parser.add_argument(
-    "--run_local", action="store_true", help="Run pipeline locally instead of using Slurm"
+    "--run-local", action="store_true", help="Run pipeline locally instead of using Slurm"
 )
 
 
@@ -603,7 +604,7 @@ def main():
             env_command="sleep $((RANDOM % 30))",
             mail_user="joel@hf.co",
             depends_job_id=args.dep_job_id,
-            sbatch_args={"gres": f"gpu:{args.gpus}"}
+            sbatch_args={"gres": f"gpu:{args.gpus}", "exclude": FAULTY_NODES}
         )
     
     rephrase_executor.run()

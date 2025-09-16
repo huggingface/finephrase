@@ -473,7 +473,7 @@ parser.add_argument(
     help="Budget for GEPA optimization (max_full_evals, default: 5)"
 )
 parser.add_argument(
-    "--run_local",
+    "--run-local",
     action="store_true",
     help="Run locally instead of using Slurm",
 )
@@ -598,6 +598,7 @@ def main():
     if args.run_local:
         executor = LocalPipelineExecutor(pipeline=[_run_step], logging_dir=run_dir)
     else:
+        # TODO: For some reason, edu score calculation is not working through SLURM for this script. Run locally instead.
         executor = SlurmPipelineExecutor(
             pipeline=[_run_step],
             tasks=1,

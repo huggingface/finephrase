@@ -11,6 +11,13 @@ LOG_BASE_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments"
 S3_BASE_PATH = f"s3://{PROJECT_NAME}/experiments"
 LOCAL_TMP_PATH_ON_NODE = f"/scratch/{USER}/tmp/{PROJECT_NAME}"
 
+FAULTY_NODES = "ip-26-0-160-103,ip-26-0-160-242,ip-26-0-161-138,ip-26-0-161-178,ip-26-0-162-46,ip-26-0-162-180"
+
+
+# -----------------------------
+# Reader utilities
+# -----------------------------
+
 def get_reader(path):
     from datatrove.pipeline.readers import JsonlReader, ParquetReader
 

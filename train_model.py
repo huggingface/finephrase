@@ -6,7 +6,7 @@ import subprocess
 import yaml
 from datetime import datetime
 
-from utils import BASE_PATH, LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
+from utils import BASE_PATH, FAULTY_NODES, LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
 TRAINING_RUNS_PATH = f"{LOG_BASE_PATH}/training"
@@ -340,7 +340,7 @@ def main():
 #SBATCH --begin=now+0minutes
 #SBATCH --time={args.time}
 #SBATCH --exclusive
-#SBATCH --exclude=ip-26-0-160-103,ip-26-0-160-242,ip-26-0-161-138,ip-26-0-161-178,ip-26-0-162-46,ip-26-0-162-180
+#SBATCH --exclude={FAULTY_NODES}
 {"#SBATCH --dependency=afterok:" + args.d if args.d else ""}
 {"#SBATCH --reservation=" + args.reservation if args.reservation else ""}
 

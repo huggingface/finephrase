@@ -95,7 +95,6 @@ class DspyGepaOptimizer(PipelineStep):
             top_p=0.95,
             top_k=64,
         )
-        dspy.settings.configure(lm=self.lm)
         
         self.reflection_lm = self.configure_model_provider(
             reflection_provider, 
@@ -119,6 +118,8 @@ class DspyGepaOptimizer(PipelineStep):
         This pipeline step doesn't process input data but performs optimization and saves results.
         """
         with self.track_time():
+            dspy.settings.configure(lm=self.lm)
+
             # Create slurm logs directory
             slurm_logs_path = Path(self.run_dir) / "slurm_logs"
             slurm_logs_path.mkdir(parents=True, exist_ok=True)

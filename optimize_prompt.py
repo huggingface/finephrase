@@ -639,7 +639,8 @@ def main():
             job_name=f"optimize-prompt-{run_name}",
             env_command="sleep $((RANDOM % 30))",
             depends_job_id=args.dep_job_id,
-            sbatch_args={"gres": f"gpu:1"}
+            sbatch_args={"gres": f"gpu:1"},
+            srun_args={"cpu-bind": "none"},
         )
 
     executor.run()

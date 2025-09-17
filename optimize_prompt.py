@@ -77,9 +77,12 @@ class DspyGepaOptimizer(PipelineStep):
         self.task = task
         self.log_dir = log_dir or f"{LOG_BASE_PATH}/prompt_optimization"
         
-        # Create per-run directory
-        run_name = f"{self.task}-budget-{self.budget}-train-{self.train_size}-val-{self.val_size}"
-        self.run_dir = f"{self.log_dir}/{run_name}"
+        # Create hierarchical directory structure: task/model/train-val-size/budget
+        generation_model_name = self.generation_model.split("/")[-1]  # Extract last part after /
+        train_val_size = f"train-{self.train_size}-val-{self.val_size}"
+        run_name = f"budget-{self.budget}"
+        
+        self.run_dir = f"{self.log_dir}/{self.task}/{generation_model_name}/{train_val_size}/{run_name}"
         Path(self.run_dir).mkdir(parents=True, exist_ok=True)
         
         # Parse model strings and create models
@@ -526,19 +529,19 @@ parser.add_argument(
 parser.add_argument(
     "--train-size",
     type=int,
-    default=50,
+    default=500,
     help="Number of training examples (default: 50)"
 )
 parser.add_argument(
     "--val-size",
     type=int,
-    default=20,
+    default=100,
     help="Number of validation examples (default: 20)"
 )
 parser.add_argument(
     "--test-size",
     type=int,
-    default=1000,
+    default=100,
     help="Number of new FineWeb samples for post-optimization evaluation (default: 1000)"
 )
 parser.add_argument(
@@ -625,8 +628,9 @@ def main():
     if args.run_local:
         executor = LocalPipelineExecutor(pipeline=[optimizer_step], logging_dir=optimizer_step.run_dir)
     else:
-        # TODO: For some reason, edu score calculation is not working through SLURM for this script. Run locally instead.
-        run_name = f"{args.task}-budget-{args.budget}-train-{args.train_size}-val-{args.val_size}"
+        # Create job name using hierarchical structure: task-model-train-val-budget
+        generation_model_name = args.generation_model.split("/")[-1]
+        job_name = f"optimize-{args.task}-{generation_model_name}-train-{args.train_size}-val-{args.val_size}-budget-{args.budget}"
         executor = SlurmPipelineExecutor(
             pipeline=[optimizer_step],
             tasks=1,
@@ -636,7 +640,7 @@ def main():
             mem_per_cpu_gb=4,
             qos=args.qos,
             logging_dir=optimizer_step.run_dir,
-            job_name=f"optimize-prompt-{run_name}",
+            job_name=job_name,
             env_command="sleep $((RANDOM % 30))",
             depends_job_id=args.dep_job_id,
             sbatch_args={"gres": f"gpu:1"},

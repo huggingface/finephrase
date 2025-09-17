@@ -195,6 +195,38 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         
         return thinking_text, final_output_text
 
+    def extract_text_from_inference_results(inference_results: list) -> str:
+        """
+        Extract text from inference results, handling various result formats.
+        
+        Args:
+            inference_results: List of inference results from the inference pipeline
+            
+        Returns:
+            Extracted text string, or empty string if no text found
+        """
+        if not inference_results:
+            return ""
+            
+        # Get the first successful result
+        for result in inference_results:
+            if hasattr(result, 'text'):  # InferenceSuccess object
+                return result.text
+            elif isinstance(result, dict):
+                # Extract from dict format
+                if "choices" in result and len(result["choices"]) > 0:
+                    choice = result["choices"][0]
+                    if "message" in choice and "content" in choice["message"]:
+                        return choice["message"]["content"]
+                    elif "text" in choice:
+                        return choice["text"]
+                elif "content" in result:
+                    return result["content"]
+                elif "text" in result:
+                    return result["text"]
+        
+        return ""
+    
     def parse_structured_generated_text(text: str) -> str:
         """
         Extract the generated text from the structured output format:
@@ -236,6 +268,100 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
             first_500 = thinking_text[:500]
             last_500 = thinking_text[-500:]
             return f"{first_500}\n[...]\n{last_500}"
+    
+    def format_document_structure(doc: Document) -> str:
+        """
+        Format document structure without showing full content.
+        
+        Args:
+            doc: Document to format structure summary for
+            
+        Returns:
+            Formatted string summary of document structure
+        """
+        structure_info = []
+        
+        # Document ID and basic info
+        if hasattr(doc, 'id') and doc.id:
+            structure_info.append(f"Document ID: {doc.id}")
+        
+        # Text length info
+        structure_info.append(f"Document text: {len(doc.text)} chars")
+        
+        # Metadata summary
+        if doc.metadata:
+            structure_info.append("Metadata keys:")
+            for key, value in doc.metadata.items():
+                if isinstance(value, str):
+                    value_summary = f"{len(value)} chars" if len(value) > 250 else f"'{value}'"
+                elif isinstance(value, (int, float, bool)):
+                    value_summary = str(value)
+                elif isinstance(value, list):
+                    value_summary = f"list({len(value)} items)"
+                elif isinstance(value, dict):
+                    value_summary = f"dict({len(value)} items)"
+                    structure_info.append(f"  - {key}: {value_summary}")
+                    # Expand nested dict contents
+                    for nested_key, nested_value in value.items():
+                        if isinstance(nested_value, str):
+                            nested_summary = f"{len(nested_value)} chars" if len(nested_value) > 250 else f"'{nested_value}'"
+                        elif isinstance(nested_value, (int, float, bool)):
+                            nested_summary = str(nested_value)
+                        elif isinstance(nested_value, (list, dict)):
+                            nested_summary = f"{type(nested_value).__name__}({len(nested_value)} items)"
+                        else:
+                            nested_summary = f"{type(nested_value).__name__}"
+                        structure_info.append(f"    - {nested_key}: {nested_summary}")
+                    continue  # Skip the normal append since we already added it
+                else:
+                    value_summary = f"{type(value).__name__}"
+                structure_info.append(f"  - {key}: {value_summary}")
+        else:
+            structure_info.append("Metadata: None")
+        
+        return "\n".join(structure_info)
+    
+    def print_debug_output(document: Document, thinking_text: str, final_output_text: str) -> None:
+        """
+        Print debug output showing input/output pair with tokens and educational scores.
+        
+        Args:
+            document: The processed document with metadata
+            thinking_text: The extracted thinking text
+            final_output_text: The final output text
+        """
+        # Get tokens from metadata
+        input_tokens = document.metadata["input"]["token_count"]
+        thinking_tokens = document.metadata["thinking"]["token_count"]
+        final_output_tokens = document.metadata["token_count"]
+        
+        document_structure = format_document_structure(document)
+
+        log_cutoff = 2500
+        delimiter_outside = '='*100
+        delimiter_inside = '-'*50
+        
+        print(f"""
+{delimiter_outside}
+🔍 DEBUG: INPUT/OUTPUT PAIR
+{delimiter_outside}
+📝 INPUT ({input_tokens} tokens, edu score: {document.metadata["input"]["score"]:.2f}/{document.metadata["input"]["int_score"]}):
+{delimiter_inside}
+{document.metadata["input"]["text"][:log_cutoff] + ("..." if len(document.metadata["input"]["text"]) > log_cutoff else "")}
+{delimiter_inside}
+🧠 THINKING ({thinking_tokens} tokens, edu score: {document.metadata["thinking"]["score"]:.2f}/{document.metadata["thinking"]["int_score"]}):
+{delimiter_inside}
+{format_thinking_display(thinking_text)}
+{delimiter_inside}
+🔄 FINAL OUTPUT ({final_output_tokens} tokens, edu score: {document.metadata["score"]:.2f}/{document.metadata["int_score"]}):
+{delimiter_inside}
+{final_output_text}
+{delimiter_inside}
+📋 DOCUMENT STRUCTURE:
+{delimiter_inside}
+{document_structure}
+{delimiter_outside}
+""")
             
     def postprocess_fn(document: Document) -> Document:
         """
@@ -251,29 +377,7 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         # Extract inference results from document metadata
         inference_results = document.metadata.get("inference_results", [])
         
-        output_text = ""
-        if inference_results:
-            # Get the first successful result
-            for result in inference_results:
-                if hasattr(result, 'text'):  # InferenceSuccess object
-                    output_text = result.text
-                    break
-                elif isinstance(result, dict):
-                    # Extract from dict format
-                    if "choices" in result and len(result["choices"]) > 0:
-                        choice = result["choices"][0]
-                        if "message" in choice and "content" in choice["message"]:
-                            output_text = choice["message"]["content"]
-                            break
-                        elif "text" in choice:
-                            output_text = choice["text"]
-                            break
-                    elif "content" in result:
-                        output_text = result["content"]
-                        break
-                    elif "text" in result:
-                        output_text = result["text"]
-                        break
+        output_text = extract_text_from_inference_results(inference_results)
         
         # Parse thinking and final output
         thinking_text, final_output_raw = parse_thinking_output(output_text)
@@ -328,83 +432,7 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         
         # Debug output (only if debug flag is enabled)
         if debug:
-            # Get tokens from metadata
-            input_tokens = document.metadata["input"]["token_count"]
-            thinking_tokens = document.metadata["thinking"]["token_count"]
-            final_output_tokens = document.metadata["token_count"]
-            
-            log_cutoff = 2500
-            delimiter_outside = '='*100
-            delimiter_inside = '-'*50
-            
-            # Prepare document structure summary
-            def format_document_structure(doc: Document) -> str:
-                """Format document structure without showing full content."""
-                structure_info = []
-                
-                # Document ID and basic info
-                if hasattr(doc, 'id') and doc.id:
-                    structure_info.append(f"Document ID: {doc.id}")
-                
-                # Text length info
-                structure_info.append(f"Document text: {len(doc.text)} chars")
-                
-                # Metadata summary
-                if doc.metadata:
-                    structure_info.append("Metadata keys:")
-                    for key, value in doc.metadata.items():
-                        if isinstance(value, str):
-                            value_summary = f"{len(value)} chars" if len(value) > 250 else f"'{value}'"
-                        elif isinstance(value, (int, float, bool)):
-                            value_summary = str(value)
-                        elif isinstance(value, list):
-                            value_summary = f"list({len(value)} items)"
-                        elif isinstance(value, dict):
-                            value_summary = f"dict({len(value)} items)"
-                            structure_info.append(f"  - {key}: {value_summary}")
-                            # Expand nested dict contents
-                            for nested_key, nested_value in value.items():
-                                if isinstance(nested_value, str):
-                                    nested_summary = f"{len(nested_value)} chars" if len(nested_value) > 250 else f"'{nested_value}'"
-                                elif isinstance(nested_value, (int, float, bool)):
-                                    nested_summary = str(nested_value)
-                                elif isinstance(nested_value, (list, dict)):
-                                    nested_summary = f"{type(nested_value).__name__}({len(nested_value)} items)"
-                                else:
-                                    nested_summary = f"{type(nested_value).__name__}"
-                                structure_info.append(f"    - {nested_key}: {nested_summary}")
-                            continue  # Skip the normal append since we already added it
-                        else:
-                            value_summary = f"{type(value).__name__}"
-                        structure_info.append(f"  - {key}: {value_summary}")
-                else:
-                    structure_info.append("Metadata: None")
-                
-                return "\n".join(structure_info)
-            
-            document_structure = format_document_structure(document)
-            
-            print(f"""
-{delimiter_outside}
-🔍 DEBUG: INPUT/OUTPUT PAIR
-{delimiter_outside}
-📝 INPUT ({input_tokens} tokens, edu score: {document.metadata["input"]["score"]:.2f}/{document.metadata["input"]["int_score"]}):
-{delimiter_inside}
-{document.metadata["input"]["text"][:log_cutoff] + ("..." if len(document.metadata["input"]["text"]) > log_cutoff else "")}
-{delimiter_inside}
-🧠 THINKING ({thinking_tokens} tokens, edu score: {document.metadata["thinking"]["score"]:.2f}/{document.metadata["thinking"]["int_score"]}):
-{delimiter_inside}
-{format_thinking_display(thinking_text)}
-{delimiter_inside}
-🔄 FINAL OUTPUT ({final_output_tokens} tokens, edu score: {document.metadata["score"]:.2f}/{document.metadata["int_score"]}):
-{delimiter_inside}
-{final_output_text}
-{delimiter_inside}
-📋 DOCUMENT STRUCTURE:
-{delimiter_inside}
-{document_structure}
-{delimiter_outside}
-""")
+            print_debug_output(document, thinking_text, final_output_text)
         
         return document
     

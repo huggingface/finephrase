@@ -123,7 +123,7 @@ evaluate fineweb-edu-hq-20BT-21B-seed-606,fineweb-edu-lq-20BT-21B-seed-606
 Optimize prompts for text generation tasks using DSPy GEPA:
 
 ```bash
-optimize-prompt --budget 10 --train-size 50 --val-size 20 --test-size 1000
+optimize-prompt --budget 10
 ```
 
 ## Data Generation

@@ -548,7 +548,7 @@ def main():
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
     
     # Set up paths based on arguments
-    run_name = f"{args.prompt.replace(".md", "")}-{args.model_name_or_path.split('/')[-1]}-{args.name}"
+    run_name = f"{args.prompt.replace('.md', '')}-{args.model_name_or_path.split('/')[-1]}-{args.name}"
     output_path = f"{args.output_path}/rephrased/{run_name}"
     logs_path = f"{LOG_BASE_PATH}/rephrasing/{run_name}"
     checkpoints_path = f"{LOCAL_TMP_PATH_ON_NODE}/checkpoints/{run_name}" if not args.disable_checkpoints else None

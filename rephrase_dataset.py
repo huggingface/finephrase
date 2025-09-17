@@ -538,6 +538,13 @@ parser.add_argument(
 
 def main():
     args = parser.parse_args()
+
+    if args.debug:
+        args.run_local = True
+        args.disable_checkpoints = True
+        args.limit = 3
+        skip_completed = False
+        print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
     
     # Set up paths based on arguments
     output_path = f"{args.output_path}/rephrased/{args.name}"
@@ -548,13 +555,6 @@ def main():
     data_paths = args.data_paths.split(",")
     print(f"Data paths: {data_paths}")
     print(f"Output path: {output_path}")
-    
-    if args.debug:
-        args.run_local = True
-        args.disable_checkpoints = True
-        args.limit = 3
-        skip_completed = False
-        print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
 
     from datatrove.pipeline.readers import JsonlReader
     from datatrove.pipeline.writers import JsonlWriter

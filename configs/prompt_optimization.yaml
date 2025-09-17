@@ -10,27 +10,23 @@ fixed_args:
   train-size: 500
   val-size: 100
   test-size: 100
-  
-  temperature: 1
-  top-p: 0.95
-  top-k: 64
 
 # Variable arguments - creates different experiment runs
 runs:
-  - name: "gemma_3_27b_it_budget_1"
+  - name: "test"
     args:
       generation-model: "huggingface/google/gemma-3-27b-it"
       budget: 1      
-  - name: "gemma_3_27b_it_budget_10"
+  - name: "test"
     args:
       generation-model: "huggingface/google/gemma-3-27b-it"
       budget: 10
 
-  - name: "gemma_3_270m_it_budget_1"
+  - name: "test"
     args:
       generation-model: "huggingface/google/gemma-3-270m-it"
       budget: 1
-  - name: "gemma_3_270m_it_budget_10"
+  - name: "test"
     args:
       generation-model: "huggingface/google/gemma-3-270m-it"
       budget: 10

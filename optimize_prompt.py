@@ -64,6 +64,7 @@ class DspyGepaOptimizer(PipelineStep):
         seed: int = 42,
         budget: int = 5,
         task: str = "rephrase",
+        name: str = "",
         log_dir: str = None
     ):
         super().__init__()
@@ -75,12 +76,13 @@ class DspyGepaOptimizer(PipelineStep):
         self.seed = seed
         self.budget = budget
         self.task = task
+        self.name = name
         self.log_dir = log_dir or f"{LOG_BASE_PATH}/prompt_optimization"
         
         # Create hierarchical directory structure: task/model/train-val-size/budget
         generation_model_name = self.generation_model.split("/")[-1]  # Extract last part after /
         train_val_size = f"train-{self.train_size}-val-{self.val_size}"
-        run_name = f"budget-{self.budget}"
+        run_name = f"budget-{self.budget}-{self.name}"
         
         self.run_dir = f"{self.log_dir}/{self.task}/{generation_model_name}/{train_val_size}/{run_name}"
         Path(self.run_dir).mkdir(parents=True, exist_ok=True)
@@ -551,6 +553,12 @@ parser.add_argument(
     help="Random seed for reproducibility (default: 42)"
 )
 parser.add_argument(
+    "--name",
+    type=str,
+    default="",
+    help="Name of the optimization run",
+)
+parser.add_argument(
     "--log-dir",
     type=str,
     default=f"{LOG_BASE_PATH}/prompt_optimization",
@@ -619,6 +627,7 @@ def main():
         seed=args.seed,
         budget=args.budget,
         task=args.task,
+        name=args.name,
         log_dir=args.log_dir
     )
 
@@ -630,7 +639,7 @@ def main():
     else:
         # Create job name using hierarchical structure: task-model-train-val-budget
         generation_model_name = args.generation_model.split("/")[-1]
-        job_name = f"optimize-{args.task}-{generation_model_name}-train-{args.train_size}-val-{args.val_size}-budget-{args.budget}"
+        job_name = f"optimize-{args.task}-{generation_model_name}-train-{args.train_size}-val-{args.val_size}-budget-{args.budget}-{args.name}"
         executor = SlurmPipelineExecutor(
             pipeline=[optimizer_step],
             tasks=1,

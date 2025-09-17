@@ -156,13 +156,13 @@ Submit multiple Slurm experiments with different configurations using YAML files
 
 ```bash
 # Submit all Slurm jobs in a configuration
-launch-experiments config/rephrase_benchmark.yaml
+launch-experiments configs/rephrase_benchmark.yaml
 
 # Test configuration without submitting jobs (dry run)
-launch-experiments config/rephrase_benchmark.yaml --dry-run
+launch-experiments configs/rephrase_benchmark.yaml --dry-run
 
 # Submit only specific experiments
-launch-experiments config/rephrase_benchmark.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
+launch-experiments configs/rephrase_benchmark.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
 ```
 
 ## Analysis & Visualization

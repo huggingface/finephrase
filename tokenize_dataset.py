@@ -109,10 +109,10 @@ class DocumentSplitter(PipelineStep):
 parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
 
 parser.add_argument(
-    "--data_paths", type=str, help="Path to the data to tokenize.", required=True
+    "--data-paths", type=str, help="Path to the data to tokenize.", required=True
 )
 parser.add_argument(
-    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=S3_BASE_PATH
+    "--output-path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=S3_BASE_PATH
 )
 parser.add_argument(
     "--name", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"  
@@ -121,14 +121,14 @@ parser.add_argument(
     "--limit", type=int, help="limit the number of documents to tokenize", default=-1
 )
 parser.add_argument(
-    "--n_tasks", type=int, help="number of tokenization tasks", default=100
+    "--n-tasks", type=int, help="number of tokenization tasks", default=100
 )
 parser.add_argument(
-    "--max_toks", type=int, help="max tokens per file", default=1e8
+    "--max-toks", type=int, help="max tokens per file", default=1e8
 )
 # For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
 parser.add_argument(
-    "--batch_size", type=int, help="batch size", default=2000
+    "--batch-size", type=int, help="batch size", default=2000
 )
 parser.add_argument(
     "--qos", type=str, default="normal"
@@ -137,34 +137,34 @@ parser.add_argument(
     "--tokenizer", type=str, help="tokenizer to use", default="hynky/Llama-3.2-1B-no-bos"
 )
 parser.add_argument(
-    "--text_key", type=str, default="text"
+    "--text-key", type=str, default="text"
 )
 parser.add_argument(
     "--sample", type=float, default=1.0
 )
 parser.add_argument(
-    "--dep_job_id", type=str, default=None, help="ID of the job that produced the data to tokenize."
+    "--dep-job-id", type=str, default=None, help="ID of the job that produced the data to tokenize."
 )
 parser.add_argument(
-    "--jsonl_output", "-jo", type=str, default=None, help="Path to optionally save the sampled data jsonl"
+    "--jsonl-output", "-jo", type=str, default=None, help="Path to optionally save the sampled data jsonl"
 )
 parser.add_argument(
-    "--shuffle_chunk_size", "-scs", type=int, default=4096, help="Shuffle inter document"
+    "--shuffle-chunk-size", "-scs", type=int, default=4096, help="Shuffle inter document"
 )
 parser.add_argument(
-    "--run_merger", "-rm", action="store_true", help="Run the merger after tokenization"
+    "--run-merger", "-rm", action="store_true", help="Run the merger after tokenization"
 )
 parser.add_argument(
-    "--max_chars_per_document", type=int, default=100_000, help="Split documents larger than this many characters"
+    "--max-chars-per-document", type=int, default=100_000, help="Split documents larger than this many characters"
 )
 parser.add_argument(
     "--duplicate", type=int, default=1, help="Duplicate the data n times"
 )
 parser.add_argument(
-    "--sample_seed", type=int, default=42, help="Seed for the sample filter random number generator"
+    "--sample-seed", type=int, default=42, help="Seed for the sample filter random number generator"
 )
 parser.add_argument(
-    "--shuffle_seed", type=int, default=42, help="Seed for the tokenizer shuffle random number generator"
+    "--shuffle-seed", type=int, default=42, help="Seed for the tokenizer shuffle random number generator"
 )
 
 

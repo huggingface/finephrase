@@ -1,36 +1,32 @@
 # Rephrasing benchmark experiment configuration
-experiment_name: "rephrase_budget-20-prompt"
+experiment_name: "rephrase_lq_budget-1"
 script: "rephrase"
 continue_on_failure: true
 
-# Fixed arguments that apply to all runs
+# Fixed arguments for all runs
 fixed_args:
   # Data and output configuration
-  data_paths: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
-  limit: -1
+  data-paths: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  limit: 1000
   
   # Processing configuration
-  n_tasks: 2
-  gpus: 1 # It seems dp on multiple gpus is not working
-  tp: 1
-  enable_prefix_caching: true
-  enable_chunked_prefill: true
+  enable-prefix-caching: true
+  enable-chunked-prefill: true
 
   # Model configuration 
-  # TODO adapt rephrase script to allow for system and user prompts
-  prompt: "dspy/5-max_full_evals.md"  # Adjust prompt as needed
-  max_tokens: 4096
-  model_max_context: 16384
+  prompt: "dspy/rephrase-budget-1.md"  # Adjust prompt as needed
+  max-tokens: 4096
+  model-max-context: 16384
 
   temperature: 1
-  top_p: 0.95
-  top_k: 64
-  presence_penalty: 1.5
+  top-p: 0.95
+  top-k: 64
   
   # Infrastructure configuration
-  max_concurrent_requests: 500
-  max_concurrent_tasks: 500
-  server_type: "vllm"
+  max-concurrent-requests: 500
+  max-concurrent-tasks: 500
+  gpu-memory-utilization: 0.97
+  server-type: "vllm"
   
   # Debugging and checkpoints
   debug: false # Logs get very verbose when debug is true
@@ -38,15 +34,19 @@ fixed_args:
   
   # Slurm configuration
   time: "23:00:00"
-  partition: "hopper-prod"
   qos: "normal"
+  n-tasks: 10
 
 # Variable arguments - creates different experiment runs
 runs:
   - name: "gemma_3_270m_it"
     args:
-      model_name_or_path: "google/gemma-3-270m-it"
+      model-name-or-path: "google/gemma-3-270m-it"
+      gpus: 1
+      tp: 1
   - name: "gemma_3_27b_it"
     args:
-      model_name_or_path: "google/gemma-3-27b-it"
+      model-name-or-path: "google/gemma-3-27b-it"
+      gpus: 4
+      tp: 4
 

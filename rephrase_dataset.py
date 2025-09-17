@@ -440,7 +440,7 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
 parser = argparse.ArgumentParser("Rephrase documents using inference pipeline.")
 
 parser.add_argument(
-    "--data_paths", type=str, help="Path to the data to rephrase.", required=True
+    "--data-paths", type=str, help="Path to the data to rephrase.", required=True
 )
 parser.add_argument(
     "--name", type=str, help="Name of the rephrasing experiment", required=True
@@ -449,57 +449,57 @@ parser.add_argument(
     "--prompt", type=str, help="Path to prompt template file (relative to prompts/ directory)", required=True
 )
 parser.add_argument(
-    "--output_path", type=str, help="Path to the base output folder.", default=S3_BASE_PATH
+    "--output-path", type=str, help="Path to the base output folder.", default=S3_BASE_PATH
 )
 parser.add_argument(
-    "--model_name_or_path", type=str, help="Model name or path for inference", default="google/gemma-3-270m-it"
+    "--model-name-or-path", type=str, help="Model name or path for inference", default="google/gemma-3-270m-it"
 )
 parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to rephrase", default=-1
 )
 parser.add_argument(
-    "--n_tasks", type=int, help="Number of parallel tasks", default=1
+    "--n-tasks", type=int, help="Number of parallel tasks", default=1
 )
 parser.add_argument(
     "--temperature", type=float, help="Temperature for inference", default=1
 )
 parser.add_argument(
-    "--top_p", type=float, help="Top-p (nucleus sampling) for inference", default=0.95
+    "--top-p", type=float, help="Top-p (nucleus sampling) for inference", default=0.95
 )
 parser.add_argument(
-    "--top_k", type=int, help="Top-k sampling for inference", default=64
+    "--top-k", type=int, help="Top-k sampling for inference", default=64
 )
 parser.add_argument(
-    "--enable_thinking", action="store_true", help="Enable thinking in chat template"
+    "--enable-thinking", action="store_true", help="Enable thinking in chat template"
 )
 parser.add_argument(
     # Allow for long inputs to account for the prompt and because the model may output shorter rephrases
-    "--model_max_context", type=int, help="Maximum context length for the model", default=16384
+    "--model-max-context", type=int, help="Maximum context length for the model", default=16384
 )
 parser.add_argument(
-    "--max_concurrent_requests", type=int, help="Maximum concurrent requests", default=500
+    "--max-concurrent-requests", type=int, help="Maximum concurrent requests", default=500
 )
 parser.add_argument(
-    "--max_concurrent_tasks", type=int, help="Maximum concurrent tasks", default=500
+    "--max-concurrent-tasks", type=int, help="Maximum concurrent tasks", default=500
 )
 parser.add_argument(
-    "--metric_interval", type=int, help="Metric logging interval in seconds", default=60
+    "--metric-interval", type=int, help="Metric logging interval in seconds", default=60
 )
 parser.add_argument(
-    "--records_per_chunk", type=int, help="Number of records per chunk", default=1000
+    "--records-per-chunk", type=int, help="Number of records per chunk", default=1000
 )
 parser.add_argument(
     # We only train on this many tokens, so no need to go beyond
-    "--max_tokens", type=int, help="Maximum tokens per request", default=4096 
+    "--max-tokens", type=int, help="Maximum tokens per request", default=4096 
 )
 parser.add_argument(
-    "--server_type", type=str, help="Inference server type", choices=["vllm", "sglang", "dummy"], default="vllm"
+    "--server-type", type=str, help="Inference server type", choices=["vllm", "sglang", "dummy"], default="vllm"
 )
 parser.add_argument(
-    "--text_key", type=str, default="text", help="Key name for text content in input documents"
+    "--text-key", type=str, default="text", help="Key name for text content in input documents"
 )
 parser.add_argument(
-    "--disable_checkpoints", action="store_true", help="Disable checkpoint functionality"
+    "--disable-checkpoints", action="store_true", help="Disable checkpoint functionality"
 )
 parser.add_argument(
     "--debug", action="store_true", help="Enable debug logging to show input/output text pairs in terminal (overrides limit, run_local and disable_checkpoints)"
@@ -514,22 +514,22 @@ parser.add_argument(
     "--qos", type=str, default="normal", help="Slurm QoS"
 )
 parser.add_argument(
-    "--dep_job_id", type=str, default=None, help="Optional Slurm dependency job id"
+    "--dep-job-id", type=str, default=None, help="Optional Slurm dependency job id"
 )
 parser.add_argument(
     "--gpus", type=int, default=1, help="Number of GPUs per task"
 )
 parser.add_argument(
-    "--enable_prefix_caching", action="store_true", default=True, help="Enable prefix caching"
+    "--enable-prefix-caching", action="store_true", default=True, help="Enable prefix caching"
 )
 parser.add_argument(
-    "--enable_chunked_prefill", action="store_true", default=True, help="Enable chunked prefill"
+    "--enable-chunked-prefill", action="store_true", default=True, help="Enable chunked prefill"
 )
 parser.add_argument(
     "--tp", type=int, default=1, help="Tensor parallelism size"
 )
 parser.add_argument(
-    "--gpu_memory_utilization", type=float, default=0.97, help="GPU memory utilization"
+    "--gpu-memory-utilization", type=float, default=0.97, help="GPU memory utilization"
 )
 parser.add_argument(
     "--run-local", action="store_true", help="Run pipeline locally instead of using Slurm"

@@ -21,10 +21,10 @@ def score_predicate_hq(doc):
 
 parser = argparse.ArgumentParser("Filter fineweb-edu dataset by quality and count tokens.")
 parser.add_argument(
-    "--data_paths", type=str, help="Path to the data to filter.", required=True
+    "--data-paths", type=str, help="Path to the data to filter.", required=True
 )
 parser.add_argument(
-    "--output_path", type=str, help="Path to the base output folder. The final output path will be <output_path>/filtered/<name>", default=S3_BASE_PATH
+    "--output-path", type=str, help="Path to the base output folder. The final output path will be <output_path>/filtered/<name>", default=S3_BASE_PATH
 )
 parser.add_argument(
     "--quality", type=str, choices=["lq", "hq"], required=True, help="Quality subset to select based on FineWeb-Edu score (lq: <=2, hq: >4)"
@@ -33,32 +33,32 @@ parser.add_argument(
     "--name", type=str, default=None, help="Name of the filtering. If not provided, the name will be the last part of the data paths"
 )
 parser.add_argument(
-    "--subset_tokens", type=float, help="Number of tokens to subset", default=36e9, required=False
+    "--subset-tokens", type=float, help="Number of tokens to subset", default=36e9, required=False
 )
 parser.add_argument(
-    "--total_tokens", type=int, help="Total number of tokens. If not set, just counts tokens.", default=None
+    "--total-tokens", type=int, help="Total number of tokens. If not set, just counts tokens.", default=None
 )
 parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to process", default=-1
 )
 parser.add_argument(
-    "--n_tasks", type=int, help="Number of tasks", default=1000
+    "--n-tasks", type=int, help="Number of tasks", default=1000
 )
 # For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
 parser.add_argument(
-    "--batch_size", type=int, help="Batch size", default=2000
+    "--batch-size", type=int, help="Batch size", default=2000
 )
 parser.add_argument(
     "--qos", type=str, default="normal", help="QoS to use for the job"
 )
 parser.add_argument(
-    "--dep_job_id", type=str, default=None, help="Optional Slurm dependency job id"
+    "--dep-job-id", type=str, default=None, help="Optional Slurm dependency job id"
 )
 parser.add_argument(
     "--tokenizer", type=str, default="hynky/Llama-3.2-1B-no-bos", help="Tokenizer to use for counting tokens"
 )
 parser.add_argument(
-    "--sample_seed", type=int, default=42, help="Seed for the sample filter random number generator"
+    "--sample-seed", type=int, default=42, help="Seed for the sample filter random number generator"
 )
 
 def main():

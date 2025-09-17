@@ -60,7 +60,7 @@ All commands support `--help` to see available options.
 Get comprehensive token statistics for any dataset:
 
 ```bash
-report-tokens --data_paths s3://path/to/dataset1,hf://datasets/owner/dataset2
+report-tokens --data-paths s3://path/to/dataset1,hf://datasets/owner/dataset2
 ```
 
 ### Filtering Educational Data
@@ -69,21 +69,21 @@ Use `filter-fineweb-edu` to create datasets with specific educational quality sc
 **HQ data** (rounded int_score 4,5 or score > 3.5):
 ```bash
 filter-fineweb-edu \
-  --data_paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
+  --data-paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
   --name fineweb-edu-hq-20BT \
-  --subset_tokens 21.5e9 \
-  --total_tokens 217715141792
+  --subset-tokens 21.5e9 \
+  --total-tokens 217715141792
 ```
 
 **LQ data** (rounded int_score 0,1 or score < 1.5):
 ```bash
 filter-fineweb-edu \
-  --data_paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
+  --data-paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
   --name fineweb-edu-lq-20BT \
-  --subset_tokens 21.5e9 \
-  --total_tokens 1644271223950
+  --subset-tokens 21.5e9 \
+  --total-tokens 1644271223950
 ```
 
 **Data sources:**
@@ -97,8 +97,8 @@ Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 Prepare datasets for training by tokenizing them:
 
 ```bash
-tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fineweb-edu-hq-20BT --sample 1
-tokenize --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fineweb-edu-lq-20BT --sample 1
+tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fineweb-edu-hq-20BT --sample 1
+tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fineweb-edu-lq-20BT --sample 1
 ```
 
 ## Model Training & Evaluation
@@ -132,7 +132,7 @@ optimize-prompt --budget 10
 Generate synthetic training data by rephrasing existing content:
 
 ```bash
-rephrase --data_paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase-budget-20.md --name dspy-rephrase-budget-20 --limit 100
+rephrase --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase-budget-20.md --name dspy-rephrase-budget-20 --limit 100
 ```
 
 **Available prompts for data quality improvement:**

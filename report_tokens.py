@@ -26,13 +26,13 @@ class ReportTokens(PipelineStep):
 
 parser = argparse.ArgumentParser(description="Report token statistics for a dataset")
 parser.add_argument(
-    "--data_paths",
+    "--data-paths",
     type=str,
     required=True,
     help="Comma-separated list of dataset paths (e.g., s3://..., hf://...)",
 )
 parser.add_argument(
-    "--run_local",
+    "--run-local",
     action="store_true",
     help="Run the pipeline locally, usually for debugging",
 )
@@ -49,13 +49,13 @@ parser.add_argument(
     help="Hugging Face tokenizer name or path",
 )
 parser.add_argument(
-    "--batch_size",
+    "--batch-size",
     type=int,
     default=10000,
     help="Batch size for token counting",
 )
 parser.add_argument(
-    "--n_tasks",
+    "--n-tasks",
     type=int,
     default=100,
     help="Number of parallel tasks",

@@ -1,0 +1,36 @@
+# Prompt optimization experiment configuration
+experiment_name: "prompt_optimization"
+script: "optimize-prompt"
+continue_on_failure: true
+
+# Fixed arguments for all runs
+fixed_args:
+  task: "rephrase"
+
+  train-size: 500
+  val-size: 100
+  test-size: 100
+  
+  temperature: 1
+  top-p: 0.95
+  top-k: 64
+
+# Variable arguments - creates different experiment runs
+runs:
+  - name: "gemma_3_27b_it_budget_1"
+    args:
+      generation-model: "huggingface/google/gemma-3-27b-it"
+      budget: 1      
+  - name: "gemma_3_27b_it_budget_10"
+    args:
+      generation-model: "huggingface/google/gemma-3-27b-it"
+      budget: 10
+
+  - name: "gemma_3_270m_it_budget_1"
+    args:
+      generation-model: "huggingface/google/gemma-3-270m-it"
+      budget: 1
+  - name: "gemma_3_270m_it_budget_10"
+    args:
+      generation-model: "huggingface/google/gemma-3-270m-it"
+      budget: 10

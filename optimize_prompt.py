@@ -580,7 +580,7 @@ parser.add_argument(
     help="Slurm QoS (default: normal)",
 )
 parser.add_argument(
-    "--dep_job_id",
+    "--dep-job-id",
     type=str,
     default=None,
     help="Optional Slurm dependency job id",

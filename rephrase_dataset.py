@@ -56,7 +56,6 @@ def create_templated_query_builder(
     temperature: float = 0.7,
     top_p: float = 0.8,
     top_k: int = 20,
-    presence_penalty: float = 1.5,
     enable_thinking: bool = False,
 ):
     """
@@ -69,7 +68,6 @@ def create_templated_query_builder(
         temperature:            Temperature for inference
         top_p:                  Top-p (nucleus sampling) for inference
         top_k:                  Top-k sampling for inference
-        presence_penalty:       Presence penalty for inference
         enable_thinking:        Enable thinking in chat template
         
     Returns:
@@ -129,7 +127,6 @@ def create_templated_query_builder(
             "temperature": temperature,
             "top_p": top_p,
             "top_k": top_k,
-            "presence_penalty": presence_penalty,
             "chat_template_kwargs": {"enable_thinking": enable_thinking},
         }
     return query_builder
@@ -473,9 +470,6 @@ parser.add_argument(
     "--top_k", type=int, help="Top-k sampling for inference", default=64
 )
 parser.add_argument(
-    "--presence_penalty", type=float, help="Presence penalty for inference", default=1.5
-)
-parser.add_argument(
     "--enable_thinking", action="store_true", help="Enable thinking in chat template"
 )
 parser.add_argument(
@@ -508,7 +502,7 @@ parser.add_argument(
     "--disable_checkpoints", action="store_true", help="Disable checkpoint functionality"
 )
 parser.add_argument(
-    "--debug", action="store_true", help="Enable debug logging to show input/output text pairs in terminal"
+    "--debug", action="store_true", help="Enable debug logging to show input/output text pairs in terminal (overrides limit, run_local and disable_checkpoints)"
 )
 parser.add_argument(
     "--tokenizer", type=str, default="hynky/Llama-3.2-1B-no-bos", help="Tokenizer to use for token counting in debug output"
@@ -556,12 +550,24 @@ def main():
     print(f"Output path: {output_path}")
     
     if args.debug:
+        args.run_local = True
+        args.disable_checkpoints = True
+        args.limit = 3
+        skip_completed = False
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
 
     from datatrove.pipeline.readers import JsonlReader
     from datatrove.pipeline.writers import JsonlWriter
     from datatrove.executor.slurm import SlurmPipelineExecutor
     from datatrove.executor.local import LocalPipelineExecutor
+
+    # Build model kwargs for the inference server
+    _model_kwargs = {
+        "enable_prefix_caching": args.enable_prefix_caching,
+        "enable_chunked_prefill": args.enable_chunked_prefill,
+        "gpu_memory_utilization": args.gpu_memory_utilization,
+        "dtype": "bfloat16",
+    }
 
     config: InferenceConfig = InferenceConfig(
         server_type=args.server_type,
@@ -572,11 +578,7 @@ def main():
         max_concurrent_tasks=args.max_concurrent_tasks,
         metric_interval=args.metric_interval,
         tp=args.tp,
-        model_kwargs={
-            "enable_prefix_caching": args.enable_prefix_caching,
-            "enable_chunked_prefill": args.enable_chunked_prefill,
-            "gpu_memory_utilization": args.gpu_memory_utilization,
-        },
+        model_kwargs=_model_kwargs,
     )
 
     # Load prompt template if specified
@@ -603,7 +605,6 @@ def main():
                     args.temperature, 
                     args.top_p, 
                     args.top_k, 
-                    args.presence_penalty, 
                     args.enable_thinking
                 ),
                 config=config,
@@ -622,7 +623,9 @@ def main():
         ]
 
     if args.run_local:
-        rephrase_executor = LocalPipelineExecutor(pipeline=pipeline, logging_dir=logs_path)
+        rephrase_executor = LocalPipelineExecutor(
+            pipeline=pipeline, logging_dir=logs_path, skip_completed=skip_completed
+        )
     else:
         rephrase_executor = SlurmPipelineExecutor(
             job_name=f"rephrase-{args.name}",

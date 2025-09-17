@@ -46,7 +46,6 @@ class ExperimentLauncher:
         self._validate_config()
         
         # Setup experiment metadata
-        self.experiment_name = self.config.get('experiment_name', 'experiment')
         self.timestamp = time.strftime('%Y%m%d_%H%M%S')
         
     def _load_config(self) -> Dict[str, Any]:
@@ -133,9 +132,8 @@ class ExperimentLauncher:
             # Execute script directly (e.g., "rephrase" -> "rephrase")
             cmd = [script]
         
-        # Add the experiment name and run name as --name argument first
-        full_name = f"{self.experiment_name}/{run_config['name']}"
-        cmd.extend(['--name', full_name])
+        # Add the run name as --name argument first
+        cmd.extend(['--name', run_config['name']])
         
         # Add fixed arguments (apply to all runs)
         fixed_args = self.config.get('fixed_args', {})
@@ -208,7 +206,6 @@ class ExperimentLauncher:
         Returns:
             Dictionary mapping run names to job submission exit codes
         """
-        print(f"Launching experiment: {self.experiment_name}")
         print(f"Configuration: {self.config_path}")
         print(f"Timestamp: {self.timestamp}")
         
@@ -280,8 +277,7 @@ Slurm job with the specified parameters. The scripts handle their own Slurm subm
 
 Example YAML configuration:
 
-experiment_name: "rephrasing_benchmark"
-script: "rephrase_dataset"  # Script name or script.py
+script: "rephrase"
 continue_on_failure: true
 
 fixed_args:

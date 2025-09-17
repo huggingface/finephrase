@@ -1,5 +1,4 @@
 # Rephrasing benchmark experiment configuration
-experiment_name: "rephrase_lq_budget-1"
 script: "rephrase"
 continue_on_failure: true
 
@@ -7,14 +6,13 @@ continue_on_failure: true
 fixed_args:
   # Data and output configuration
   data-paths: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
-  limit: 1000
+  limit: 1000 # TODO: remove this when i am sure
   
   # Processing configuration
   enable-prefix-caching: true
   enable-chunked-prefill: true
 
   # Model configuration 
-  prompt: "dspy/rephrase-budget-1.md"  # Adjust prompt as needed
   max-tokens: 4096
   model-max-context: 16384
 
@@ -39,14 +37,21 @@ fixed_args:
 
 # Variable arguments - creates different experiment runs
 runs:
-  - name: "gemma_3_270m_it"
-    args:
-      model-name-or-path: "google/gemma-3-270m-it"
-      gpus: 1
-      tp: 1
-  - name: "gemma_3_27b_it"
+  #- name: "gemma_3_270m_it"
+  #  args:
+  #    model-name-or-path: "google/gemma-3-270m-it"
+  #    gpus: 1
+  #    tp: 1
+  - name: "gemma_3_27b_it_budget_1"
     args:
       model-name-or-path: "google/gemma-3-27b-it"
+      prompt: "dspy/rephrase/gemma-3-27b-it/budget-1.md"
       gpus: 4
       tp: 4
 
+  - name: "gemma_3_27b_it_budget_10"
+    args:
+      model-name-or-path: "google/gemma-3-27b-it"
+      prompt: "dspy/rephrase/gemma-3-27b-it/budget-10.md"
+      gpus: 4
+      tp: 4

@@ -1,5 +1,4 @@
 # Prompt optimization experiment configuration
-experiment_name: "prompt_optimization"
 script: "optimize-prompt"
 continue_on_failure: true
 

@@ -65,7 +65,7 @@ class DspyGepaOptimizer(PipelineStep):
         budget: int = 5,
         task: str = "rephrase",
         name: str = "",
-        log_dir: str = None
+        log_dir: str = f"{LOG_BASE_PATH}/prompt_optimization"
     ):
         super().__init__()
         self.generation_model = generation_model
@@ -77,7 +77,7 @@ class DspyGepaOptimizer(PipelineStep):
         self.budget = budget
         self.task = task
         self.name = name
-        self.log_dir = log_dir or f"{LOG_BASE_PATH}/prompt_optimization"
+        self.log_dir = log_dir
         
         # Create hierarchical directory structure: task/model/train-val-size/budget
         generation_model_name = self.generation_model.split("/")[-1]  # Extract last part after /

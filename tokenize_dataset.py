@@ -126,8 +126,8 @@ parser.add_argument(
 parser.add_argument(
     "--max-toks", type=int, help="max tokens per file", default=1e8
 )
-# For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
 parser.add_argument(
+    # For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
     "--batch-size", type=int, help="batch size", default=2000
 )
 parser.add_argument(

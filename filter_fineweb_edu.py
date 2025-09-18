@@ -33,7 +33,7 @@ parser.add_argument(
     "--name", type=str, default=None, help="Name of the filtering. If not provided, the name will be the last part of the data paths"
 )
 parser.add_argument(
-    "--subset-tokens", type=float, help="Number of tokens to subset", default=36e9, required=False
+    "--subset-tokens", type=float, help="Number of tokens to subset", default=21.5e9, required=False
 )
 parser.add_argument(
     "--total-tokens", type=int, help="Total number of tokens. If not set, just counts tokens.", default=None
@@ -42,10 +42,11 @@ parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to process", default=-1
 )
 parser.add_argument(
-    "--n-tasks", type=int, help="Number of tasks", default=1000
+    # Use 10K tasks so we have around 2M tokens per file, this enables smaller rephrasing tasks losing less on preemption
+    "--n-tasks", type=int, help="Number of tasks", default=10000 
 )
-# For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
 parser.add_argument(
+    # For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu
     "--batch-size", type=int, help="Batch size", default=2000
 )
 parser.add_argument(

@@ -624,7 +624,7 @@ def main():
                 postprocess_fn=create_postprocess_fn(
                     debug=args.debug,
                     tokenizer_name=args.tokenizer,
-                    model_name=args.model_name_or_path
+                    model_name=args.model_name_or_path,
                 ),
             ),
             JsonlReader(output_path),

@@ -372,11 +372,14 @@ class DspyGepaOptimizer(PipelineStep):
         elif provider == "huggingface":
             api_base = f'https://router.huggingface.co/v1'
             # Route via OpenAI adapter to avoid forwarding liteLLM-only params to HF router
-            if model_name == "google/gemma-3-270m-it":
-                # Use my own deployed inference endpoint at: https://endpoints.huggingface.co/huggingface/endpoints/gemma-3-270m-it
-                # Nvidia A10G GPU works, Nvidia T4 errors for some reason
-                # Just create a new endpoint for 1b and 4b models if needed
-                api_base = "https://vvk54njxozomcnm8.us-east-1.aws.endpoints.huggingface.cloud/v1/"
+            # Use my own deployed inference endpoint at: https://endpoints.huggingface.co/huggingface/endpoints/dedicated
+            # NVIDIA T4 errors, NVIDIA L4 and A10G work
+            if model_name == "google/gemma-3-270m-it": # A10G, vllm
+                api_base = "https://y7ftany7ifv3hpqh.us-east-1.aws.endpoints.huggingface.cloud/v1/"
+            elif model_name == "google/gemma-3-1b-it": # L4, TGI
+                api_base = "https://xk759aj0m12gfnz4.us-east-1.aws.endpoints.huggingface.cloud/v1/"
+            elif model_name == "google/gemma-3-4b-it": # L4, TGI
+                api_base = "https://raa4dhdnusvum3o5.us-east-1.aws.endpoints.huggingface.cloud/v1/"
             dspy_model_name = f"openai/{model_name}"
             api_key = os.getenv("HF_TOKEN")
             if not api_key:

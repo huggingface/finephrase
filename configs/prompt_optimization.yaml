@@ -12,20 +12,67 @@ fixed_args:
 
 # Variable arguments - creates different experiment runs
 runs:
-  - name: "test"
-    args:
-      generation-model: "huggingface/google/gemma-3-27b-it"
-      budget: 1      
-  - name: "test"
-    args:
-      generation-model: "huggingface/google/gemma-3-27b-it"
-      budget: 10
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-27b-it"
+  #    budget: 1      
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-27b-it"
+  #    budget: 10
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-27b-it"
+  #    budget: 20
+
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-12b-it"
+  #    budget: 1
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-12b-it"
+  #    budget: 10
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-12b-it"
+  #    budget: 20
 
   - name: "test"
     args:
-      generation-model: "huggingface/google/gemma-3-270m-it"
+      generation-model: "huggingface/google/gemma-3-4b-it"
       budget: 1
   - name: "test"
     args:
-      generation-model: "huggingface/google/gemma-3-270m-it"
+      generation-model: "huggingface/google/gemma-3-4b-it"
       budget: 10
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-4b-it"
+  #    budget: 20
+
+  - name: "test"
+    args:
+      generation-model: "huggingface/google/gemma-3-1b-it"
+      budget: 1
+  - name: "test"
+    args:
+      generation-model: "huggingface/google/gemma-3-1b-it"
+      budget: 10
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-1b-it"
+  #    budget: 20
+
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-270m-it"
+  #    budget: 1
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-270m-it"
+  #    budget: 10
+  - name: "test"
+    args:
+      generation-model: "huggingface/google/gemma-3-270m-it"
+      budget: 20

@@ -546,6 +546,13 @@ def main():
         args.limit = 3
         skip_completed = False
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
+    else:
+        # Safety guard: Abort submission for unsafe configurations (skip in debug/local)
+        if args.qos.lower() in {"normal", "high"}:
+            if args.limit == -1 or args.limit > 10000 or args.n_tasks > 10:
+                print(f"It looks like you are trying to run a large rephrasing experiment. " \
+                "Please change qos to low and inform people in #science-cluster-planning about large runs.")
+                raise ValueError("Unsafe configuration")
     
     # Set up paths based on arguments
     run_name = f"{args.prompt.replace('.md', '')}-{args.model_name_or_path.split('/')[-1]}-{args.name}"

@@ -13,31 +13,48 @@ All interactions will be structured in the following way, with the appropriate v
 [[ ## completed ## ]]
 In adhering to this structure, your objective is: 
         markdown
-        You are an expert at de-marketing and recontextualizing text into high-quality, neutral, educational wiki articles. Your sole purpose is to extract the underlying factual subject and present it objectively, as if for an encyclopedia.
+        # Instruction for Generating Original Academic Analysis
         
-        **Core Task & Mindset:** Your primary duty is to identify the general concept, entity, or industry being discussed. Extract all factual claims, data points, definitions, and process descriptions. Repurpose this information to construct a new, objective article focused on educating the reader about the topic itself. You are an educator creating a standalone resource, not a summarizer of the source's promotional or narrative content.
+        ## Your Core Objective
+        Your primary task is to use a provided text solely as a source of immutable factual data. You must then generate a completely **new, original analytical article** that explores a broader academic or conceptual theme inferred from that data. The output must be a standalone piece suitable for an academic publication, with the source text serving only as a faint point of origin.
         
-        **Critical Strategy:**
-        1.  **Identify the Core Concept:** Determine the main, provider-agnostic subject the text is illustrating (e.g., "Canine-Themed Merchandise," "Talent Management," "North Brabant").
-        2.  **Extract and Generalize:** Faithfully pull out facts but rephrase them into general, timeless statements. Remove all references to the specific source (company, author, "we," "our," "I") unless citing a specific study or data point neutrally (e.g., "according to a 2023 report by Britannica...").
-        3.  **Recontextualize the Narrative:** Discard all personal anecdotes, poems, narratives, author's subjective musings, and direct calls to the reader (e.g., "What made you want to look up...?"). Transform any underlying factual seeds within them into neutral statements of fact or common observations.
-        4.  **Demote the Source's Role:** The source is not the subject. The article is about the topic, with the source merely providing examples or data. The output should not read as a summary of the source material but as a new article *about the topic*.
-        5.  **Synthesize from Fragments:** The input may be a disjointed collection of facts, definitions, and promotional snippets. Your role is to synthesize these fragments into a coherent, logically flowing article. Infer standard wiki categories (e.g., Overview, History, Geography, Demographics, Applications) based on the facts provided.
-        6.  **Formalize Language:** Convert informal definitions and phrases into formal encyclopedic language. For example, "province of the southern Netherlands" becomes "a province located in the southern Netherlands." "capital 's Hertogenbosch" becomes "Its capital city is 's-Hertogenbosch."
+        ## Critical Mandates: What You MUST Avoid
+        1.  **NO Paraphrasing or Summarizing:** Your output must not be a rewritten version or a summary of the original text. The source text is a data mine, not a template.
+        2.  **NO Review or Evaluation:** Do not evaluate the merits, quality, or success of the subject matter. Your role is that of a neutral analyst, not a critic.
+        3.  **NO Feature Listing:** Do not simply list or describe the characteristics, events, or steps mentioned in the input. You must contextualize them within a larger theoretical framework.
+        4.  **NO Excessive Focus on the Source:** The source text and its subject should not be the main topic of your analysis. They are the evidence for your argument, not the argument itself.
         
-        **Tone and Style:**
-        *   **Formal and Objective:** Use a formal, impersonal, encyclopedic tone from a third-person perspective.
-        *   **Eliminate Promotional Language:** Remove all marketing language, calls to action (e.g., "contact us," "book now," "learn more"), subjective quality claims (e.g., "industry-leading," "excellent," "fun," "cool"), and persuasive rhetoric.
-        *   **Eliminate Anecdote and Narrative:** Remove the original author's personal reflections, stories, and narrative framing. The output should not be about the author's journey or interaction with the reader.
+        ## Step-by-Step Execution Strategy
         
-        **Structure and Organization:**
-        *   **Impose Logical Structure:** Organize the synthesized information under clear, standard descriptive headings (e.g., "Overview," "History," "Geography," "Demographics," "Key Concepts," "Applications"). Use subheadings and bulleted or numbered lists for clarity where appropriate.
-        *   **Self-Contained Article:** The output must read as a complete, standalone informational piece about the topic, requiring no prior knowledge of the source text.
+        ### 1. Data Extraction
+        *   Identify the central subject of the input text (e.g., a college program, a corporate initiative, a historical account).
+        *   Extract key, neutral, and immutable facts about this subject (e.g., names, stated purposes, core events, actors involved). Treat these solely as data points to be used as evidence, not as the focus of your writing.
         
-        **Content Handling:**
-        *   **Focus on the Topic, Not the Source:** The main body explains the *topic or concept itself*.
-        *   **Integrate General Information:** Weave provider-agnostic details into the main body to support the educational narrative (e.g., "A common product category includes...", "The landscape is largely characterized by...").
-        *   **Preserve Facts, Omit Non-Facts:** Faithfully represent all factual information (statistics, dates, locations, definitions) but omit all subjective commentary, opinion, and speculation from the original text.
-        *   **Standardize Measurements:** Present measurements in a clear and consistent format, often providing imperial and metric equivalents if relevant (e.g., "5,105 square kilometers (1,971 square miles)").
+        ### 2. Thesis Inference and Academic Pivot (The Most Important Step)
+        *   Analyze the extracted data to **infer a significant, defensible thesis**. This thesis must connect the specific subject to a larger, broader trend, challenge, or discourse within a relevant academic field.
+        *   **Example Pivots:**
+            *   From a text about a college Classics program, infer a thesis about the deployment of historical narratives to legitimize institutional power through postcolonial frameworks like **Orientalism (Edward Said)**.
+            *   From a corporate press release about a new technology, infer a thesis about the rhetoric of innovation and its relationship to **neoliberal economic theory**.
+            *   From a government report on a policy, infer a thesis about the use of language to frame public perception, drawing on **Framing Theory** or **Critical Discourse Analysis (Michel Foucault)**.
+        *   This thesis is your analytical launchpad. It must allow you to pivot away from describing the source text and into a scholarly discussion.
         
-        **Output Format:** Format the final output using clean Markdown for headings (`#`, `##`), subheadings, and lists. Ensure the article is highly readable and well-structured.
+        ### 3. Domain Identification and Conceptual Framing
+        *   Determine the appropriate academic or professional discipline relevant to your inferred thesis (e.g., Postcolonial Studies, Political Science, Media Studies, Sociology, Critical Theory).
+        *   **Generate and apply established theoretical frameworks and concepts** from these domains to build your analysis. This is where you add original value and achieve critical distance from the source.
+            *   **Use specific theories and concepts:** e.g., "Orientalism" (Said, 1978), "Discourse" (Foucault, 1969), "Bounded Rationality," "Framing Theory," "Neoliberalism."
+            *   **Synthesize concepts with data:** Weave these academic concepts together with the immutable facts from the input to explain *why* the subject is significant within the broader context you've established. The facts should serve as brief examples that illustrate your theoretical points.
+            *   **Generate plausible academic references:** To lend credibility, integrate citations to seminal researchers and works that are relevant to the chosen framework (e.g., "This approach reflects what Foucault termed a 'discursive formation' (Foucault, 1969)..."). These references are part of the analytical exercise.
+        
+        ### 4. Structure and Tone
+        *   **Tone:** Maintain a formal, objective, and third-person academic tone throughout. Avoid promotional language, first-person pronouns, and conversational style.
+        *   **Structure:**
+            *   **Introduction (Approx. 10% of text):** Begin by immediately stating your inferred thesis, framing the subject within the larger academic context you will explore. Mention the source text only once to establish the subject of your analysis.
+            *   **Body Paragraphs (Approx. 80% of text):**
+                *   **PIVOT CRITICALLY:** Use the immutable facts from the input very briefly (1-2 sentences per paragraph) to establish the subject.
+                *   The vast majority of each body paragraph (**80-90%**) must be dedicated to exploring the academic concepts, theories, and broader trends. Use the subject purely as a case study or a piece of evidence to illustrate these larger points. Discuss the theory, its proponents, its implications, and how the source data exemplifies it.
+            *   **Conclusion (Approx. 10% of text):** Synthesize the analysis to reinforce the thesis and comment on the broader significance of the subject beyond its specific details. Do not re-summarize the source text.
+        
+        ## Key Feedback Integration
+        To improve upon previous outputs and ensure maximum critical distance:
+        *   **Prioritize conceptual expansion over factual description.** The word count should be overwhelmingly dedicated to the "so what" – the theoretical implications – not the "what" of the source text.
+        *   Ensure the output is a piece of academic analysis that *uses* the source data, not a piece *about* the source data. A reader should learn about a broader concept (e.g., Orientalism, Framing Theory), using the subject as a single, illustrative example.

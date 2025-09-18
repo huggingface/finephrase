@@ -12,20 +12,22 @@ All interactions will be structured in the following way, with the appropriate v
 
 [[ ## completed ## ]]
 In adhering to this structure, your objective is: 
-        Rephrase and synthesize a collection of low-quality, disparate web text snippets into a single, high-quality, and educational summary.
+        markdown
+        Your task is to transform a provided unstructured, first-person, and opinionated text into a single, coherent, objective, and high-quality summary paragraph.
         
-        Your process must be:
-        1.  **Synthesize:** Analyze the input texts to identify the single, overarching theme that connects them all.
-        2.  **Summarize:** Create a concise, well-written opening sentence that accurately describes the entire collection's subject matter.
-        3.  **Extract and Categorize:** Identify all key information, including specific events, organizations, arguments, perspectives, and personal stories. Group this information into logical, thematic categories.
-        4.  **Structure and Elevate:** Present your findings in a structured format. First, provide the summary sentence. Then, list the key themes using bullet points. Each bullet point must have a bolded title followed by an explanation.
-        5.  **Conclude:** End with a final sentence that summarizes the significance or implication of the synthesized content.
+        The input will be a lengthy personal account, such as a blog post or critique, containing fragmented data points, strong opinions, and endorsements. Your output must be a neutral and formal summary, not a list or a reflection of the original author's subjective voice.
         
-        Pay close attention to niche and domain-specific information, which may include:
-        -   Specific organizations, conferences, and events (e.g., G92, The Justice Conference, National Day of Prayer).
-        -   Theological or political debates and perspectives (e.g., evangelical views on immigration reform).
-        -   Biblical references or religious justifications used in arguments.
-        -   Legislative processes and updates.
-        -   Personal anecdotes and stories that illustrate larger points.
+        Follow this strategy precisely:
+        1.  **Analyze and Neutralize:** Identify the overarching subject matter (e.g., a union election analysis). Extract all factual claims, endorsements, and critiques, but strip them of their original subjective and emotional language (e.g., change "sold their soul to the devil" to "entered into a political alliance criticized by some").
+        2.  **Categorize and Synthesize:** Group the neutralized information into high-level categories (e.g., Criticisms of Major Caucuses, Key Endorsement Decisions, Overall Voting Strategy, Context on External Groups).
+        3.  **Structure the Paragraph:** Compose a well-structured paragraph in a formal, academic tone. The flow must be:
+            a.  **Topic Sentence:** Start by objectively stating the document's purpose and scope (e.g., "This text presents a critical analysis of the caucuses participating in the [context] election.").
+            b.  **Supporting Details:** Synthesize the categorized information. Discuss the general critiques of each major entity as neutral observations, not personal attacks. Summarize the endorsement strategy at a high level (e.g., "The analysis results in a mixed endorsement strategy, favoring candidates from multiple caucuses based on perceived effectiveness...") without listing every single name and position.
+            c.  **Concluding Context:** If present, briefly note any external contextual factors mentioned (e.g., the absence of another group from the process).
         
-        Your final output should be a coherent, stand-alone piece of educational content that is significantly more structured and informative than the original input texts.
+        **Critical Guidelines for This Task:**
+        -   **Impersonal and Objective Tone:** You must write from a third-person, anonymous perspective. Do not use phrases like "the author believes" or "the author states." Present the information as neutral fact.
+        -   **Prioritize Synthesis Over Detail:** The summary must generalize and synthesize. Avoid listing specific names, positions, or minor details. Instead, describe the *types* of candidates endorsed (e.g., "incumbents praised for their advocacy," "challengers valued for their dissenting voices") and the *nature* of the critiques (e.g., "concerns over internal democracy," "criticism of past contract negotiations").
+        -   **Formal Language:** Use professional and academic language. Elevate colloquial or inflammatory phrases from the source text into formal equivalents.
+        -   **Conciseness is Key:** The output must be a single, dense paragraph. Drastically reduce the word count of the original by focusing only on the most significant thematic elements.
+        -   **No Meta-Commentary:** Do not include any references to the task itself or the original text's format in the output.

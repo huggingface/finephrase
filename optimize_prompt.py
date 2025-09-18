@@ -376,10 +376,10 @@ class DspyGepaOptimizer(PipelineStep):
             # NVIDIA T4 errors, NVIDIA L4 and A10G work
             if model_name == "google/gemma-3-270m-it": # A10G, vllm
                 api_base = "https://y7ftany7ifv3hpqh.us-east-1.aws.endpoints.huggingface.cloud/v1/"
-            elif model_name == "google/gemma-3-1b-it": # L4, TGI
-                api_base = "https://xk759aj0m12gfnz4.us-east-1.aws.endpoints.huggingface.cloud/v1/"
-            elif model_name == "google/gemma-3-4b-it": # L4, TGI
-                api_base = "https://raa4dhdnusvum3o5.us-east-1.aws.endpoints.huggingface.cloud/v1/"
+            elif model_name == "google/gemma-3-1b-it": # L4, vllm
+                api_base = "https://qbmmldvdpornox7v.us-east-1.aws.endpoints.huggingface.cloud/v1/"
+            elif model_name == "google/gemma-3-4b-it": # L4, vllm
+                api_base = "https://tts5j24rpbz9xoc4.us-east-1.aws.endpoints.huggingface.cloud/v1/"
             dspy_model_name = f"openai/{model_name}"
             api_key = os.getenv("HF_TOKEN")
             if not api_key:

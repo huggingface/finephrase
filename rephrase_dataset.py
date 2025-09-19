@@ -16,8 +16,8 @@ from datatrove.data import Document
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 
 from utils import (
+    CHECKPOINTS_PATH,
     FAULTY_NODES,
-    LOCAL_TMP_PATH_ON_NODE,
     LOG_BASE_PATH,
     S3_BASE_PATH,
     build_reader,
@@ -458,7 +458,10 @@ parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to rephrase", default=-1
 )
 parser.add_argument(
-    "--n-tasks", type=int, help="Number of parallel tasks", default=1
+    "--n-tasks", type=int, help="Number of parallel tasks", default=1000
+)
+parser.add_argument(
+    "--n-workers", type=int, help="Number of workers (jobs to run in parallel)", default=-1
 )
 parser.add_argument(
     "--temperature", type=float, help="Temperature for inference", default=1
@@ -486,9 +489,6 @@ parser.add_argument(
     "--metric-interval", type=int, help="Metric logging interval in seconds", default=60
 )
 parser.add_argument(
-    "--records-per-chunk", type=int, help="Number of records per chunk", default=1000
-)
-parser.add_argument(
     # We only train on this many tokens, so no need to go beyond
     "--max-tokens", type=int, help="Maximum tokens per request", default=4096 
 )
@@ -508,16 +508,13 @@ parser.add_argument(
     "--tokenizer", type=str, default="hynky/Llama-3.2-1B-no-bos", help="Tokenizer to use for token counting in debug output"
 )
 parser.add_argument(
-    "--time", type=str, default="20:00:00", help="Slurm time limit"
+    "--time", type=str, default="3-00:00:00", help="Slurm time limit"
 )
 parser.add_argument(
-    "--qos", type=str, default="normal", help="Slurm QoS"
+    "--qos", type=str, default="low", help="Slurm QoS"
 )
 parser.add_argument(
     "--dep-job-id", type=str, default=None, help="Optional Slurm dependency job id"
-)
-parser.add_argument(
-    "--gpus", type=int, default=1, help="Number of GPUs per task"
 )
 parser.add_argument(
     "--enable-prefix-caching", action="store_true", default=True, help="Enable prefix caching"
@@ -558,7 +555,6 @@ def main():
     run_name = f"{args.prompt.replace('.md', '')}-{args.model_name_or_path.split('/')[-1]}-{args.name}"
     output_path = f"{args.output_path}/rephrased/{run_name}"
     logs_path = f"{LOG_BASE_PATH}/rephrasing/{run_name}"
-    checkpoints_path = f"{LOCAL_TMP_PATH_ON_NODE}/checkpoints/{run_name}" if not args.disable_checkpoints else None
 
     # Parse data paths
     data_paths = args.data_paths.split(",")
@@ -617,8 +613,8 @@ def main():
                     args.enable_thinking
                 ),
                 config=config,
-                records_per_chunk=args.records_per_chunk,
-                checkpoints_local_dir=checkpoints_path,
+                records_per_chunk=1000,
+                checkpoints_local_dir=f"{CHECKPOINTS_PATH}/{run_name}" if not args.disable_checkpoints else None, # Cannot be on scratch because it needs to be available everywhere!
                 output_writer=JsonlWriter(output_path, output_filename="${rank}_chunk_${chunk_index}.jsonl"),
                 skip_bad_requests=True, # Skips documents that cause BadRequestError from the server, e.g., when they are too long
                 postprocess_fn=create_postprocess_fn(
@@ -641,15 +637,16 @@ def main():
             pipeline=pipeline,
             logging_dir=logs_path,
             tasks=args.n_tasks,
+            workers=args.n_workers, # when I want to run something in qos normal, I can limit the number of GPUs
             time=args.time,
             partition="hopper-prod",
-            cpus_per_task=10*args.gpus,
-            mem_per_cpu_gb=20,
+            cpus_per_task=11*args.tp,
+            mem_per_cpu_gb=22,
             qos=args.qos,
-            env_command="sleep $((RANDOM % 30))",
+            env_command="module load cuda/12.4",
             mail_user="joel@hf.co",
             depends_job_id=args.dep_job_id,
-            sbatch_args={"gres": f"gpu:{args.gpus}", "exclude": FAULTY_NODES}
+            sbatch_args={"gres": f"gpu:{args.tp}", "exclude": FAULTY_NODES}
         )
     
     rephrase_executor.run()

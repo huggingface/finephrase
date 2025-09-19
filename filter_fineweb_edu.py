@@ -42,8 +42,7 @@ parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to process", default=-1
 )
 parser.add_argument(
-    # Use 10K tasks so we have around 2M tokens per file, this enables smaller rephrasing tasks losing less on preemption
-    "--n-tasks", type=int, help="Number of tasks", default=10000 
+    "--n-tasks", type=int, help="Number of tasks", default=1000
 )
 parser.add_argument(
     # For avg 100k tokens we can set batch size to 2k for 8cpus with 2gb per cpu

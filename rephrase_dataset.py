@@ -552,7 +552,7 @@ def main():
                 raise ValueError("Unsafe configuration")
     
     # Set up paths based on arguments
-    run_name = f"{args.prompt.replace('.md', '')}-{args.model_name_or_path.split('/')[-1]}-{args.name}"
+    run_name = f"{args.prompt.replace('.md', '')}-{args.name}"
     output_path = f"{args.output_path}/rephrased/{run_name}"
     logs_path = f"{LOG_BASE_PATH}/rephrasing/{run_name}"
 

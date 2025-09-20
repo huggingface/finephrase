@@ -380,6 +380,8 @@ class DspyGepaOptimizer(PipelineStep):
                 api_base = "https://qbmmldvdpornox7v.us-east-1.aws.endpoints.huggingface.cloud/v1/"
             elif model_name == "google/gemma-3-4b-it": # L4, vllm
                 api_base = "https://tts5j24rpbz9xoc4.us-east-1.aws.endpoints.huggingface.cloud/v1/"
+            elif model_name == "google/gemma-3-12b-it": # L4S, vllm
+                api_base = "https://i2urnyf73c9e5p3d.us-east-1.aws.endpoints.huggingface.cloud/v1/"
             dspy_model_name = f"openai/{model_name}"
             api_key = os.getenv("HF_TOKEN")
             if not api_key:

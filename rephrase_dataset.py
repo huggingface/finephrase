@@ -586,6 +586,7 @@ def main():
         metric_interval=args.metric_interval,
         tp=args.tp,
         model_kwargs=_model_kwargs,
+        server_log_folder=logs_path + "/server_logs",
     )
 
     # Load prompt template if specified

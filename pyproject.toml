@@ -30,10 +30,11 @@ dependencies = [
     "hf-transfer",
     "datasets==3.5.1",
     "flashinfer-python==0.2.2",
+    "tokenizers==0.21.0", # Avoid detokenization issues with vLLM: https://github.com/vllm-project/vllm/issues/17448
     "vllm<0.9.0", # Ensure compatibility with PyTorch 2.6.0
     "flash-attn==2.7.4.post1", # Ensure compatibility with PyTorch 2.6.0
     "dspy>=3.0.3",
-    "transformers>=4.56.1",
+    "transformers>=4.55.4",
     "aiofiles",
     "pip",
     "pybind11",

@@ -45,13 +45,14 @@ DEFAULT_LENGTH_CONFIGS = [
 
 MAX_NUM_SEQS_LIST = "256"  # Throughput is not very sensitive to this parameter
 MAX_NUM_BATCHED_TOKENS_LIST = "none" #"none 512 1024 2048 4096 8192 16384" # Cannot be larger than max model length
-QUANTIZATION = "awq"
+QUANTIZATION = "awq" if "awq" in DEFAULT_MODELS[0] else ""
 DTYPE = "auto"
 
 # Constant speculative decoding configuration for vLLM benchmark
 # Passed to autotune.sh via environment and forwarded to vllm serve
-SPECULATIVE_CONFIG = '{"model": "google/gemma-3-1b-it", "num_speculative_tokens": 5}'
+# Model based speculative decoding is not yet supported
 SPECULATIVE_CONFIG = "" # No speculative decoding
+SPECULATIVE_CONFIG = '{"method": "ngram", "num_speculative_tokens": 5, "prompt_lookup_max": 4}'
 
 
 # Auto-adjust dtype based on quantization
@@ -151,7 +152,8 @@ class BenchmarkJobSubmitter:
         
         # Create directory structure: LOG_BASE_PATH/benchmarking/{model}/tp{n}/{length_config}
         length_config_str = f"{input_len}_{output_len}_{max_model_len}"
-        log_dir = self.log_base_path / "benchmarking" / model_safe / f"tp{tp}" / length_config_str
+        speculative_config_str = "speculative" if self.speculative_config else "no_speculative"
+        log_dir = self.log_base_path / "benchmarking" / speculative_config_str / model_safe / f"tp{tp}" / length_config_str
         
         # Create directory if it doesn't exist
         log_dir.mkdir(parents=True, exist_ok=True)

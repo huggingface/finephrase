@@ -169,11 +169,13 @@ def find_best_log_file(results_dir: Path, best_config: Dict) -> Optional[Path]:
     return None
 
 
-def extract_experiment_info(experiment_path: Path) -> Tuple[str, int, str]:
+def extract_experiment_info(experiment_path: Path) -> Tuple[str, int, str, str]:
     """
-    Extract model name, TP, and length configuration from experiment path.
-    
-    Path format: .../benchmarking/{model}/{tp}/{length_config}/results/
+    Extract model name, TP, length configuration, and speculative flag from experiment path.
+
+    Required path format:
+      - .../benchmarking/{spec_dir}/{model}/{tp}/{length_config}/results/
+        where {spec_dir} in {"speculative", "no_speculative"}
     """
     parts = experiment_path.parts
     
@@ -184,17 +186,31 @@ def extract_experiment_info(experiment_path: Path) -> Tuple[str, int, str]:
             benchmarking_idx = i
             break
     
-    if benchmarking_idx is None or len(parts) < benchmarking_idx + 4:
-        raise ValueError(f"Invalid experiment path: {experiment_path}")
-    
-    model = parts[benchmarking_idx + 1]
-    tp_str = parts[benchmarking_idx + 2]
-    length_config = parts[benchmarking_idx + 3]
+    if benchmarking_idx is None:
+        raise ValueError(f"Invalid experiment path (no 'benchmarking' segment): {experiment_path}")
+
+    # Slice parts after 'benchmarking'
+    after_bench = parts[benchmarking_idx + 1:]
+    if len(after_bench) < 4:
+        raise ValueError(f"Invalid experiment path (too short after 'benchmarking'): {experiment_path}")
+
+    first = after_bench[0]
+    if first not in ("speculative", "no_speculative"):
+        raise ValueError(
+            f"Invalid experiment path (expected 'speculative' or 'no_speculative' after 'benchmarking'): {experiment_path}"
+        )
+    # Expect: {spec_dir}/{model}/{tp}/{length_config}/results
+    spec_dir = first
+    model = after_bench[1]
+    tp_str = after_bench[2]
+    length_config = after_bench[3]
     
     # Extract TP number
     tp = int(tp_str.replace('tp', ''))
-    
-    return model, tp, length_config
+
+    speculative_flag = 'yes' if spec_dir == 'speculative' else 'no'
+
+    return model, tp, length_config, speculative_flag
 
 
 def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]]:
@@ -213,15 +229,15 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
         print(f"Benchmarking directory not found: {benchmarking_path}")
         return successful_experiments, failed_experiments
     
-    # Find all results.txt files
-    results_files = list(benchmarking_path.glob("*/*/*/results/result.txt"))
+    # Find all results.txt files under speculative/no_speculative
+    results_files = list(benchmarking_path.glob("*/*/*/*/results/result.txt"))
     
     print(f"Found {len(results_files)} experiment result files")
     
     for results_file in results_files:
         try:
             # Extract experiment information
-            model, tp, length_config = extract_experiment_info(results_file.parent)
+            model, tp, length_config, speculative_flag = extract_experiment_info(results_file.parent)
             
             # Parse results file
             best_config, is_failed = parse_results_file(results_file)
@@ -278,10 +294,11 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 'input_len': input_len,
                 'output_len': output_len,
                 'max_model_len': max_model_len,
+                'speculative': speculative_flag,
                 'max_num_batched_tokens': best_config['max_num_batched_tokens'],
                 'gpu_memory_utilization': gpu_memory_utilization if gpu_memory_utilization is not None else 0,
 
-                # Derived productivity metrics (days to process 18B tokens)
+                # Derived productivity metrics (days to process 20B tokens)
                 # Inserted immediately after gpu_memory_utilization in CSV order below
                 # Computed using normalised total tokens per second (per-TP => per-GPU)
                 
@@ -313,9 +330,9 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 'p99_e2el': metrics.get("P99 E2EL (ms)", 0),
             }
             
-            # Compute days-to-18B using per-TP (per-GPU) total token throughput
+            # Compute days-to-20B using per-TP (per-GPU) total token throughput
             try:
-                target_tokens = 18_000_000_000
+                target_tokens = 20_000_000_000
                 seconds_per_day = 60 * 60 * 24
                 per_gpu_toks_per_sec = total_token_throughput_per_tp
                 if per_gpu_toks_per_sec and per_gpu_toks_per_sec > 0:
@@ -328,8 +345,8 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 gpu_days = 0
                 node_days = 0
 
-            experiment['gpu_days_to_process_18b_tokens'] = round(gpu_days, 2)
-            experiment['node_days_to_process_18b_tokens'] = round(node_days, 2)
+            experiment['gpu_days_to_process_20b_tokens'] = round(gpu_days, 2)
+            experiment['node_days_to_process_20b_tokens'] = round(node_days, 2)
 
             # Keep best throughput on record for uniform summary printing later
             experiment['best_throughput'] = best_config['best_throughput']
@@ -355,8 +372,8 @@ def save_results_to_csv(experiments: List[Dict], output_path: Path):
     # Define column order as specified
     columns = [
         # Model information
-        'model', 'tp', 'input_len', 'output_len', 'max_model_len', 'max_num_batched_tokens', 'gpu_memory_utilization',
-        'gpu_days_to_process_18b_tokens', 'node_days_to_process_18b_tokens',
+        'model', 'speculative', 'tp', 'input_len', 'output_len', 'max_model_len', 'max_num_batched_tokens', 'gpu_memory_utilization',
+        'gpu_days_to_process_20b_tokens', 'node_days_to_process_20b_tokens',
         
         # Per-TP throughput metrics
         'output_token_throughput_per_tp', 'total_token_throughput_per_tp',

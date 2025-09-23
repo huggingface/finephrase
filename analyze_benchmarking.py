@@ -67,6 +67,7 @@ def parse_results_file(results_path: Path) -> Tuple[Optional[Dict], bool]:
             'max_num_seqs': max_num_seqs,
             'max_num_batched_tokens': max_num_batched_tokens,
             'best_throughput': best_throughput,
+            'warning_no_best_line': True,
         }, best_throughput == 0
     
     except Exception as e:
@@ -332,6 +333,8 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
 
             # Keep best throughput on record for uniform summary printing later
             experiment['best_throughput'] = best_config['best_throughput']
+            if best_config.get('warning_no_best_line'):
+                experiment['warning_no_best_line'] = True
             successful_experiments.append(experiment)
             
         except Exception as e:
@@ -381,7 +384,7 @@ def format_summary_line(symbol: str, model: str, tp: int, length_config: str, ri
     return f"{symbol} {model:<30} /tp{tp}/{length_config:<20} - {right_text}"
 
 
-def generate_rerun_command(failed_experiments: List[str]) -> str:
+def generate_rerun_command_failed(failed_experiments: List[str]) -> str:
     """
     Generate a benchmark-vllm command to rerun failed experiments.
     """
@@ -406,6 +409,20 @@ def generate_rerun_command(failed_experiments: List[str]) -> str:
     # Join configs with commas
     experiments_str = ','.join(experiment_configs)
     
+    return f"benchmark-vllm --experiments {experiments_str}"
+
+
+def generate_rerun_command_missing_best(successful_experiments: List[Dict]) -> str:
+    """Generate a rerun command for experiments missing an explicit best_* line."""
+    configs = []
+    for exp in successful_experiments:
+        if exp.get('warning_no_best_line'):
+            configs.append(f"{exp['model']}/tp{exp['tp']}/{exp['length_config']}")
+    if not configs:
+        return ""
+    # Deduplicate and sort for stable output
+    unique_configs = sorted(set(configs))
+    experiments_str = ','.join(unique_configs)
     return f"benchmark-vllm --experiments {experiments_str}"
 
 
@@ -443,7 +460,7 @@ def main():
                 model=exp['model'],
                 tp=exp['tp'],
                 length_config=exp['length_config'],
-                right_text=f"throughput: {exp['best_throughput']:>6.2f}",
+                right_text=f"throughput: {exp['best_throughput']:>6.2f}" + ("  [warn:no best line]" if exp.get('warning_no_best_line') else ""),
             )
             print(line)
 
@@ -483,11 +500,18 @@ def main():
     
     # Generate rerun command for failures
     if failed_experiments:
-        rerun_command = generate_rerun_command(failed_experiments)
+        rerun_command = generate_rerun_command_failed(failed_experiments)
         if rerun_command:
-            print(f"\n=== RERUN COMMAND ===")
+            print(f"\n=== RERUN COMMAND (FAILED) ===")
             print(f"To rerun all failed experiments, use:")
             print(f"{rerun_command}")
+    
+    # Generate rerun command for experiments missing a best_* line
+    missing_best_cmd = generate_rerun_command_missing_best(successful_experiments)
+    if missing_best_cmd:
+        print(f"\n=== RERUN COMMAND (NO BEST LINE) ===")
+        print("To rerun experiments missing 'best_*' in result.txt, use:")
+        print(missing_best_cmd)
 
     # Print summary
     print(f"\n=== SUMMARY ===")

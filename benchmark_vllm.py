@@ -44,8 +44,13 @@ DEFAULT_LENGTH_CONFIGS = [
 ]
 
 MAX_NUM_SEQS_LIST = "256"  # Throughput is not very sensitive to this parameter
-MAX_NUM_BATCHED_TOKENS_LIST = "none 512 1024 2048 4096 8192 16384" # Cannot be larger than max model length
+MAX_NUM_BATCHED_TOKENS_LIST = "none" #"none 512 1024 2048 4096 8192 16384" # Cannot be larger than max model length
+QUANTIZATION = "awq"
+DTYPE = "auto"
 
+# Auto-adjust dtype based on quantization
+if QUANTIZATION and QUANTIZATION.strip().lower() == "awq":
+    DTYPE = "float16"
 
 class BenchmarkJobSubmitter:
     def __init__(self, base_dir: str = "/fsx/joel_niklaus/projects/finephrase/vllm_benchmark", 
@@ -61,6 +66,10 @@ class BenchmarkJobSubmitter:
         else:
             # Use default sweep configuration
             self.experiment_configs = self.generate_default_experiments()
+        
+        # Quantization mode and dtype to pass to vLLM
+        self.quantization = QUANTIZATION
+        self.dtype = DTYPE
     
     def parse_experiments(self, experiments: List[str]) -> List[Dict]:
         """
@@ -183,6 +192,8 @@ export NUM_PROMPTS_SUB=200
 export VLLM_LOGGING_LEVEL="DEBUG"
 export LOG_FOLDER="{log_dir}/results"
 export PORT=$((8000 + SLURM_JOB_ID % 1000))
+export QUANTIZATION="{self.quantization}"
+export DTYPE="{self.dtype}"
 
 # Job info
 echo "Starting benchmark job:"

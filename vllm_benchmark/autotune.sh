@@ -22,6 +22,8 @@ NUM_BATCHED_TOKENS_LIST=${NUM_BATCHED_TOKENS_LIST:-"512 1024 2048 4096"}
 NUM_PROMPTS_MAIN=${NUM_PROMPTS_MAIN:-1000}
 NUM_PROMPTS_SUB=${NUM_PROMPTS_SUB:-100}
 ENABLE_PROFILING=${ENABLE_PROFILING:-0}
+QUANTIZATION=${QUANTIZATION:-""}
+DTYPE=${DTYPE:-"auto"}
 
 LOG_FOLDER=${LOG_FOLDER:-"$BASE/auto-benchmark/$TAG"}
 RESULT="$LOG_FOLDER/result.txt"
@@ -43,13 +45,13 @@ echo "NUM_SEQS_LIST=$NUM_SEQS_LIST"
 echo "NUM_BATCHED_TOKENS_LIST=$NUM_BATCHED_TOKENS_LIST"
 echo "VLLM_LOGGING_LEVEL=$VLLM_LOGGING_LEVEL"
 echo "ENABLE_PROFILING=$ENABLE_PROFILING"
+echo "QUANTIZATION=$QUANTIZATION"
+echo "DTYPE=$DTYPE"
 echo "RESULT_FILE=$RESULT"
 echo "====================== AUTO TUNEPARAMETERS ===================="
 
-rm -rf $LOG_FOLDER
-rm -rf $PROFILE_PATH
+# Preserve existing logs and profiles; only ensure log folder exists.
 mkdir -p $LOG_FOLDER
-mkdir -p $PROFILE_PATH
 
 pip install -q datasets
 
@@ -102,9 +104,15 @@ start_server() {
         "--tensor-parallel-size" "$TP"
         "--enable-prefix-caching"
         "--load-format" "dummy"
+        "--dtype" "$DTYPE"
         "--download-dir" "$DOWNLOAD_DIR"
         "--max-model-len" "$MAX_MODEL_LEN"
     )
+
+    # Optionally include quantization if provided
+    if [[ -n "$QUANTIZATION" ]]; then
+        common_args_array+=( "--quantization" "$QUANTIZATION" )
+    fi
 
     # Optionally include max-num-batched-tokens unless 'none' or empty
     if [[ -n "$max_num_batched_tokens" && "$max_num_batched_tokens" != "none" ]]; then
@@ -297,6 +305,8 @@ if [[ "$ENABLE_PROFILING" == "1" || "$ENABLE_PROFILING" == "true" ]]; then
 
         # Start server with the best params and profiling ENABLED
         echo "Starting server for profiling..."
+        # Create profile directory only when profiling is actually enabled
+        mkdir -p "$PROFILE_PATH"
         start_server $gpu_memory_utilization $best_max_num_seqs $best_num_batched_tokens "$vllm_log" "$PROFILE_PATH"
 
         # Run benchmark with the best params and the --profile flag

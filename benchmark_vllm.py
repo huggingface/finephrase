@@ -48,6 +48,12 @@ MAX_NUM_BATCHED_TOKENS_LIST = "none" #"none 512 1024 2048 4096 8192 16384" # Ca
 QUANTIZATION = "awq"
 DTYPE = "auto"
 
+# Constant speculative decoding configuration for vLLM benchmark
+# Passed to autotune.sh via environment and forwarded to vllm serve
+SPECULATIVE_CONFIG = '{"model": "google/gemma-3-1b-it", "num_speculative_tokens": 5}'
+SPECULATIVE_CONFIG = "" # No speculative decoding
+
+
 # Auto-adjust dtype based on quantization
 if QUANTIZATION and QUANTIZATION.strip().lower() == "awq":
     DTYPE = "float16"
@@ -70,6 +76,8 @@ class BenchmarkJobSubmitter:
         # Quantization mode and dtype to pass to vLLM
         self.quantization = QUANTIZATION
         self.dtype = DTYPE
+        # Speculative decoding configuration passed through to autotune
+        self.speculative_config = SPECULATIVE_CONFIG
     
     def parse_experiments(self, experiments: List[str]) -> List[Dict]:
         """
@@ -194,6 +202,7 @@ export LOG_FOLDER="{log_dir}/results"
 export PORT=$((8000 + SLURM_JOB_ID % 1000))
 export QUANTIZATION="{self.quantization}"
 export DTYPE="{self.dtype}"
+export SPECULATIVE_CONFIG='{self.speculative_config}'
 
 # Job info
 echo "Starting benchmark job:"

@@ -24,6 +24,7 @@ NUM_PROMPTS_SUB=${NUM_PROMPTS_SUB:-100}
 ENABLE_PROFILING=${ENABLE_PROFILING:-0}
 QUANTIZATION=${QUANTIZATION:-""}
 DTYPE=${DTYPE:-"auto"}
+SPECULATIVE_CONFIG=${SPECULATIVE_CONFIG:-""}
 
 LOG_FOLDER=${LOG_FOLDER:-"$BASE/auto-benchmark/$TAG"}
 RESULT="$LOG_FOLDER/result.txt"
@@ -47,6 +48,7 @@ echo "VLLM_LOGGING_LEVEL=$VLLM_LOGGING_LEVEL"
 echo "ENABLE_PROFILING=$ENABLE_PROFILING"
 echo "QUANTIZATION=$QUANTIZATION"
 echo "DTYPE=$DTYPE"
+echo "SPECULATIVE_CONFIG=$SPECULATIVE_CONFIG"
 echo "RESULT_FILE=$RESULT"
 echo "====================== AUTO TUNEPARAMETERS ===================="
 
@@ -117,6 +119,11 @@ start_server() {
     # Optionally include max-num-batched-tokens unless 'none' or empty
     if [[ -n "$max_num_batched_tokens" && "$max_num_batched_tokens" != "none" ]]; then
         common_args_array+=( "--max-num-batched-tokens" "$max_num_batched_tokens" )
+    fi
+
+    # Optionally enable speculative decoding if configuration is provided
+    if [[ -n "$SPECULATIVE_CONFIG" ]]; then
+        common_args_array+=( "--speculative-config" "$SPECULATIVE_CONFIG" )
     fi
 
     # Use the array expansion "${common_args_array[@]}"
@@ -266,7 +273,10 @@ gpu_memory_utilization=0.98
 find_gpu_memory_utilization=0
 while (( $(echo "$gpu_memory_utilization >= 0.9" | bc -l) )); do
     # Pass empty string for profile_dir argument
-    start_server $gpu_memory_utilization "${num_seqs_list[-1]}" "${num_batched_tokens_list[-1]}" "$LOG_FOLDER/vllm_log_gpu_memory_utilization_$gpu_memory_utilization.log" ""
+    # Compute last elements from arrays (bash does not support negative indices)
+    last_num_seqs="${num_seqs_list[${#num_seqs_list[@]}-1]}"
+    last_num_batched_tokens="${num_batched_tokens_list[${#num_batched_tokens_list[@]}-1]}"
+    start_server $gpu_memory_utilization "$last_num_seqs" "$last_num_batched_tokens" "$LOG_FOLDER/vllm_log_gpu_memory_utilization_$gpu_memory_utilization.log" ""
     result=$?
     if [[ "$result" -eq 0 ]]; then
         find_gpu_memory_utilization=1

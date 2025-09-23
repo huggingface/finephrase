@@ -2,11 +2,13 @@
 script: "rephrase"
 continue_on_failure: true
 
+# IMPORTANT: This is a large run, make sure to inform people in #science-cluster-planning beforehand.
+
 # Fixed arguments for all runs
 fixed_args:
   # Data and output configuration
   data-paths: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
-  limit: 1000 # TODO: remove this when i am sure
+  limit: -1
   
   # Processing configuration
   enable-prefix-caching: true
@@ -23,35 +25,56 @@ fixed_args:
   # Infrastructure configuration
   max-concurrent-requests: 500
   max-concurrent-tasks: 500
-  gpu-memory-utilization: 0.97
+  gpu-memory-utilization: 0.97 # 0.98 can sometimes OOM
   server-type: "vllm"
   
   # Debugging and checkpoints
   debug: false # Logs get very verbose when debug is true
-  tokenizer: "hynky/Llama-3.2-1B-no-bos"
   
   # Slurm configuration
-  time: "23:00:00"
-  qos: "normal"
-  n-tasks: 10
+  time: "3-00:00:00"
+  qos: "low"
+  n-tasks: 1000 # The input dataset has 10K chunks, so we cannot run more tasks (2M tokens per file)
+  #n-workers: 16 # Only limit the number of workers if you are running in qos normal
+
+# There is usually more input tokens than output tokens
+# 27B (tp4): ~4.5M output tokens per hour 
+# 12B (tp2): ~3.6M output tokens per hour 
+# 4B (tp1): ~7.2M output tokens per hour
+# 1B (tp1): ~33.2M output tokens per hour 
+# 270M (tp1): ~62.4M output tokens per hour
 
 # Variable arguments - creates different experiment runs
 runs:
-  #- name: "gemma_3_270m_it"
+  #- name: "test"
   #  args:
-  #    model-name-or-path: "google/gemma-3-270m-it"
-  #    gpus: 1
-  #    tp: 1
-  - name: "gemma_3_27b_it_budget_1"
-    args:
-      model-name-or-path: "google/gemma-3-27b-it"
-      prompt: "dspy/rephrase/gemma-3-27b-it/budget-1.md"
-      gpus: 4
-      tp: 4
-
-  - name: "gemma_3_27b_it_budget_10"
+  #    model-name-or-path: "google/gemma-3-27b-it"
+  #    prompt: "dspy/rephrase/gemma-3-27b-it/budget-1.md"
+  #    tp: 4
+  - name: "test"
     args:
       model-name-or-path: "google/gemma-3-27b-it"
       prompt: "dspy/rephrase/gemma-3-27b-it/budget-10.md"
-      gpus: 4
       tp: 4
+
+  #- name: "test"
+  #  args:
+  #    model-name-or-path: "google/gemma-3-4b-it"
+  #    prompt: "dspy/rephrase/gemma-3-4b-it/budget-1.md"
+  #    tp: 1
+  #- name: "test"
+  #  args:
+  #    model-name-or-path: "google/gemma-3-4b-it"
+  #    prompt: "dspy/rephrase/gemma-3-4b-it/budget-10.md"
+  #    tp: 1
+
+  #- name: "test"
+  #  args:
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-1.md"
+  #    tp: 1
+  #- name: "test"
+  #  args:
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-10.md"
+  #    tp: 1

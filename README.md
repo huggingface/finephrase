@@ -97,8 +97,8 @@ Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 Prepare datasets for training by tokenizing them:
 
 ```bash
-tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fineweb-edu-hq-20BT --sample 1
-tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fineweb-edu-lq-20BT --sample 1
+tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fineweb-edu-hq-20BT
+tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fineweb-edu-lq-20BT
 ```
 
 ## Model Training & Evaluation
@@ -132,7 +132,15 @@ optimize-prompt --budget 10
 Generate synthetic training data by rephrasing existing content:
 
 ```bash
-rephrase --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase-budget-20.md --name dspy-rephrase-budget-20 --limit 100
+rephrase --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase/gemma-3-1b-it/budget-10.md --name dspy-rephrase-budget-10 --debug
+```
+
+## Data Inspection
+
+Quickly inspect data
+
+```bash
+inspect-data --data-path s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
 ```
 
 **Available prompts for data quality improvement:**

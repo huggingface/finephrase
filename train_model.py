@@ -237,7 +237,7 @@ def main():
     
     # Update the config with the provided arguments
     run_name = args.run_name.replace(" ", "_")
-    run_name = f"{run_name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
+    run_name = f"train-{run_name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
     
     # Calculate local dataset path if using S3
     local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{run_name}/"

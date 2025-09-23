@@ -23,6 +23,7 @@ from utils import (
     build_reader,
     EduScoreStatsLogger,
     calculate_edu_score_dict,
+    print_debug_output,
 )
 
 
@@ -249,116 +250,6 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
             end_idx = len(text)
         return text[start_idx:end_idx].strip()
     
-    def format_thinking_display(thinking_text: str) -> str:
-        """
-        Format thinking text for display, truncating if > 1000 characters.
-        
-        Args:
-            thinking_text: The thinking content
-            
-        Returns:
-            Formatted thinking text for display
-        """
-        if len(thinking_text) <= 1000:
-            return thinking_text
-        else:
-            first_500 = thinking_text[:500]
-            last_500 = thinking_text[-500:]
-            return f"{first_500}\n[...]\n{last_500}"
-    
-    def format_document_structure(doc: Document) -> str:
-        """
-        Format document structure without showing full content.
-        
-        Args:
-            doc: Document to format structure summary for
-            
-        Returns:
-            Formatted string summary of document structure
-        """
-        structure_info = []
-        
-        # Document ID and basic info
-        if hasattr(doc, 'id') and doc.id:
-            structure_info.append(f"Document ID: {doc.id}")
-        
-        # Text length info
-        structure_info.append(f"Document text: {len(doc.text)} chars")
-        
-        # Metadata summary
-        if doc.metadata:
-            structure_info.append("Metadata keys:")
-            for key, value in doc.metadata.items():
-                if isinstance(value, str):
-                    value_summary = f"{len(value)} chars" if len(value) > 250 else f"'{value}'"
-                elif isinstance(value, (int, float, bool)):
-                    value_summary = str(value)
-                elif isinstance(value, list):
-                    value_summary = f"list({len(value)} items)"
-                elif isinstance(value, dict):
-                    value_summary = f"dict({len(value)} items)"
-                    structure_info.append(f"  - {key}: {value_summary}")
-                    # Expand nested dict contents
-                    for nested_key, nested_value in value.items():
-                        if isinstance(nested_value, str):
-                            nested_summary = f"{len(nested_value)} chars" if len(nested_value) > 250 else f"'{nested_value}'"
-                        elif isinstance(nested_value, (int, float, bool)):
-                            nested_summary = str(nested_value)
-                        elif isinstance(nested_value, (list, dict)):
-                            nested_summary = f"{type(nested_value).__name__}({len(nested_value)} items)"
-                        else:
-                            nested_summary = f"{type(nested_value).__name__}"
-                        structure_info.append(f"    - {nested_key}: {nested_summary}")
-                    continue  # Skip the normal append since we already added it
-                else:
-                    value_summary = f"{type(value).__name__}"
-                structure_info.append(f"  - {key}: {value_summary}")
-        else:
-            structure_info.append("Metadata: None")
-        
-        return "\n".join(structure_info)
-    
-    def print_debug_output(document: Document, thinking_text: str, final_output_text: str) -> None:
-        """
-        Print debug output showing input/output pair with tokens and educational scores.
-        
-        Args:
-            document: The processed document with metadata
-            thinking_text: The extracted thinking text
-            final_output_text: The final output text
-        """
-        # Get tokens from metadata
-        input_tokens = document.metadata["input"]["token_count"]
-        thinking_tokens = document.metadata["thinking"]["token_count"]
-        final_output_tokens = document.metadata["token_count"]
-        
-        document_structure = format_document_structure(document)
-
-        log_cutoff = 2500
-        delimiter_outside = '='*100
-        delimiter_inside = '-'*50
-        
-        print(f"""
-{delimiter_outside}
-🔍 DEBUG: INPUT/OUTPUT PAIR
-{delimiter_outside}
-📝 INPUT ({input_tokens} tokens, edu score: {document.metadata["input"]["score"]:.2f}/{document.metadata["input"]["int_score"]}):
-{delimiter_inside}
-{document.metadata["input"]["text"][:log_cutoff] + ("..." if len(document.metadata["input"]["text"]) > log_cutoff else "")}
-{delimiter_inside}
-🧠 THINKING ({thinking_tokens} tokens, edu score: {document.metadata["thinking"]["score"]:.2f}/{document.metadata["thinking"]["int_score"]}):
-{delimiter_inside}
-{format_thinking_display(thinking_text)}
-{delimiter_inside}
-🔄 FINAL OUTPUT ({final_output_tokens} tokens, edu score: {document.metadata["score"]:.2f}/{document.metadata["int_score"]}):
-{delimiter_inside}
-{final_output_text}
-{delimiter_inside}
-📋 DOCUMENT STRUCTURE:
-{delimiter_inside}
-{document_structure}
-{delimiter_outside}
-""")
             
     def postprocess_fn(document: Document) -> Document:
         """

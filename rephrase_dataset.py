@@ -431,6 +431,7 @@ def main():
     if args.debug:
         args.run_local = True
         args.disable_checkpoints = True
+        args.n_tasks = 1
         args.limit = 3
         skip_completed = False
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")

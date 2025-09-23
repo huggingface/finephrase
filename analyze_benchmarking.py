@@ -26,44 +26,49 @@ def parse_results_file(results_path: Path) -> Tuple[Optional[Dict], bool]:
     """
     try:
         with open(results_path, 'r') as f:
-            lines = f.readlines()
+            lines = [line.strip() for line in f.readlines() if line.strip()]
         
-        # Find the best configuration line
-        best_line = None
+        # Prefer explicit best_* summary line
+        best_line = next((line for line in lines if line.startswith('best_')), None)
+        best_pattern = r"best_max_num_seqs:\s*(\d+),\s*best_num_batched_tokens:\s*(\d+|none),\s*best_throughput:\s*([\d.]+)"
+        if best_line:
+            m = re.search(best_pattern, best_line)
+            if m:
+                max_num_seqs = int(m.group(1))
+                num_batched_raw = m.group(2)
+                best_throughput = float(m.group(3))
+                max_num_batched_tokens = int(num_batched_raw) if num_batched_raw.isdigit() else num_batched_raw
+                return {
+                    'max_num_seqs': max_num_seqs,
+                    'max_num_batched_tokens': max_num_batched_tokens,
+                    'best_throughput': best_throughput,
+                }, best_throughput == 0
+            # If pattern didn't match, fall through to non-best parsing
+        
+        # Fallback: choose best throughput from non-best lines
+        non_best_pattern = r"max_num_seqs:\s*(\d+),\s*max_num_batched_tokens:\s*(\d+|none).*?throughput:\s*([\d.]+)"
+        best_candidate = None  # (throughput, max_num_seqs, max_num_batched_tokens_raw)
         for line in lines:
-            if line.startswith('best_'):
-                best_line = line.strip()
-                break
+            m = re.search(non_best_pattern, line)
+            if not m:
+                continue
+            max_num_seqs_i = int(m.group(1))
+            num_batched_raw = m.group(2)
+            throughput_f = float(m.group(3))
+            if best_candidate is None or throughput_f > best_candidate[0]:
+                best_candidate = (throughput_f, max_num_seqs_i, num_batched_raw)
         
-        if not best_line:
+        if best_candidate is None:
             return None, True
         
-        # Parse best configuration
-        # Format: best_max_num_seqs: 256, best_num_batched_tokens: 4096, best_throughput: 8.04, profile saved in: ...
-        pattern = r'best_max_num_seqs: (\d+), best_num_batched_tokens: (\d+), best_throughput: ([\d.]+)'
-        match = re.search(pattern, best_line)
-        
-        if not match:
-            return None, True
-        
-        max_num_seqs = int(match.group(1))
-        max_num_batched_tokens = int(match.group(2))
-        best_throughput = float(match.group(3))
-        
-        # Check if experiment failed
-        if best_throughput == 0:
-            return {
-                'max_num_seqs': max_num_seqs,
-                'max_num_batched_tokens': max_num_batched_tokens,
-                'best_throughput': best_throughput
-            }, True
-        
+        best_throughput, max_num_seqs, num_batched_raw = best_candidate
+        max_num_batched_tokens = int(num_batched_raw) if isinstance(num_batched_raw, str) and num_batched_raw.isdigit() else num_batched_raw
         return {
             'max_num_seqs': max_num_seqs,
             'max_num_batched_tokens': max_num_batched_tokens,
-            'best_throughput': best_throughput
-        }, False
-        
+            'best_throughput': best_throughput,
+        }, best_throughput == 0
+    
     except Exception as e:
         print(f"Error parsing {results_path}: {e}")
         return None, True
@@ -145,8 +150,11 @@ def find_best_log_file(results_dir: Path, best_config: Dict) -> Optional[Path]:
     max_num_seqs = best_config['max_num_seqs']
     max_num_batched_tokens = best_config['max_num_batched_tokens']
     
-    # Look for the specific config file
-    pattern = f"bm_log_{max_num_seqs}_{max_num_batched_tokens}_requestrate_inf.txt"
+    # Handle 'none' (no explicit limit was passed to the server)
+    if isinstance(max_num_batched_tokens, str) and str(max_num_batched_tokens).lower() == 'none':
+        pattern = f"bm_log_{max_num_seqs}_none_requestrate_inf.txt"
+    else:
+        pattern = f"bm_log_{max_num_seqs}_{max_num_batched_tokens}_requestrate_inf.txt"
     log_path = results_dir / pattern
     
     if log_path.exists():
@@ -237,7 +245,9 @@ def analyze_benchmarking_results(base_path: Path) -> Tuple[List[Dict], List[str]
                 continue
 
             # Parse gpu_memory_utilization from vllm server log for this best config
-            vllm_log_file = results_file.parent / f"vllm_log_{best_config['max_num_seqs']}_{best_config['max_num_batched_tokens']}.txt"
+            best_num_batched = best_config['max_num_batched_tokens']
+            best_num_batched_str = str(best_num_batched).lower() if isinstance(best_num_batched, str) else str(best_num_batched)
+            vllm_log_file = results_file.parent / f"vllm_log_{best_config['max_num_seqs']}_{best_num_batched_str}.txt"
             gpu_memory_utilization = parse_gpu_memory_utilization(vllm_log_file) if vllm_log_file.exists() else None
             
             # Compute per-TP metrics

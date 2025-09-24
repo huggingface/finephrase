@@ -417,7 +417,10 @@ parser.add_argument(
     "--tp", type=int, default=1, help="Tensor parallelism size"
 )
 parser.add_argument(
-    "--gpu-memory-utilization", type=float, default=0.97, help="GPU memory utilization"
+    "--gpu-memory-utilization", type=float, default=0.9, help="GPU memory utilization" # without speculative decoding we can use 0.97
+)
+parser.add_argument(
+    "--speculative-config", type=str, default='{"method": "ngram", "num_speculative_tokens": 8, "prompt_lookup_max": 7}', help="Speculative decoding configuration"
 )
 parser.add_argument(
     "--run-local", action="store_true", help="Run pipeline locally instead of using Slurm"
@@ -466,6 +469,7 @@ def main():
         "enable_chunked_prefill": args.enable_chunked_prefill,
         "gpu_memory_utilization": args.gpu_memory_utilization,
         "dtype": "bfloat16",
+        **({"speculative_config": args.speculative_config} if args.speculative_config else {}),
     }
 
     config: InferenceConfig = InferenceConfig(

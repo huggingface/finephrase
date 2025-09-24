@@ -25,17 +25,20 @@ fixed_args:
   # Infrastructure configuration
   max-concurrent-requests: 500
   max-concurrent-tasks: 500
-  gpu-memory-utilization: 0.97 # 0.98 can sometimes OOM
   server-type: "vllm"
+  
+  # This seems to be a middle ground that works well across models and has a high draft acceptance rate of around 0.7
+  # Decreasing the temperature could lead to a higher draft acceptance rate, but diversity could suffer
+  speculative-config: '{"method": "ngram", "num_speculative_tokens": 7, "prompt_lookup_max": 6}'
   
   # Debugging and checkpoints
   debug: false # Logs get very verbose when debug is true
   
   # Slurm configuration
   time: "3-00:00:00"
-  qos: "low"
-  n-tasks: 1000 # The input dataset has 10K chunks, so we cannot run more tasks (2M tokens per file)
-  #n-workers: 16 # Only limit the number of workers if you are running in qos normal
+  qos: "normal"
+  n-tasks: 1 # The input dataset has 10K chunks, so we cannot run more tasks (2M tokens per file)
+  n-workers: 16 # Only limit the number of workers if you are running in qos normal
 
 # There is usually more input tokens than output tokens
 # 27B (tp4): ~4.5M output tokens per hour 
@@ -46,35 +49,54 @@ fixed_args:
 
 # Variable arguments - creates different experiment runs
 runs:
-  #- name: "test"
+  #- name: "test-speculative"
   #  args:
-  #    model-name-or-path: "google/gemma-3-27b-it"
   #    prompt: "dspy/rephrase/gemma-3-27b-it/budget-1.md"
+  #    model-name-or-path: "google/gemma-3-27b-it"
   #    tp: 4
-  - name: "test"
+  #    gpu-memory-utilization: 0.86
+  - name: "test-speculative"
     args:
-      model-name-or-path: "google/gemma-3-27b-it"
       prompt: "dspy/rephrase/gemma-3-27b-it/budget-10.md"
+      model-name-or-path: "google/gemma-3-27b-it"
       tp: 4
+      gpu-memory-utilization: 0.86
 
-  #- name: "test"
+  #- name: "test-speculative"
   #  args:
-  #    model-name-or-path: "google/gemma-3-4b-it"
+  #    prompt: "dspy/rephrase/gemma-3-12b-it/budget-1.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    gpu-memory-utilization: 0.9
+  #- name: "test-speculative"
+  #  args:
+  #    prompt: "dspy/rephrase/gemma-3-12b-it/budget-10.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    gpu-memory-utilization: 0.9
+
+  #- name: "test-speculative"
+  #  args:
   #    prompt: "dspy/rephrase/gemma-3-4b-it/budget-1.md"
-  #    tp: 1
-  #- name: "test"
-  #  args:
   #    model-name-or-path: "google/gemma-3-4b-it"
+  #    tp: 1
+  #    gpu-memory-utilization: 0.94
+  #- name: "test-speculative"
+  #  args:
   #    prompt: "dspy/rephrase/gemma-3-4b-it/budget-10.md"
+  #    model-name-or-path: "google/gemma-3-4b-it"
   #    tp: 1
+  #    gpu-memory-utilization: 0.94
 
-  #- name: "test"
+  #- name: "test-speculative"
   #  args:
-  #    model-name-or-path: "google/gemma-3-1b-it"
   #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-1.md"
-  #    tp: 1
-  #- name: "test"
-  #  args:
   #    model-name-or-path: "google/gemma-3-1b-it"
-  #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-10.md"
   #    tp: 1
+  #    gpu-memory-utilization: 0.98
+  #- name: "test-speculative"
+  #  args:
+  #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-10.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    tp: 1
+  #    gpu-memory-utilization: 0.98

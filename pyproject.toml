@@ -82,9 +82,10 @@ optimize-prompt = "optimize_prompt:main"
 benchmark-vllm = "benchmark_vllm:main"
 analyze-benchmarking = "analyze_benchmarking:main"
 inspect-data = "inspect_data:main"
+iterate-prompt = "iterate_prompt:main"
 
 [tool.setuptools]
-py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "benchmark_vllm", "analyze_benchmarking", "inspect_data", "utils"]
+py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "benchmark_vllm", "analyze_benchmarking", "inspect_data", "iterate_prompt", "utils"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]

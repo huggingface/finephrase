@@ -16,11 +16,17 @@ from utils import LOG_BASE_PATH
 
 # Configuration constants
 DEFAULT_MODELS = [
+    # Floating point models
     "google/gemma-3-270m-it",
     "google/gemma-3-1b-it",
     "google/gemma-3-4b-it",
     "google/gemma-3-12b-it",
     "google/gemma-3-27b-it",
+
+    #"gaunernst/gemma-3-1b-it-int4-awq",
+    #"gaunernst/gemma-3-4b-it-int4-awq",
+    #"gaunernst/gemma-3-12b-it-int4-awq",
+    #"gaunernst/gemma-3-27b-it-int4-awq",
 
     # Qwen models are significantly slower than gemma models
     #"Qwen/Qwen3-0.6B",

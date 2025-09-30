@@ -37,14 +37,12 @@ def load_prompt_template(template_path: str) -> str:
     Returns:
         Template content as a string
     """
-    if not template_path:
-        return None
-        
+     
     # Get the base directory of this script
     script_dir = os.path.dirname(os.path.abspath(__file__))
     full_path = os.path.join(script_dir, "prompts", template_path)
     
-    if not os.path.exists(full_path):
+    if not template_path or not os.path.exists(full_path):
         raise FileNotFoundError(f"Prompt template not found: {full_path}")
         
     with open(full_path, 'r', encoding='utf-8') as f:
@@ -52,7 +50,7 @@ def load_prompt_template(template_path: str) -> str:
 
 
 def create_templated_query_builder(
-    system_prompt: str,
+    prompt_path: str,
     max_tokens: int,
     temperature: float = 0.7,
     top_p: float = 0.8,
@@ -60,11 +58,10 @@ def create_templated_query_builder(
     enable_thinking: bool = False,
 ):
     """
-    Create a query builder function that uses a system prompt (as a system message)
-    and a user prompt (as a user message) formatted with the document text.
+    Create a query builder function that loads and applies the prompt template.
     
     Args:
-        system_prompt:          The system prompt content
+        prompt_path:            Path to the prompt template
         max_tokens:             Maximum tokens for the response
         temperature:            Temperature for inference
         top_p:                  Top-p (nucleus sampling) for inference
@@ -74,16 +71,13 @@ def create_templated_query_builder(
     Returns:
         Query builder function
     """
-
-    assert system_prompt, "System prompt is required"
-
-    # Default user prompt if none is provided
-    user_prompt = "[[ ## original_text ## ]]\n[TEXT]\n\n"
-    user_prompt += "Respond with the corresponding output fields, starting with the field `[[ ## generated_text ## ]]`, and then ending with the marker for `[[ ## completed ## ]]`."
+    
+    is_dspy = prompt_path.startswith("dspy")
+    prompt_template = load_prompt_template(prompt_path)
 
     def query_builder(runner: InferenceRunner, document: Document) -> dict[str, Any]:
         """
-        Query builder that applies the system and user templates to construct chat messages.
+        Query builder that applies the prompt template to construct chat messages.
         
         Args:
             runner:     Inference runner instance
@@ -92,11 +86,15 @@ def create_templated_query_builder(
         Returns:
             Query payload for the inference server
         """
-        # Prepare user content by replacing common placeholders
-        user_prompt = load_prompt_template("dspy/user.md")
-        user_content = user_prompt.replace("[DOCUMENT SEGMENT]", document.text)
-        user_content = user_content.replace("[ORIGINAL DOCUMENT]", document.text)
-        user_content = user_content.replace("[TEXT]", document.text)
+        # Prepare user content
+        if is_dspy:
+            # Use system prompt (loaded template) + structured user template
+            user_content = load_prompt_template("dspy/user.md").replace("[TEXT]", document.text)
+        else:
+            # Simple: use the prompt template as user prompt
+            user_content = prompt_template.replace("[DOCUMENT SEGMENT]", document.text)
+            user_content = user_content.replace("[ORIGINAL DOCUMENT]", document.text)
+            user_content = user_content.replace("[TEXT]", document.text)
 
         # Truncate user content if too long to avoid server errors
         max_chars = 4 * max_tokens  # rough heuristic for average token length
@@ -109,21 +107,26 @@ def create_templated_query_builder(
             else:
                 user_content = user_content[:max_chars]
 
-        return {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": [
-                        {"type": "text", "text": system_prompt},
-                    ],
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": user_content},
-                    ],
-                },
+        messages = []
+        
+        # Only add system message for dspy prompts
+        if is_dspy:
+            messages.append({
+                "role": "system",
+                "content": [
+                    {"type": "text", "text": prompt_template},
+                ],
+            })
+        
+        messages.append({
+            "role": "user",
+            "content": [
+                {"type": "text", "text": user_content},
             ],
+        })
+
+        return {
+            "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
@@ -233,6 +236,7 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         [[ ## completed ## ]]
 
         If markers are missing, fall back to the full text.
+        Also removes "Here is a paraphrased version:" prefix if present.
         """
         if not text:
             return ""
@@ -240,15 +244,23 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         end_marker = "[[ ## completed ## ]]"
         start_idx = text.find(start_marker)
         if start_idx == -1:
-            return text.strip()
-        start_idx += len(start_marker)
-        # Skip a potential leading newline
-        if start_idx < len(text) and text[start_idx] == "\n":
-            start_idx += 1
-        end_idx = text.find(end_marker, start_idx)
-        if end_idx == -1:
-            end_idx = len(text)
-        return text[start_idx:end_idx].strip()
+            result = text.strip()
+        else:
+            start_idx += len(start_marker)
+            # Skip a potential leading newline
+            if start_idx < len(text) and text[start_idx] == "\n":
+                start_idx += 1
+            end_idx = text.find(end_marker, start_idx)
+            if end_idx == -1:
+                end_idx = len(text)
+            result = text[start_idx:end_idx].strip()
+        
+        # Remove "Here is a paraphrased version:" prefix if present
+        prefix = "Here is a paraphrased version:"
+        if result.startswith(prefix):
+            result = result[len(prefix):].strip()
+        
+        return result
     
             
     def postprocess_fn(document: Document) -> Document:
@@ -343,7 +355,7 @@ parser.add_argument(
     "--output-path", type=str, help="Path to the base output folder.", default=S3_BASE_PATH
 )
 parser.add_argument(
-    "--model-name-or-path", type=str, help="Model name or path for inference", default="google/gemma-3-270m-it"
+    "--model-name-or-path", type=str, help="Model name or path for inference", default="google/gemma-3-4b-it"
 )
 parser.add_argument(
     "--limit", type=int, help="Limit the number of documents to rephrase", default=-1
@@ -435,9 +447,23 @@ def main():
         args.run_local = True
         args.disable_checkpoints = True
         args.n_tasks = 1
-        args.limit = 3
+        args.limit = 5
         skip_completed = False
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
+        
+        # Check if GPUs are available in debug mode
+        import subprocess
+        try:
+            result = subprocess.run(['nvidia-smi'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                pass  # GPUs available, continue
+            else:
+                raise RuntimeError("nvidia-smi failed")
+        except (subprocess.TimeoutExpired, FileNotFoundError, RuntimeError):
+            print(f"\n❌ No GPUs available. Please run:")
+            print(f'srun --gpus={args.tp} --qos=high --time="04:00:00" --pty bash')
+            print("\nThen run this script again.")
+            exit(1)
     else:
         print("⚠️ Please inform people in #science-cluster-planning about large runs.")
         # Safety guard: Abort submission for unsafe configurations (skip in debug/local)
@@ -485,26 +511,12 @@ def main():
         server_log_folder=logs_path + "/server_logs",
     )
 
-    # Load prompt template if specified
-    try:
-        prompt_template = load_prompt_template(args.prompt)
-        print(f"Loaded prompt template: {args.prompt}")
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        print("Available templates:")
-        prompts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts")
-        for root, _, files in os.walk(prompts_dir):
-            for file in files:
-                if file.endswith('.md'):
-                    rel_path = os.path.relpath(os.path.join(root, file), prompts_dir)
-                    print(f"  - {rel_path}")
-        exit(1)
 
     pipeline = [
             *[build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=False, text_key=args.text_key) for data_path in data_paths],
             InferenceRunner(
                 query_builder=create_templated_query_builder(
-                    prompt_template, 
+                    args.prompt,
                     args.max_tokens, 
                     args.temperature, 
                     args.top_p, 

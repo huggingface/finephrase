@@ -442,13 +442,11 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-    skip_completed = True
     if args.debug:
         args.run_local = True
         args.disable_checkpoints = True
         args.n_tasks = 1
         args.limit = 5
-        skip_completed = False
         print("🔍 DEBUG MODE ENABLED: Input/output pairs will be logged to terminal")
         
         # Check if GPUs are available in debug mode
@@ -540,7 +538,7 @@ def main():
 
     if args.run_local:
         rephrase_executor = LocalPipelineExecutor(
-            pipeline=pipeline, logging_dir=logs_path, skip_completed=skip_completed
+            pipeline=pipeline, logging_dir=logs_path, skip_completed=not args.debug
         )
     else:
         rephrase_executor = SlurmPipelineExecutor(

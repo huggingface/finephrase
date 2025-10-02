@@ -122,7 +122,6 @@ def count_tokens(text: str, tokenizer) -> int:
 
 
 def call_model(
-    text: str,
     prompt: str,
     api_base: str,
     api_key: str,
@@ -134,8 +133,7 @@ def call_model(
 ) -> str:
     """Call the model via LiteLLM API."""
     messages = [
-        {"role": "system", "content": prompt},
-        {"role": "user", "content": text}
+        {"role": "user", "content": prompt}
     ]
     
     response = litellm.completion(
@@ -170,7 +168,7 @@ def process_example(
     """Process a single example and return Document with metadata."""
     # Run rephrasing
     generated_text = call_model(
-        text, prompt, api_base, api_key, model_name,
+        prompt.replace("[TEXT]", text), api_base, api_key, model_name,
         max_tokens, temperature, top_p, top_k
     )
     
@@ -245,7 +243,6 @@ def warmup_model(api_base: str, api_key: str, model_name: str) -> None:
     print(f"🔥 Warming up {model_name}...")
     try:
         response = call_model(
-            text="Hello",
             prompt="You are a helpful assistant.",
             api_base=api_base,
             api_key=api_key,

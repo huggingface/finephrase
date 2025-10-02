@@ -529,32 +529,32 @@ parser = argparse.ArgumentParser(description="Optimize prompts for web-text task
 parser.add_argument(
     "--generation-model",
     type=str,
-    default="huggingface/google/gemma-3-27b-it",
-    help="Model name for generation in format {provider}/{model_name} (default: huggingface/google/gemma-3-27b-it)"
+    default="huggingface/google/gemma-3-4b-it",
+    help="Model name for generation in format {provider}/{model_name} (default: huggingface/google/gemma-3-4b-it)"
 )
 parser.add_argument(
     "--reflection-model",
     type=str,
-    default="huggingface/deepseek-ai/DeepSeek-V3.1",
-    help="Model name for reflection in format {provider}/{model_name} (default: huggingface/deepseek-ai/DeepSeek-V3.1)."
+    default="huggingface/deepseek-ai/DeepSeek-V3.1-Terminus",
+    help="Model name for reflection in format {provider}/{model_name} (default: huggingface/deepseek-ai/DeepSeek-V3.1-Terminus)."
 )
 parser.add_argument(
     "--train-size",
     type=int,
     default=500,
-    help="Number of training examples (default: 50)"
+    help="Number of training examples (default: 500)"
 )
 parser.add_argument(
     "--val-size",
     type=int,
     default=100,
-    help="Number of validation examples (default: 20)"
+    help="Number of validation examples (default: 100)"
 )
 parser.add_argument(
     "--test-size",
     type=int,
     default=100,
-    help="Number of new FineWeb samples for post-optimization evaluation (default: 1000)"
+    help="Number of new FineWeb samples for post-optimization evaluation (default: 100)"
 )
 parser.add_argument(
     "--seed",
@@ -577,8 +577,8 @@ parser.add_argument(
 parser.add_argument(
     "--budget",
     type=int,
-    default=5,
-    help="Budget for GEPA optimization (max_full_evals, default: 5)"
+    default=10,
+    help="Budget for GEPA optimization (max_full_evals, default: 10)"
 )
 parser.add_argument(
     "--run-local",
@@ -588,8 +588,8 @@ parser.add_argument(
 parser.add_argument(
     "--time",
     type=str,
-    default="20:00:00",
-    help="Slurm time limit (default: 20:00:00)",
+    default="3-00:00:00",
+    help="Slurm time limit (default: 3-00:00:00)",
 )
 parser.add_argument(
     "--qos",
@@ -645,7 +645,7 @@ def main():
     from datatrove.executor.slurm import SlurmPipelineExecutor
 
     if args.run_local:
-        executor = LocalPipelineExecutor(pipeline=[optimizer_step], logging_dir=optimizer_step.run_dir)
+        executor = LocalPipelineExecutor(pipeline=[optimizer_step], logging_dir=optimizer_step.run_dir, skip_completed=not args.debug)
     else:
         # Create job name using hierarchical structure: task-model-train-val-budget
         generation_model_name = args.generation_model.split("/")[-1]
@@ -655,15 +655,14 @@ def main():
             tasks=1,
             time=args.time,
             partition="hopper-prod",
-            cpus_per_task=10,
-            mem_per_cpu_gb=4,
+            cpus_per_task=11,
+            mem_per_cpu_gb=22,
             qos=args.qos,
             logging_dir=optimizer_step.run_dir,
             job_name=job_name,
             env_command="sleep $((RANDOM % 30))",
             depends_job_id=args.dep_job_id,
             sbatch_args={"gres": f"gpu:1"},
-            srun_args={"cpu-bind": "none"},
         )
 
     executor.run()

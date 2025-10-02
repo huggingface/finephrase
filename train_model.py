@@ -23,6 +23,11 @@ TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
 NUM_GPUS = 8
 NUM_CPUS_IN_NODE = 88
 
+SEQUENCE_LENGTH = 4096
+
+MICRO_BATCH_SIZE = 2
+BATCH_ACCUMULATION_PER_REPLICA = 4
+
 # Default model config (updated with configuration from old_training_debug.py)
 MODEL_CONFIG = f"""
 checkpoints:
@@ -80,7 +85,7 @@ model:
     initializer_range: 0.02
     intermediate_size: 6144
     is_qwen2_config: true
-    max_position_embeddings: 4096
+    max_position_embeddings: {SEQUENCE_LENGTH}
     moe_config: null
     num_attention_heads: 16
     num_hidden_layers: 28
@@ -138,18 +143,18 @@ s3_upload:
   s5cmd_path: {S5CMD_PATH}
   upload_s3_path: {S3_CHECKPOINTS_PREFIX}
 tokenizer:
-  tokenizer_max_length: 4096
+  tokenizer_max_length: {SEQUENCE_LENGTH}
   tokenizer_name_or_path: hynky/Llama-3.2-1B-no-bos
   tokenizer_revision: null
 metrics_logging:
   log_level: 1
   log_detail_interval: 200
 tokens:
-  batch_accumulation_per_replica: 4
+  batch_accumulation_per_replica: {BATCH_ACCUMULATION_PER_REPLICA}
   limit_test_batches: 0
   limit_val_batches: 0
-  micro_batch_size: 2
-  sequence_length: 4096
+  micro_batch_size: {MICRO_BATCH_SIZE}
+  sequence_length: {SEQUENCE_LENGTH}
   train_steps: null
   val_check_interval: 0
 lighteval:
@@ -167,7 +172,7 @@ lighteval:
     partition: "hopper-prod"
     cpus_per_task: {NUM_CPUS_IN_NODE}
     qos: "normal"
-    time: "5:59:00"
+    time: "6:00:00"
   tasks:
     tasks: {TASKS_PATH}
     custom_tasks: {TASK_LIST_PATH}
@@ -211,11 +216,11 @@ parser = argparse.ArgumentParser(description="Launch training job with updated c
 parser.add_argument("data", help="Dataset folder path (can be S3 path)", type=str)
 parser.add_argument("run_name", help="Run name", type=str)
 parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
-parser.add_argument("-d", help="Dependency job", type=str, default=None)
+parser.add_argument("--dep-job-id", help="Dependency job", type=str, default=None)
 parser.add_argument("--seed", help="Seed", type=int, default=6)
 parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
-parser.add_argument("--train-steps", "-ts", help="Training steps", type=int, default=10_000)
-parser.add_argument("--priority", "--qos", "-p", help="QoS to use", type=str, default="normal")
+parser.add_argument("--train-steps", help="Training steps", type=int, default=10_000)
+parser.add_argument("--qos", help="QoS to use", type=str, default="normal")
 parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
 parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")
 parser.add_argument("--job-id", help="Job ID", type=str, default=None)
@@ -231,8 +236,11 @@ def main():
     # Load the config
     config = yaml.safe_load(MODEL_CONFIG)
 
-    # Tokens per step == 4096 * batch_accumulation_per_replica * micro_batch_size * dp
-    total_tokens_consumed = round(4096 * 4 * 2 * NUM_GPUS * args.nodes * args.train_steps / 1e9) # in billions
+    # batch size == batch_accumulation_per_replica * micro_batch_size * dp: 4 * 2 * 64 = 512
+    batch_size = BATCH_ACCUMULATION_PER_REPLICA * MICRO_BATCH_SIZE * NUM_GPUS * args.nodes
+    tokens_per_step = SEQUENCE_LENGTH * batch_size # sequence length * batch size: 4096 * 512 = 2097152
+    print(f"Batch size: {batch_size} examples / {tokens_per_step} tokens")
+    total_tokens_consumed = round(tokens_per_step * args.train_steps / 1e9) # in billions
     print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
     
     # Update the config with the provided arguments
@@ -268,18 +276,13 @@ def main():
     
     # Update training steps
     config["tokens"]["train_steps"] = args.train_steps
-
-    # Lighteval config
-    config["lighteval"]["tasks"]["tasks"] = TASKS_PATH
-    config["lighteval"]["tasks"]["custom_tasks"] = TASK_LIST_PATH
-
     
     # Debug mode settings
     if args.debug:
         config["parallelism"]["dp"] = 2
         config["parallelism"]["pp"] = 2
         config["parallelism"]["tp"] = 2
-        config["tokens"]["micro_batch_size"] = 3
+        config["tokens"]["micro_batch_size"] = 2
         config["tokens"]["batch_accumulation_per_replica"] = 2
         args.nodes = 1
       
@@ -302,9 +305,6 @@ def main():
     # Update decay learning rate
     min_decay_lr = args.lr / 10
     config["optimizer"]["learning_rate_scheduler"]["min_decay_lr"] = min_decay_lr
-    
-    # Tokens per step == 4096 * batch_accumulation_per_replica * micro_batch_size * dp
-    # 4096 * 4 * 2 * 64 = 2097152
     
     # Save the updated config
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -331,17 +331,17 @@ def main():
     sbatch_script = f"""#!/bin/bash
 #SBATCH --job-name={job_name}
 #SBATCH --nodes={args.nodes}
-#SBATCH --ntasks-per-node=1          # crucial - only 1 task per dist per node!
+#SBATCH --ntasks-per-node=1  # crucial - only 1 task per dist per node!
 #SBATCH --cpus-per-task={NUM_CPUS_IN_NODE}
 #SBATCH --gres=gpu:{NUM_GPUS}
 #SBATCH --partition=hopper-prod
 #SBATCH --output={run_dir}/slurm_logs/train-{timestamp}-%x-%j
-#SBATCH --qos={args.priority}
+#SBATCH --qos={args.qos}
 #SBATCH --begin=now+0minutes
 #SBATCH --time={args.time}
 #SBATCH --exclusive
 #SBATCH --exclude={FAULTY_NODES}
-{"#SBATCH --dependency=afterok:" + args.d if args.d else ""}
+{"#SBATCH --dependency=afterok:" + args.dep_job_id if args.dep_job_id else ""}
 {"#SBATCH --reservation=" + args.reservation if args.reservation else ""}
 
 set -x -e
@@ -403,7 +403,7 @@ echo "END TIME: $(date)"
     # Launch the job
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     job_id = launch_slurm_job(sbatch_script, args.job_id, args.nodes, args.background, run_name, timestamp)
-    slurm_log_path = f"{run_dir}/slurm_logs/train-{timestamp}-{job_name}-{job_id}"
+    slurm_log_path = f"{run_dir}/slurm_logs/train-{timestamp}-{job_name}-{job_id}.out"
     
     print(f"Launched with Slurm job id = {job_id}")
     print(f"To view the logs, use: tail -f {slurm_log_path}")

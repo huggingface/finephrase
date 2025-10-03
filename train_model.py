@@ -25,31 +25,125 @@ NUM_CPUS_IN_NODE = 88
 
 SEQUENCE_LENGTH = 4096
 
-MICRO_BATCH_SIZE = 2
-BATCH_ACCUMULATION_PER_REPLICA = 4
+GLOBAL_BATCH_SIZE = 512
+MICRO_BATCH_SIZE = 2 # We cannot fit more with the current setup
 
-# Default model config (updated with configuration from old_training_debug.py)
-MODEL_CONFIG = f"""
+
+def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, timestamp, *args):
+    """
+    Small helper function to save a sbatch script and call it.
+    Args:
+        launch_file_contents: Contents of the sbatch script
+        *args: any other arguments to pass to the sbatch command
+
+    Returns: the id of the launched slurm job
+    """
+    run_dir = f"{TRAINING_RUNS_PATH}/{run_name}"
+    slurm_logs_dir = f"{run_dir}/slurm_logs"
+    with open(f"{run_dir}/launch_script.slurm", "w") as f:
+        f.write(launch_file_contents)
+        f.flush()
+      
+    # Make the script executable
+    os.chmod(f.name, 0o755)
+    if job_id:
+      srun_args = ["srun", "--jobid", job_id, "--ntasks-per-node", "1", "--nodes", str(nodes)]
+      if background:
+        srun_args += ["--output", f"{slurm_logs_dir}/train-{timestamp}.out", "--error", f"{slurm_logs_dir}/train-{timestamp}.err"]
+        # Run the job in background - DOES NOT WAIT
+        subprocess.Popen(srun_args + list(args) + [f.name])
+        subprocess
+        print(f"Running in background. Logs: {slurm_logs_dir}/train-{timestamp}.out {slurm_logs_dir}/train-{timestamp}.err")
+      else:
+        # Run in foreground till job is done - WAITS
+        subprocess.check_call(srun_args + list(args) + [f.name])
+    else:
+      return subprocess.run(["sbatch", *args, f.name], capture_output=True, text=True).stdout.split()[-1]
+
+
+parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
+parser.add_argument("data", help="Dataset folder path (can be S3 path)", type=str)
+parser.add_argument("run_name", help="Run name", type=str)
+parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
+parser.add_argument("--seed", help="Seed", type=int, default=6)
+parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
+parser.add_argument("--train-steps", help="Training steps", type=int, default=10_000)
+parser.add_argument("--qos", help="QoS to use", type=str, default="normal")
+parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
+parser.add_argument("--debug", help="Enable debug mode", action="store_true")
+parser.add_argument("--job-id", help="Job ID", type=str, default=None)
+parser.add_argument("--lr", help="Learning rate", type=float, default=5e-4)
+parser.add_argument("--lr-schedule", help="Learning rate schedule", type=str, default="wsd")
+parser.add_argument("--background", help="Run in background", action="store_true")
+parser.add_argument("--reservation", help="SLURM reservation name", type=str, default=None)
+parser.add_argument("--time", help="SLURM time", type=str, default="1-00:00:00") # It should finish within 3 hours already with 8 nodes
+parser.add_argument("--resume_checkpoint_path", help="Path to the checkpoint to resume from", type=str, default=None)
+parser.add_argument("--dep-job-id", help="Dependency job", type=str, default=None)
+
+# Current command: train s3://finephrase/experiments/tokenized/fineweb-100BT/ fineweb-20BT --nodes 4 --qos high
+
+def main():
+    args = parser.parse_args()
+
+    # Debug mode settings
+    if args.debug:
+        args.nodes = 1 # Only use one node for debugging
+    
+    # batch size == batch_accumulation_per_replica * micro_batch_size * dp: 4 * 2 * 64 = 512
+    batch_accumulation_per_replica = GLOBAL_BATCH_SIZE // (MICRO_BATCH_SIZE * NUM_GPUS * args.nodes)
+    print(f"Training on {args.nodes} nodes with {NUM_GPUS} GPUs per node and {batch_accumulation_per_replica} batch accumulation per replica")
+    batch_size = batch_accumulation_per_replica * MICRO_BATCH_SIZE * NUM_GPUS * args.nodes
+    assert batch_size == GLOBAL_BATCH_SIZE, f"Batch size {batch_size} is not equal to global batch size {GLOBAL_BATCH_SIZE}"
+    tokens_per_step = SEQUENCE_LENGTH * batch_size # sequence length * batch size: 4096 * 512 = 2097152
+    print(f"Batch size: {batch_size} examples / {tokens_per_step} tokens")
+    total_tokens_consumed = round(tokens_per_step * args.train_steps / 1e9) # in billions
+    print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
+    
+    # Update the config with the provided arguments
+    run_name = args.run_name.replace(" ", "_")
+    run_name = f"train-{run_name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
+    
+    # Calculate local dataset path if using S3
+    local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{run_name}/"
+    
+    # Update data_stages with dynamically added dataset configuration
+    dataset_folder = local_dataset_path if args.data.startswith("s3://") else args.data
+
+    warmup_steps = round(args.train_steps * 0.01) # Warmup for 1% of training steps
+    min_decay_lr = f"{args.lr / 10:.8f}"
+
+    if args.lr_schedule == "wsd":
+      lr_decay_style = "linear"
+      decay_start_step = round(args.train_steps * 0.9) # Decaying for 10% of training steps
+    elif args.lr_schedule == "cosine":
+      lr_decay_style = "cosine"
+      decay_start_step = warmup_steps
+    else:
+      raise ValueError(f"Unsupported learning rate schedule: {args.lr_schedule}")
+
+    MODEL_CONFIG = f"""
 checkpoints:
   checkpoint_interval: 500
-  checkpoints_path: {LOCAL_TMP_PATH_ON_NODE}/checkpoints
+  checkpoints_path: {LOCAL_TMP_PATH_ON_NODE}/checkpoints/{run_name}
   checkpoints_path_is_shared_file_system: false
   load_lr_scheduler: true
   load_optimizer: true
-  resume_checkpoint_path: null
+  resume_checkpoint_path: {args.resume_checkpoint_path if args.resume_checkpoint_path else "null"}
   save_final_state: true
   save_initial_state: false
 data_stages:
 - data:
     dataset:
+      dataset_folder: [{dataset_folder}]
+      dataset_weights: [1.0]
       pad_samples_to_global_batch_size: false
       return_positions: true
       token_size_in_bytes: 4
       use_old_brrr_dataloader: false
-      tokenizer_name: hynky/Llama-3.2-1B-no-bos
+      tokenizer_name: {args.tokenizer}
       vocab_size: 128256
     num_loading_workers: 0
-    seed: 6
+    seed: {args.data_seed}
   name: stable
   start_training_step: 1
 general:
@@ -57,8 +151,8 @@ general:
   consumed_train_samples: null
   ignore_sanity_checks: true
   project: {PROJECT_NAME}
-  run: tmp
-  seed: 6
+  run: {run_name}
+  seed: {args.seed}
   step: null
 logging:
   iteration_step_info_interval: 5
@@ -107,13 +201,13 @@ optimizer:
   accumulate_grad_in_fp32: true
   clip_grad: 1.0
   learning_rate_scheduler:
-    learning_rate: 5e-4
-    lr_decay_starting_step: 2861
-    lr_decay_steps: 1
-    lr_decay_style: cosine
-    lr_warmup_steps: 2861
+    learning_rate: {args.lr}
+    lr_decay_starting_step: {decay_start_step}
+    lr_decay_steps: {args.train_steps - decay_start_step}
+    lr_decay_style: {lr_decay_style}
+    lr_warmup_steps: {warmup_steps}
     lr_warmup_style: linear
-    min_decay_lr: 0
+    min_decay_lr: {min_decay_lr}
   optimizer_factory:
     adam_beta1: 0.9
     adam_beta2: 0.95
@@ -126,7 +220,7 @@ optimizer:
   zero_stage: 0
 parallelism:
   context_parallel_size: 1
-  dp: 64
+  dp: {args.nodes * NUM_GPUS}
   expert_parallel_size: 1
   pp: 1
   pp_engine: 1f1b
@@ -141,21 +235,21 @@ s3_upload:
   s5cmd_concurrency: 5
   s5cmd_numworkers: 16
   s5cmd_path: {S5CMD_PATH}
-  upload_s3_path: {S3_CHECKPOINTS_PREFIX}
+  upload_s3_path: {S3_CHECKPOINTS_PREFIX}/{run_name}
 tokenizer:
   tokenizer_max_length: {SEQUENCE_LENGTH}
-  tokenizer_name_or_path: hynky/Llama-3.2-1B-no-bos
+  tokenizer_name_or_path: {args.tokenizer}
   tokenizer_revision: null
 metrics_logging:
   log_level: 1
   log_detail_interval: 200
 tokens:
-  batch_accumulation_per_replica: {BATCH_ACCUMULATION_PER_REPLICA}
+  batch_accumulation_per_replica: {batch_accumulation_per_replica}
   limit_test_batches: 0
   limit_val_batches: 0
   micro_batch_size: {MICRO_BATCH_SIZE}
   sequence_length: {SEQUENCE_LENGTH}
-  train_steps: null
+  train_steps: {args.train_steps}
   val_check_interval: 0
 lighteval:
   output_dir: {EVALS_OUTPUT_PATH}
@@ -179,132 +273,9 @@ lighteval:
     max_samples: 1000
 """
 
-
-def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, timestamp, *args):
-    """
-    Small helper function to save a sbatch script and call it.
-    Args:
-        launch_file_contents: Contents of the sbatch script
-        *args: any other arguments to pass to the sbatch command
-
-    Returns: the id of the launched slurm job
-    """
-    run_dir = f"{TRAINING_RUNS_PATH}/{run_name}"
-    slurm_logs_dir = f"{run_dir}/slurm_logs"
-    with open(f"{run_dir}/launch_script.slurm", "w") as f:
-        f.write(launch_file_contents)
-        f.flush()
-      
-    # Make the script executable
-    os.chmod(f.name, 0o755)
-    if job_id:
-      srun_args = ["srun", "--jobid", job_id, "--ntasks-per-node", "1", "--nodes", str(nodes)]
-      if background:
-        srun_args += ["--output", f"{slurm_logs_dir}/train-{timestamp}.out", "--error", f"{slurm_logs_dir}/train-{timestamp}.err"]
-        # Run the job in background - DOES NOT WAIT
-        subprocess.Popen(srun_args + list(args) + [f.name])
-        subprocess
-        print(f"Running in background. Logs: {slurm_logs_dir}/train-{timestamp}.out {slurm_logs_dir}/train-{timestamp}.err")
-      else:
-        # Run in foreground till job is done - WAITS
-        subprocess.check_call(srun_args + list(args) + [f.name])
-    else:
-      return subprocess.run(["sbatch", *args, f.name], capture_output=True, text=True).stdout.split()[-1]
-
-
-parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
-parser.add_argument("data", help="Dataset folder path (can be S3 path)", type=str)
-parser.add_argument("run_name", help="Run name", type=str)
-parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
-parser.add_argument("--dep-job-id", help="Dependency job", type=str, default=None)
-parser.add_argument("--seed", help="Seed", type=int, default=6)
-parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
-parser.add_argument("--train-steps", help="Training steps", type=int, default=10_000)
-parser.add_argument("--qos", help="QoS to use", type=str, default="normal")
-parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
-parser.add_argument("--debug", help="Enable d/ntuebug mode", action="store_true")
-parser.add_argument("--job-id", help="Job ID", type=str, default=None)
-parser.add_argument("--lr", help="Learning rate", type=float, default=5e-4)
-parser.add_argument("--background", help="Run in background", action="store_true")
-parser.add_argument("--reservation", help="SLURM reservation name", type=str, default=None)
-parser.add_argument("--time", help="SLURM time", type=str, default="20:00:00")
-parser.add_argument("--resume", help="Set resume checkpoint path to the checkpoint path", action="store_true")
-
-def main():
-    args = parser.parse_args()
-    
     # Load the config
     config = yaml.safe_load(MODEL_CONFIG)
 
-    # batch size == batch_accumulation_per_replica * micro_batch_size * dp: 4 * 2 * 64 = 512
-    batch_size = BATCH_ACCUMULATION_PER_REPLICA * MICRO_BATCH_SIZE * NUM_GPUS * args.nodes
-    tokens_per_step = SEQUENCE_LENGTH * batch_size # sequence length * batch size: 4096 * 512 = 2097152
-    print(f"Batch size: {batch_size} examples / {tokens_per_step} tokens")
-    total_tokens_consumed = round(tokens_per_step * args.train_steps / 1e9) # in billions
-    print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
-    
-    # Update the config with the provided arguments
-    run_name = args.run_name.replace(" ", "_")
-    run_name = f"train-{run_name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
-    
-    # Calculate local dataset path if using S3
-    local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{run_name}/"
-    
-    # Update data_stages with dynamically added dataset configuration
-    dataset_folder = local_dataset_path if args.data.startswith("s3://") else args.data
-    
-    # Dynamically add dataset entries
-    config["data_stages"][0]["data"]["dataset"]["dataset_folder"] = [dataset_folder]
-    config["data_stages"][0]["data"]["dataset"]["dataset_weights"] = [1.0]
-    
-    # Update general config
-    config["general"]["run"] = run_name
-    config["general"]["seed"] = args.seed
-    config["data_stages"][0]["data"]["seed"] = args.data_seed
-    
-    # Update tokenizer
-    config["tokenizer"]["tokenizer_name_or_path"] = args.tokenizer
-    
-    # Update checkpoint paths
-    checkpoint_path = f"{LOCAL_TMP_PATH_ON_NODE}/checkpoints/{run_name}"
-    config["checkpoints"]["checkpoints_path"] = checkpoint_path
-    config["s3_upload"]["upload_s3_path"] = f"{S3_CHECKPOINTS_PREFIX}/{run_name}"
-    
-    # Set resume checkpoint path if --resume flag is provided
-    if args.resume:
-        config["checkpoints"]["resume_checkpoint_path"] = checkpoint_path
-    
-    # Update training steps
-    config["tokens"]["train_steps"] = args.train_steps
-    
-    # Debug mode settings
-    if args.debug:
-        config["parallelism"]["dp"] = 2
-        config["parallelism"]["pp"] = 2
-        config["parallelism"]["tp"] = 2
-        config["tokens"]["micro_batch_size"] = 2
-        config["tokens"]["batch_accumulation_per_replica"] = 2
-        args.nodes = 1
-      
-    else:
-      config["parallelism"]["dp"] = args.nodes * NUM_GPUS
-
-    # Update training steps
-    config["tokens"]["train_steps"] = args.train_steps
-
-    # Update decay start to 10% of training steps
-    decay_start_step = round(args.train_steps * 0.1)
-    decay_steps = args.train_steps - decay_start_step
-    config["optimizer"]["learning_rate_scheduler"]["lr_decay_steps"] = decay_steps
-    config["optimizer"]["learning_rate_scheduler"]["lr_warmup_steps"] = decay_start_step
-    config["optimizer"]["learning_rate_scheduler"]["lr_decay_starting_step"] = decay_start_step
-
-    # Update learning rate
-    config["optimizer"]["learning_rate_scheduler"]["learning_rate"] = args.lr
-
-    # Update decay learning rate
-    min_decay_lr = args.lr / 10
-    config["optimizer"]["learning_rate_scheduler"]["min_decay_lr"] = min_decay_lr
     
     # Save the updated config
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

@@ -24,11 +24,6 @@ S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 TASKS_PATH = f"{PROJECT_PATH}/tasks.txt"
 TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
 
-CPUS_PER_NODE = 88
-GPUS_PER_NODE = 8
-PARTITION = "hopper-prod"
-NODES = 1
-
 def parse_date(date_string: Optional[str]) -> Optional[datetime]:
     if date_string is None:
         return None
@@ -246,12 +241,12 @@ parser.add_argument("--custom-tasks", type=str, help="lighteval custom tasks", d
 parser.add_argument("--offline-datasets", action="store_true", help="Turns off datasets downloading", default=False)
 parser.add_argument("--seed", help="Defines seeds to use in model template. Comma separated list of seeds", default="6")
 parser.add_argument("--qos", type=str, default="normal", help="qos to use")
-parser.add_argument("--time-limit", type=str, default="1:50:00", help="slurm time limit. 1:50:00 by default")
+parser.add_argument("--time", type=str, default="2:00:00", help="slurm time limit. 2:00:00 by default")
 parser.add_argument("--parallel", type=int, default=5, help="How many eval tasks to run simultaneously")
 parser.add_argument("--batch-size", type=int, default=None, help="Batch size")
-parser.add_argument("--gpus", type=int, default=GPUS_PER_NODE, help="How many gpus to use")
+parser.add_argument("--gpus", type=int, default=4, help="How many gpus to use")
 parser.add_argument("--logging-dir", type=str, default=S3_EVALS_RESULTS_PREFIX, help="S3 repo to push results to")
-parser.add_argument("-d", help="dependency job", type=str, default=None)
+parser.add_argument("--dep-job-id", help="dependency job", type=str, default=None)
 parser.add_argument("--overwrite", "-ow", action="store_true", default=False, help="Overwrite existing eval results. Will skip completed checkpoints by default")
 parser.add_argument("--after-date", type=str, default=None, help="Only consider checkpoints newer than this date (DD-MM-YYYY HH:MM:SS)")
 parser.add_argument("--job-prefix", type=str, default="", help="Prefix to add to the job name")
@@ -320,8 +315,8 @@ def main():
             yaml.dump(lighteval_config_yaml, f)
 
         deps = []
-        if args.d:
-            deps.append(f"afterok:{args.d}")
+        if args.dep_job_id:
+            deps.append(f"afterok:{args.dep_job_id}")
         if args.run_all and job_id:
             deps.append(f"afterany:{job_id}")
 
@@ -334,14 +329,14 @@ def main():
 
         launch_script = f"""#!/bin/bash
 #SBATCH --job-name={args.job_prefix}eval-{formatted_model_name}{task_suffix}
-#SBATCH --nodes={NODES}
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --partition={PARTITION}
+#SBATCH --partition=hopper-prod
 {f'#SBATCH --qos={args.qos}' if args.qos else ''}
 #SBATCH --array=0-{len(checkpoints_with_tasks) - 1}%{args.parallel}
 #SBATCH --gres=gpu:{args.gpus}
-#SBATCH --time={args.time_limit}
-#SBATCH --cpus-per-task={CPUS_PER_NODE}
+#SBATCH --time={args.time}
+#SBATCH --cpus-per-task={11*args.gpus}
 #SBATCH --output={eval_logs_path}/eval-%A_%a.out
 #SBATCH --error={eval_logs_path}/eval-%A_%a.out
 {"#SBATCH --dependency=" + ",".join(deps) if deps else ""}
@@ -437,7 +432,7 @@ echo "Running evaluation for checkpoint $STEP with tasks: $TASKS_TO_EVAL"
 CUDA_DEVICE_MAX_CONNECTIONS=1 accelerate launch {'--multi_gpu' if args.gpus > 1 else ''} {'--num_processes ' + str(args.gpus) if args.gpus > 1 else ''} \\
     -m lighteval accelerate \\
     --custom-tasks {custom_tasks_path} \\
-    --dataset-loading-processes {CPUS_PER_NODE} \\
+    --dataset-loading-processes {11*args.gpus} \\
     --max-samples 1000 \\
     --output-dir {args.logging_dir} \\
     --save-details \\

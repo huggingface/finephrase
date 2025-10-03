@@ -23,11 +23,10 @@ TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
 NUM_GPUS = 8
 NUM_CPUS_IN_NODE = 88
 
-SEQUENCE_LENGTH = 4096
-
 GLOBAL_BATCH_SIZE = 512
 MICRO_BATCH_SIZE = 2 # We cannot fit more with the current setup
 
+SEQUENCE_LENGTH = 4096
 
 def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, timestamp, *args):
     """
@@ -261,12 +260,12 @@ lighteval:
   nanotron_path: {NANOTRON_PATH}
   batch_size: 8
   slurm:
-    gpus_per_node: {NUM_GPUS}
+    gpus_per_node: 4
     hf_cache: "{BASE_PATH}/.cache/huggingface"
     partition: "hopper-prod"
-    cpus_per_task: {NUM_CPUS_IN_NODE}
+    cpus_per_task: {11*4}
     qos: "normal"
-    time: "6:00:00"
+    time: "2:00:00"
   tasks:
     tasks: {TASKS_PATH}
     custom_tasks: {TASK_LIST_PATH}

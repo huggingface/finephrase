@@ -28,7 +28,7 @@ MICRO_BATCH_SIZE = 2 # We cannot fit more with the current setup
 
 SEQUENCE_LENGTH = 4096
 
-def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, timestamp, *args):
+def launch_slurm_job(launch_file_contents, job_id, nodes, background, name, timestamp, *args):
     """
     Small helper function to save a sbatch script and call it.
     Args:
@@ -37,7 +37,7 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, 
 
     Returns: the id of the launched slurm job
     """
-    run_dir = f"{TRAINING_RUNS_PATH}/{run_name}"
+    run_dir = f"{TRAINING_RUNS_PATH}/{name}"
     slurm_logs_dir = f"{run_dir}/slurm_logs"
     with open(f"{run_dir}/launch_script.slurm", "w") as f:
         f.write(launch_file_contents)
@@ -62,7 +62,7 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, run_name, 
 
 parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
 parser.add_argument("data", help="Dataset folder path (can be S3 path)", type=str)
-parser.add_argument("run_name", help="Run name", type=str)
+parser.add_argument("name", help="Run name", type=str)
 parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
 parser.add_argument("--seed", help="Seed", type=int, default=6)
 parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
@@ -76,7 +76,8 @@ parser.add_argument("--lr-schedule", help="Learning rate schedule", type=str, de
 parser.add_argument("--background", help="Run in background", action="store_true")
 parser.add_argument("--reservation", help="SLURM reservation name", type=str, default=None)
 parser.add_argument("--time", help="SLURM time", type=str, default="1-00:00:00") # It should finish within 3 hours already with 8 nodes
-parser.add_argument("--resume_checkpoint_path", help="Path to the checkpoint to resume from", type=str, default=None)
+parser.add_argument("--resume-checkpoint-path", help="Path to the checkpoint to resume from", type=str, default=None)
+parser.add_argument("--decay-exp", help="Run a decay experiment", action="store_true")
 parser.add_argument("--dep-job-id", help="Dependency job", type=str, default=None)
 
 # Current command: train s3://finephrase/experiments/tokenized/fineweb-100BT/ fineweb-20BT --nodes 4 --qos high
@@ -87,6 +88,20 @@ def main():
     # Debug mode settings
     if args.debug:
         args.nodes = 1 # Only use one node for debugging
+
+    if args.decay_exp:
+      # Hard code to the lq checkpoint because we see larger differences there
+      args.resume_checkpoint_path = "s3://finephrase/experiments/checkpoints/train-fineweb-edu-lq-20BT-wsd-21B-seed-606/9000"
+      # Determine start_training_step for decay experiments
+      # When running a decay experiment, we resume from a checkpoint and train on a NEW dataset.
+      # We need to create a new data stage starting at the step we're resuming from to ensure
+      # nanotron starts from the beginning of the new dataset rather than trying to skip ahead.
+      # Extract step number from checkpoint path (e.g., "path/9000" -> 9000)
+      checkpoint_step = int(args.resume_checkpoint_path.rstrip('/').split('/')[-1])
+      start_training_step = checkpoint_step + 1
+    else:
+        start_training_step = 1
+      
     
     # batch size == batch_accumulation_per_replica * micro_batch_size * dp: 4 * 2 * 64 = 512
     batch_accumulation_per_replica = GLOBAL_BATCH_SIZE // (MICRO_BATCH_SIZE * NUM_GPUS * args.nodes)
@@ -99,11 +114,11 @@ def main():
     print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
     
     # Update the config with the provided arguments
-    run_name = args.run_name.replace(" ", "_")
-    run_name = f"train-{run_name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
+    name = args.name.replace(" ", "_")
+    name = f"train-{name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
     
     # Calculate local dataset path if using S3
-    local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{run_name}/"
+    local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{name}/"
     
     # Update data_stages with dynamically added dataset configuration
     dataset_folder = local_dataset_path if args.data.startswith("s3://") else args.data
@@ -123,7 +138,7 @@ def main():
     MODEL_CONFIG = f"""
 checkpoints:
   checkpoint_interval: 500
-  checkpoints_path: {LOCAL_TMP_PATH_ON_NODE}/checkpoints/{run_name}
+  checkpoints_path: {LOCAL_TMP_PATH_ON_NODE}/checkpoints/{name}
   checkpoints_path_is_shared_file_system: false
   load_lr_scheduler: true
   load_optimizer: true
@@ -144,13 +159,13 @@ data_stages:
     num_loading_workers: 0
     seed: {args.data_seed}
   name: stable
-  start_training_step: 1
+  start_training_step: {start_training_step}
 general:
   benchmark_csv_path: null
   consumed_train_samples: null
   ignore_sanity_checks: true
   project: {PROJECT_NAME}
-  run: {run_name}
+  run: {name}
   seed: {args.seed}
   step: null
 logging:
@@ -234,7 +249,7 @@ s3_upload:
   s5cmd_concurrency: 5
   s5cmd_numworkers: 16
   s5cmd_path: {S5CMD_PATH}
-  upload_s3_path: {S3_CHECKPOINTS_PREFIX}/{run_name}
+  upload_s3_path: {S3_CHECKPOINTS_PREFIX}/{name}
 tokenizer:
   tokenizer_max_length: {SEQUENCE_LENGTH}
   tokenizer_name_or_path: {args.tokenizer}
@@ -278,7 +293,7 @@ lighteval:
     
     # Save the updated config
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    run_dir = f"{TRAINING_RUNS_PATH}/{run_name}"
+    run_dir = f"{TRAINING_RUNS_PATH}/{name}"
     os.makedirs(run_dir, exist_ok=True)
     os.makedirs(f"{run_dir}/slurm_logs", exist_ok=True)
     config_path_yaml = f"{run_dir}/config.yaml"
@@ -296,7 +311,7 @@ lighteval:
 # """
     
     # Build SLURM job script
-    job_name = run_name
+    job_name = name
     
     sbatch_script = f"""#!/bin/bash
 #SBATCH --job-name={job_name}
@@ -372,7 +387,7 @@ echo "END TIME: $(date)"
     
     # Launch the job
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    job_id = launch_slurm_job(sbatch_script, args.job_id, args.nodes, args.background, run_name, timestamp)
+    job_id = launch_slurm_job(sbatch_script, args.job_id, args.nodes, args.background, name, timestamp)
     slurm_log_path = f"{run_dir}/slurm_logs/train-{timestamp}-{job_name}-{job_id}.out"
     
     print(f"Launched with Slurm job id = {job_id}")

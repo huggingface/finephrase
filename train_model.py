@@ -89,19 +89,14 @@ def main():
     if args.debug:
         args.nodes = 1 # Only use one node for debugging
 
+    # For decay experiments, we need to set up two data stages
     if args.decay_exp:
       # Hard code to the lq checkpoint because we see larger differences there
       args.resume_checkpoint_path = "s3://finephrase/experiments/checkpoints/train-fineweb-edu-lq-20BT-wsd-21B-seed-606/9000"
-      # Determine start_training_step for decay experiments
-      # When running a decay experiment, we resume from a checkpoint and train on a NEW dataset.
-      # We need to create a new data stage starting at the step we're resuming from to ensure
-      # nanotron starts from the beginning of the new dataset rather than trying to skip ahead.
       # Extract step number from checkpoint path (e.g., "path/9000" -> 9000)
       checkpoint_step = int(args.resume_checkpoint_path.rstrip('/').split('/')[-1])
-      start_training_step = checkpoint_step + 1
-    else:
-        start_training_step = 1
-      
+      assert args.lr_schedule == "wsd", "LR schedule must be wsd for decay experiments"
+
     
     # batch size == batch_accumulation_per_replica * micro_batch_size * dp: 4 * 2 * 64 = 512
     batch_accumulation_per_replica = GLOBAL_BATCH_SIZE // (MICRO_BATCH_SIZE * NUM_GPUS * args.nodes)
@@ -135,6 +130,35 @@ def main():
     else:
       raise ValueError(f"Unsupported learning rate schedule: {args.lr_schedule}")
 
+    # Build data_stages configuration
+    # Helper function to create a stage config
+    def make_stage(name, start_step, folder):
+        return f"""- data:
+    dataset:
+      dataset_folder: [{folder}]
+      dataset_weights: [1.0]
+      pad_samples_to_global_batch_size: false
+      return_positions: true
+      token_size_in_bytes: 4
+      use_old_brrr_dataloader: false
+      tokenizer_name: {args.tokenizer}
+      vocab_size: 128256
+    num_loading_workers: 0
+    seed: {args.data_seed}
+  name: {name}
+  start_training_step: {start_step}"""
+    
+    # For decay experiments, we need TWO stages:
+    # 1. First stage at step 1 (satisfies nanotron's requirement, won't be used since we resume from step 9000)
+    # 2. Second stage at checkpoint_step + 1 (the new dataset for decay phase)
+    # Note: Both stages point to the same dataset since the first stage is never actually used
+    if args.decay_exp:
+        dummy_stage = make_stage("warmup_stable_phase", 1, dataset_folder)
+        decay_stage = make_stage("decay_phase", checkpoint_step + 1, dataset_folder)
+        data_stages_config = f"{dummy_stage}\n{decay_stage}"
+    else:
+        data_stages_config = make_stage("stable", 1, dataset_folder)
+
     MODEL_CONFIG = f"""
 checkpoints:
   checkpoint_interval: 500
@@ -146,20 +170,7 @@ checkpoints:
   save_final_state: true
   save_initial_state: false
 data_stages:
-- data:
-    dataset:
-      dataset_folder: [{dataset_folder}]
-      dataset_weights: [1.0]
-      pad_samples_to_global_batch_size: false
-      return_positions: true
-      token_size_in_bytes: 4
-      use_old_brrr_dataloader: false
-      tokenizer_name: {args.tokenizer}
-      vocab_size: 128256
-    num_loading_workers: 0
-    seed: {args.data_seed}
-  name: stable
-  start_training_step: {start_training_step}
+{data_stages_config}
 general:
   benchmark_csv_path: null
   consumed_train_samples: null

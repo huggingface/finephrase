@@ -109,13 +109,13 @@ class DocumentSplitter(PipelineStep):
 parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
 
 parser.add_argument(
-    "--data-paths", type=str, help="Path to the data to tokenize.", required=True
+    "data", type=str, help="Path to the data to tokenize."
+)
+parser.add_argument(
+    "name", type=str, help="Name of the tokenization."  
 )
 parser.add_argument(
     "--output-path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=S3_BASE_PATH
-)
-parser.add_argument(
-    "--name", type=str, default=None, help="Name of the tokenization. If not provided, the name will be the last part of the data paths"  
 )
 parser.add_argument(
     "--limit", type=int, help="limit the number of documents to tokenize", default=-1
@@ -172,8 +172,8 @@ def main():
     args = parser.parse_args()
     print(f"Output name: {args.name}")
 
-    data_paths = args.data_paths.split(",")
-    print(f"Data paths: {data_paths}")
+    data = args.data.split(",")
+    print(f"Data paths: {data}")
 
     logging_base_path = f"{LOG_BASE_PATH}/tokenization/{args.name}"
 
@@ -186,7 +186,7 @@ def main():
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{args.name}",
         pipeline=[
-            *([build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True, text_key=args.text_key) for data_path in data_paths]),
+            *([build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True, text_key=args.text_key) for data_path in data]),
             SamplerFilter(rate=args.sample, seed=args.sample_seed),
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),

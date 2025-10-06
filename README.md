@@ -97,8 +97,8 @@ Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 Prepare datasets for training by tokenizing them:
 
 ```bash
-tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fineweb-edu-hq-20BT
-tokenize --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fineweb-edu-lq-20BT
+tokenize s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT fineweb-edu-hq-20BT
+tokenize s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT fineweb-edu-lq-20BT
 ```
 
 ## Model Training & Evaluation

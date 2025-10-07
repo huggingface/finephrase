@@ -140,7 +140,7 @@ rephrase --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT -
 Quickly inspect data
 
 ```bash
-inspect-data --data-path s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
+inspect-data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
 ```
 
 **Available prompts for data quality improvement:**

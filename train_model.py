@@ -110,7 +110,7 @@ def main():
     
     # Update the config with the provided arguments
     name = args.name.replace(" ", "_")
-    name = f"train-{name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
+    name = f"{name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
     
     # Calculate local dataset path if using S3
     local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{name}/"
@@ -257,8 +257,8 @@ parallelism:
 profiler: null
 s3_upload:
   remove_after_upload: true
-  s5cmd_concurrency: 5
-  s5cmd_numworkers: 16
+  s5cmd_concurrency: 10
+  s5cmd_numworkers: 32
   s5cmd_path: {S5CMD_PATH}
   upload_s3_path: {S3_CHECKPOINTS_PREFIX}/{name}
 tokenizer:

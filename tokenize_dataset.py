@@ -109,7 +109,7 @@ class DocumentSplitter(PipelineStep):
 parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
 
 parser.add_argument(
-    "data", type=str, help="Path to the data to tokenize."
+    "data", type=str, help="Path to the data to tokenize. Comma separated list of paths for mixed datasets."
 )
 parser.add_argument(
     "name", type=str, help="Name of the tokenization."  
@@ -146,13 +146,13 @@ parser.add_argument(
     "--dep-job-id", type=str, default=None, help="ID of the job that produced the data to tokenize."
 )
 parser.add_argument(
-    "--jsonl-output", "-jo", type=str, default=None, help="Path to optionally save the sampled data jsonl"
+    "--jsonl-output", type=str, default=None, help="Path to optionally save the sampled data jsonl"
 )
 parser.add_argument(
-    "--shuffle-chunk-size", "-scs", type=int, default=4096, help="Shuffle inter document"
+    "--shuffle-chunk-size", type=int, default=4096, help="Shuffle inter document"
 )
 parser.add_argument(
-    "--run-merger", "-rm", action="store_true", help="Run the merger after tokenization"
+    "--run-merger", action="store_true", help="Run the merger after tokenization"
 )
 parser.add_argument(
     "--max-chars-per-document", type=int, default=100_000, help="Split documents larger than this many characters"

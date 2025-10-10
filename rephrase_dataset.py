@@ -27,6 +27,8 @@ from utils import (
     print_debug_output,
 )
 
+EDU_CLASSIFIER_NAME = "HuggingFaceFW/fineweb-edu-classifier"
+
 
 def load_prompt_template(template_path: str) -> str:
     """
@@ -153,8 +155,8 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
     tokenizer = None
     from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-    edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceFW/fineweb-edu-classifier")
-    edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceFW/fineweb-edu-classifier").eval()
+    edu_tokenizer = AutoTokenizer.from_pretrained(EDU_CLASSIFIER_NAME, local_files_only=True)
+    edu_model = AutoModelForSequenceClassification.from_pretrained(EDU_CLASSIFIER_NAME, local_files_only=True).eval()
         
 
     def count_tokens(text: str) -> int:
@@ -163,7 +165,7 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         if text:
             if tokenizer is None and tokenizer_name:
                 from transformers import AutoTokenizer
-                tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+                tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, local_files_only=True)
             if tokenizer:
                 return len(tokenizer.encode(text))
         return 0
@@ -443,6 +445,8 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
+
+
     if args.debug:
         args.run_local = True
         args.disable_checkpoints = True
@@ -472,6 +476,33 @@ def main():
             print(f"It looks like you are trying to run a large rephrasing experiment. " \
             "Please change qos to low or limit the number of workers.")
             raise ValueError("Unsafe configuration")
+
+    # Pre-cache models before job submission to ensure they're available when HF_HUB_OFFLINE=1 is set on workers
+    # This runs in the main submission process where network access is available
+    if not args.run_local:
+        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        from huggingface_hub import snapshot_download
+        print("Verifying models are cached (required for offline workers)...")
+        try:
+            # Cache the full inference model (used by vLLM) - downloads all files without loading into memory
+            print(f"  - Caching {args.model_name_or_path} (model + tokenizer)...")
+            snapshot_download(repo_id=args.model_name_or_path, ignore_patterns=["*.gguf", "*.msgpack"])
+            
+            # Cache the token counting tokenizer
+            print(f"  - Caching {args.tokenizer} tokenizer...")
+            AutoTokenizer.from_pretrained(args.tokenizer)
+            
+            # Cache the edu-classifier (used in postprocessing)
+            print(f"  - Caching fineweb-edu-classifier (model + tokenizer)...")
+            AutoTokenizer.from_pretrained(EDU_CLASSIFIER_NAME)
+            AutoModelForSequenceClassification.from_pretrained(EDU_CLASSIFIER_NAME)
+            
+            print("✓ All models cached successfully - workers can run offline")
+        except Exception as e:
+            print(f"\n❌ ERROR: Failed to cache models: {e}")
+            print("Workers will fail with HF_HUB_OFFLINE=1 if models aren't cached.")
+            print("Please ensure models are downloaded before submitting jobs.\n")
+            raise
 
     # Set up paths based on arguments
     run_name = f"{args.prompt.replace('.md', '')}-{args.name}"

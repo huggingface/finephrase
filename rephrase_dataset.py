@@ -17,6 +17,7 @@ from datatrove.pipeline.inference.run_inference import InferenceConfig, Inferenc
 
 from utils import (
     CHECKPOINTS_PATH,
+    EMV_COMMAND,
     FAULTY_NODES,
     LOG_BASE_PATH,
     S3_BASE_PATH,
@@ -552,7 +553,7 @@ def main():
             cpus_per_task=11*args.tp,
             mem_per_cpu_gb=22,
             qos=args.qos,
-            env_command="module load cuda/12.4",
+            env_command=EMV_COMMAND,
             mail_user="joel@hf.co",
             depends_job_id=args.dep_job_id,
             sbatch_args={"gres": f"gpu:{args.tp}", "exclude": FAULTY_NODES}

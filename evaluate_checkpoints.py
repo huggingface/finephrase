@@ -14,6 +14,10 @@ import itertools
 from datatrove.io import get_datafolder
 from loguru import logger
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from utils import FAULTY_NODES, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
@@ -367,6 +371,9 @@ export CUDA_DEVICE_MAX_CONNECTIONS="1"
 
 module purge
 module load cuda/12.4
+
+hf auth login --token {os.getenv('HF_TOKEN')}
+hf auth whoami
 
 echo "Running on $COUNT_NODE nodes: $HOSTNAMES"
 

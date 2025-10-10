@@ -5,6 +5,9 @@ import random
 import subprocess
 import yaml
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from utils import BASE_PATH, FAULTY_NODES, LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
 
@@ -361,6 +364,9 @@ export TMPDIR={LOCAL_TMP_PATH_ON_NODE}
 export CUDA_DEVICE_MAX_CONNECTIONS="1"
 
 module load cuda/12.4
+
+hf auth login --token {os.getenv('HF_TOKEN')}
+hf auth whoami
 
 echo go $COUNT_NODE
 echo $HOSTNAMES

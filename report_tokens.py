@@ -4,7 +4,7 @@ from datatrove.data import DocumentsPipeline
 
 import argparse
 
-from utils import LOG_BASE_PATH, build_reader, human_readable
+from utils import EMV_COMMAND, LOG_BASE_PATH, build_reader, human_readable
 
 
 class ReportTokens(PipelineStep):
@@ -82,7 +82,13 @@ def main():
         executor = LocalPipelineExecutor(pipeline)
     else:
         executor = SlurmPipelineExecutor(
-            pipeline, tasks=args.n_tasks, time="01:00:00", partition="hopper-cpu", qos="normal", cpus_per_task=4,
+            pipeline, 
+            tasks=args.n_tasks, 
+            time="01:00:00", 
+            partition="hopper-cpu", 
+            qos="normal", 
+            cpus_per_task=4,
+            env_command=EMV_COMMAND,
             logging_dir=logs_path, job_name=f"report-tokens-{args.data_paths}", mail_user="joel@hf.co",
         )
     executor.run()

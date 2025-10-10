@@ -2,6 +2,9 @@ import os
 import logging
 from datatrove.pipeline.base import PipelineStep
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
@@ -15,6 +18,8 @@ LOCAL_TMP_PATH_ON_NODE = f"/scratch/{USER}/tmp/{PROJECT_NAME}"
 
 FAULTY_NODES = "ip-26-0-160-103,ip-26-0-160-225,ip-26-0-160-242,ip-26-0-161-138,ip-26-0-161-178,ip-26-0-162-46,ip-26-0-162-180"
 
+# Make sure we're authenticated before running any jobs
+EMV_COMMAND = f"sleep $((RANDOM % 30)) && module load cuda/12.4 && hf auth login --token {os.getenv('HF_TOKEN')} && hf auth whoami"
 
 # -----------------------------
 # Reader utilities
@@ -66,8 +71,6 @@ def human_readable(num):
 # -----------------------------
 # Fineweb EDU score utilities
 # -----------------------------
-
-
 
 def calculate_edu_score(text: str, tokenizer, model) -> float:
     """Return the fineweb-edu score in [0, 5] for given text."""

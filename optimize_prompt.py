@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 from statistics import mean
 from tqdm import tqdm
 
-from utils import EMV_COMMAND, LOG_BASE_PATH, calculate_edu_score
+from utils import ENV_COMMAND, LOG_BASE_PATH, calculate_edu_score
 
 from datatrove.pipeline.base import PipelineStep
 from datatrove.data import DocumentsPipeline
@@ -660,7 +660,7 @@ def main():
             qos=args.qos,
             logging_dir=optimizer_step.run_dir,
             job_name=job_name,
-            env_command=EMV_COMMAND,
+            env_command=ENV_COMMAND,
             depends_job_id=args.dep_job_id,
             sbatch_args={"gres": f"gpu:1"},
         )

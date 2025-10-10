@@ -1,6 +1,6 @@
 import argparse
 
-from utils import EMV_COMMAND, LOG_BASE_PATH, S3_BASE_PATH, build_reader
+from utils import ENV_COMMAND, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 
 def score_predicate_lq(doc):
@@ -117,7 +117,7 @@ def main():
             cpus_per_task=8,
             mem_per_cpu_gb=2,
             qos=args.qos,
-            env_command=EMV_COMMAND,
+            env_command=ENV_COMMAND,
             mail_user="joel@hf.co",
             depends_job_id=args.dep_job_id
         )

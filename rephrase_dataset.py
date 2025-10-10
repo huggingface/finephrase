@@ -17,7 +17,7 @@ from datatrove.pipeline.inference.run_inference import InferenceConfig, Inferenc
 
 from utils import (
     CHECKPOINTS_PATH,
-    EMV_COMMAND,
+    ENV_COMMAND,
     FAULTY_NODES,
     LOG_BASE_PATH,
     S3_BASE_PATH,
@@ -553,7 +553,8 @@ def main():
             cpus_per_task=11*args.tp,
             mem_per_cpu_gb=22,
             qos=args.qos,
-            env_command=EMV_COMMAND,
+            # Add the HF_HUB_OFFLINE=1 command to prevent continuous Hub requests from workers (they should use cached models only)
+            env_command=ENV_COMMAND + " && export HF_HUB_OFFLINE=1",
             mail_user="joel@hf.co",
             depends_job_id=args.dep_job_id,
             sbatch_args={"gres": f"gpu:{args.tp}", "exclude": FAULTY_NODES}

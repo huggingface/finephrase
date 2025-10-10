@@ -4,7 +4,7 @@ from datatrove.data import DocumentsPipeline
 
 import argparse
 
-from utils import EMV_COMMAND, LOG_BASE_PATH, build_reader, human_readable
+from utils import ENV_COMMAND, LOG_BASE_PATH, build_reader, human_readable
 
 
 class ReportTokens(PipelineStep):
@@ -88,7 +88,7 @@ def main():
             partition="hopper-cpu", 
             qos="normal", 
             cpus_per_task=4,
-            env_command=EMV_COMMAND,
+            env_command=ENV_COMMAND,
             logging_dir=logs_path, job_name=f"report-tokens-{args.data_paths}", mail_user="joel@hf.co",
         )
     executor.run()

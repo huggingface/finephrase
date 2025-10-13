@@ -16,7 +16,7 @@ LOG_BASE_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments"
 S3_BASE_PATH = f"s3://{PROJECT_NAME}/experiments"
 LOCAL_TMP_PATH_ON_NODE = f"/scratch/{USER}/tmp/{PROJECT_NAME}"
 
-FAULTY_NODES = "ip-26-0-160-103,ip-26-0-160-225,ip-26-0-160-242,ip-26-0-161-138,ip-26-0-161-178,ip-26-0-162-46,ip-26-0-162-180"
+FAULTY_NODES = "ip-26-0-160-103,ip-26-0-160-225,ip-26-0-160-242,ip-26-0-161-103,ip-26-0-161-138,ip-26-0-161-178,ip-26-0-162-46,ip-26-0-162-180,ip-26-0-164-0,ip-26-0-164-236"
 
 # Make sure we're authenticated before running any jobs
 ENV_COMMAND = f"sleep $((RANDOM % 30)) && module load cuda/12.4 && hf auth login --token {os.getenv('HF_TOKEN')} && hf auth whoami"

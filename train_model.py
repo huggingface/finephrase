@@ -95,7 +95,7 @@ def main():
     # For decay experiments, we need to set up two data stages
     if args.decay_exp:
       # Hard code to the lq checkpoint because we see larger differences there
-      args.resume_checkpoint_path = "s3://finephrase/experiments/checkpoints/train-fineweb-edu-lq-20BT-wsd-21B-seed-606/9000"
+      args.resume_checkpoint_path = "s3://finephrase/experiments/checkpoints/fw_edu_lq/9000/"
       # Extract step number from checkpoint path (e.g., "path/9000" -> 9000)
       checkpoint_step = int(args.resume_checkpoint_path.rstrip('/').split('/')[-1])
       assert args.lr_schedule == "wsd", "LR schedule must be wsd for decay experiments"
@@ -111,9 +111,8 @@ def main():
     total_tokens_consumed = round(tokens_per_step * args.train_steps / 1e9) # in billions
     print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
     
-    # Update the config with the provided arguments
+    # Naming convention: {stage1_data}-decay-{stage2_data}
     name = args.name.replace(" ", "_")
-    name = f"{name}-{total_tokens_consumed}B-seed-{args.seed + (args.data_seed * 100)}"
     
     # Calculate local dataset path if using S3
     local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{name}/"

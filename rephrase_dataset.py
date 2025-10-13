@@ -445,8 +445,6 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-
-
     if args.debug:
         args.run_local = True
         args.disable_checkpoints = True

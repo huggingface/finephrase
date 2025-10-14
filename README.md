@@ -60,7 +60,7 @@ All commands support `--help` to see available options.
 Get comprehensive token statistics for any dataset:
 
 ```bash
-report-tokens --data-paths s3://path/to/dataset1,hf://datasets/owner/dataset2
+report-tokens --data s3://path/to/dataset1,hf://datasets/owner/dataset2
 ```
 
 ### Filtering Educational Data
@@ -69,7 +69,7 @@ Use `filter-fineweb-edu` to create datasets with specific educational quality sc
 **HQ data** (rounded int_score 4,5 or score > 3.5):
 ```bash
 filter-fineweb-edu \
-  --data-paths hf://datasets/HuggingFaceFW/fineweb-edu/data \
+  --data hf://datasets/HuggingFaceFW/fineweb-edu/data \
   --quality hq \
   --name fineweb-edu-hq-20BT \
   --subset-tokens 21.5e9 \
@@ -79,7 +79,7 @@ filter-fineweb-edu \
 **LQ data** (rounded int_score 0,1 or score < 1.5):
 ```bash
 filter-fineweb-edu \
-  --data-paths s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
+  --data s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
   --quality lq \
   --name fineweb-edu-lq-20BT \
   --subset-tokens 21.5e9 \
@@ -97,8 +97,8 @@ Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
 Prepare datasets for training by tokenizing them:
 
 ```bash
-tokenize s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT fineweb-edu-hq-20BT
-tokenize s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT fineweb-edu-lq-20BT
+tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fw_edu_hq
+tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fw_edu_lq
 ```
 
 ## Model Training & Evaluation
@@ -107,15 +107,15 @@ tokenize s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT fineweb-edu-lq
 Train 1B parameter models on your tokenized datasets:
 
 ```bash
-train s3://finephrase/experiments/tokenized/fineweb-edu-hq-20BT fineweb-edu-hq-20BT
-train s3://finephrase/experiments/tokenized/fineweb-edu-lq-20BT fineweb-edu-lq-20BT
+train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq
+train --data s3://finephrase/experiments/tokenized/fw_edu_lq --name fw_edu_lq
 ```
 
 ### Evaluating Checkpoints
 Run evaluations manually if automatic ones fail during training:
 
 ```bash
-evaluate fineweb-edu-hq-20BT-21B-seed-606,fineweb-edu-lq-20BT-21B-seed-606
+evaluate --name fw_edu_hq,fw_edu_lq
 ```
 
 ## Prompt Optimization
@@ -132,7 +132,7 @@ optimize-prompt --budget 10
 Generate synthetic training data by rephrasing existing content:
 
 ```bash
-rephrase --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase/gemma-3-1b-it/budget-10.md --name dspy-rephrase-budget-10 --debug
+rephrase --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase/gemma-3-1b-it/budget-10.md --name dspy-rephrase-budget-10 --debug
 ```
 
 ## Data Inspection
@@ -140,7 +140,7 @@ rephrase --data-paths s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT -
 Quickly inspect data
 
 ```bash
-inspect-data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
+inspect-data --data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
 ```
 
 **Available prompts for data quality improvement:**

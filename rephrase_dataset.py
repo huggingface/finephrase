@@ -346,7 +346,7 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
 parser = argparse.ArgumentParser("Rephrase documents using inference pipeline.")
 
 parser.add_argument(
-    "--data-paths", type=str, help="Path to the data to rephrase.", required=True
+    "--data", type=str, help="Path to the data to rephrase.", required=True
 )
 parser.add_argument(
     "--name", type=str, help="Name of the rephrasing experiment", required=True
@@ -508,7 +508,7 @@ def main():
     logs_path = f"{LOG_BASE_PATH}/rephrasing/{run_name}"
 
     # Parse data paths
-    data_paths = args.data_paths.split(",")
+    data_paths = args.data.split(",")
     print(f"Data paths: {data_paths}")
     print(f"Output path: {output_path}")
 

@@ -153,7 +153,7 @@ class ExperimentLauncher:
             if value:  # Only add flag if True
                 cmd.append(f"--{key}")
         elif isinstance(value, list):
-            # Handle multiple values (e.g., --data_paths path1 path2)
+            # Handle multiple values (e.g., --data path1 path2)
             cmd.append(f"--{key}")
             cmd.extend(str(v) for v in value)
         else:
@@ -281,7 +281,7 @@ script: "rephrase"
 continue_on_failure: true
 
 fixed_args:
-  data_paths: "/path/to/data"
+  data: "/path/to/data"
   limit: 1000
   n_tasks: 4
   time: "20:00:00"

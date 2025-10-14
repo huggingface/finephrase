@@ -26,7 +26,7 @@ class ReportTokens(PipelineStep):
 
 parser = argparse.ArgumentParser(description="Report token statistics for a dataset")
 parser.add_argument(
-    "--data-paths",
+    "--data",
     type=str,
     required=True,
     help="Comma-separated list of dataset paths (e.g., s3://..., hf://...)",
@@ -64,9 +64,9 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-    logs_path = f"{LOG_BASE_PATH}/token_counts/{args.data_paths.replace('/', '_')}"
-    
-    data_paths = args.data_paths.split(",")
+    logs_path = f"{LOG_BASE_PATH}/token_counts/{args.data.replace('/', '_')}"
+
+    data_paths = args.data.split(",")
     reader = [build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True) for data_path in data_paths]
 
     from datatrove.executor.local import LocalPipelineExecutor
@@ -89,7 +89,7 @@ def main():
             qos="normal", 
             cpus_per_task=4,
             env_command=ENV_COMMAND,
-            logging_dir=logs_path, job_name=f"report-tokens-{args.data_paths}", mail_user="joel@hf.co",
+            logging_dir=logs_path, job_name=f"report-tokens-{args.data}", mail_user="joel@hf.co",
         )
     executor.run()
 

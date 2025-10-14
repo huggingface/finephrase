@@ -35,7 +35,7 @@ class FormatterStep(PipelineStep):
 
 def main():
     parser = argparse.ArgumentParser("Inspect and pretty-print dataset samples")
-    parser.add_argument("data", type=str, help="Dataset path (s3:// or hf://)")
+    parser.add_argument("--data", type=str, required=True, help="Dataset path (s3:// or hf://)")
     parser.add_argument("--limit", type=int, default=5, help="Number of samples to print")
     parser.add_argument("--text-key", type=str, default="text", help="Text field in JSONL records")
     args = parser.parse_args()

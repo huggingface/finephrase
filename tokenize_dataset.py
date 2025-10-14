@@ -108,10 +108,10 @@ class DocumentSplitter(PipelineStep):
 parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
 
 parser.add_argument(
-    "data", type=str, help="Path to the data to tokenize. Comma separated list of paths for mixed datasets."
+    "--data", type=str, required=True, help="Path to the data to tokenize. Comma separated list of paths for mixed datasets."
 )
 parser.add_argument(
-    "name", type=str, help="Name of the tokenization."  
+    "--name", type=str, required=True, help="Name of the tokenization."  
 )
 parser.add_argument(
     "--output-path", type=str, help="Path to the base output folder. The final output path will be <output_path>/tokenized/<name>", default=S3_BASE_PATH

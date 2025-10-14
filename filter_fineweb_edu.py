@@ -21,7 +21,7 @@ def score_predicate_hq(doc):
 
 parser = argparse.ArgumentParser("Filter fineweb-edu dataset by quality and count tokens.")
 parser.add_argument(
-    "--data-paths", type=str, help="Path to the data to filter.", required=True
+    "--data", type=str, help="Path to the data to filter.", required=True
 )
 parser.add_argument(
     "--output-path", type=str, help="Path to the base output folder. The final output path will be <output_path>/filtered/<name>", default=S3_BASE_PATH
@@ -65,7 +65,7 @@ def main():
     args = parser.parse_args()
     print(f"Output name: {args.name}")
 
-    data_paths = args.data_paths.split(",")
+    data_paths = args.data.split(",")
     print(f"Data paths: {data_paths}")
 
     _score_predicate = score_predicate_lq if args.quality == "lq" else score_predicate_hq

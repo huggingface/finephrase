@@ -230,7 +230,7 @@ def read_tasks_from_file(tasks_list_path: str) -> Set[str]:
 parser = argparse.ArgumentParser("Launch evals for a set of checkpoints.")
 
 parser.add_argument(
-    "model_name", type=str, help="Model name on s3. Example: fineweb-edu-lq-20BT-21B-seed-606. Use commas for multiple models"
+    "--name", type=str, required=True, help="Model name on s3. Example: fineweb-edu-lq-20BT-21B-seed-606. Use commas for multiple models"
 )
 parser.add_argument(
     "--s3_prefix", type=str, help="s3://path/to/models/ by default", default=f"{S3_BASE_PATH}/checkpoints"
@@ -238,7 +238,7 @@ parser.add_argument(
 parser.add_argument(
     "--checkpoints", type=str, help="Comma separated list of checkpoints to run, or \"all\"", default="all"
 )
-parser.add_argument("--model-template", type=str, help="Template to use for the model name", default="{model_name}")
+parser.add_argument("--model-template", type=str, help="Template to use for the model name", default="{name}")
 parser.add_argument("--run-all", action="store_true", default=False, help="Run in sequence")
 parser.add_argument("--tasks", type=str, help="Comma separated list of tasks to run, or \"all\"", default=TASKS_PATH)
 parser.add_argument("--custom-tasks", type=str, help="lighteval custom tasks", default=TASK_LIST_PATH)
@@ -260,8 +260,8 @@ def main():
     args = parser.parse_args()
 
     job_id = None
-    for model_name, seed in itertools.product(args.model_name.split(","), args.seed.split(",")):
-        formatted_model_name = args.model_template.format(model_name=model_name, seed=seed)
+    for model_name, seed in itertools.product(args.name.split(","), args.seed.split(",")):
+        formatted_model_name = args.model_template.format(name=model_name, seed=seed)
         
         # Use the provided task paths (English only)
         custom_tasks_path = args.custom_tasks

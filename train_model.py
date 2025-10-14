@@ -64,8 +64,8 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, name, time
 
 
 parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
-parser.add_argument("data", help="Dataset folder paths (can be S3 path)", type=str)
-parser.add_argument("name", help="Run name", type=str)
+parser.add_argument("--data", help="Dataset folder paths (can be S3 path)", type=str, required=True)
+parser.add_argument("--name", help="Run name", type=str, required=True)
 parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
 parser.add_argument("--seed", help="Seed", type=int, default=6)
 parser.add_argument("--data-seed", help="Data seed", type=int, default=6)

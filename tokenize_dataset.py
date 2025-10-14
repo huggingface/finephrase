@@ -151,7 +151,7 @@ parser.add_argument(
     "--shuffle-chunk-size", type=int, default=4096, help="Shuffle inter document"
 )
 parser.add_argument(
-    "--run-merger", action="store_true", help="Run the merger after tokenization"
+    "--run-merger", type=bool, default=True, help="Run the merger after tokenization"
 )
 parser.add_argument(
     "--max-chars-per-document", type=int, default=100_000, help="Split documents larger than this many characters"

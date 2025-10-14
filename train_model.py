@@ -64,7 +64,7 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, name, time
 
 
 parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
-parser.add_argument("data", help="Dataset folder path (can be S3 path)", type=str)
+parser.add_argument("data", help="Dataset folder paths (can be S3 path)", type=str)
 parser.add_argument("name", help="Run name", type=str)
 parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
 parser.add_argument("--seed", help="Seed", type=int, default=6)
@@ -114,11 +114,21 @@ def main():
     # Naming convention: {stage1_data}-decay-{stage2_data}
     name = args.name.replace(" ", "_")
     
-    # Calculate local dataset path if using S3
-    local_dataset_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{name}/"
+    # Parse multiple comma-separated data paths
+    data_paths = [path.strip() for path in args.data.split(",")]
     
-    # Update data_stages with dynamically added dataset configuration
-    dataset_folder = local_dataset_path if args.data.startswith("s3://") else args.data
+    # Calculate local dataset paths if using S3
+    local_dataset_paths = []
+    dataset_folders = []
+    for data_path in data_paths:
+        if data_path.startswith("s3://"):
+            # Extract the last item from the path (e.g., s3://.../my-dataset/ -> my-dataset)
+            dataset_name = data_path.rstrip('/').split('/')[-1]
+            local_path = f"{LOCAL_TMP_PATH_ON_NODE}/dataset/{dataset_name}/"
+            local_dataset_paths.append((data_path, local_path))
+            dataset_folders.append(local_path)
+        else:
+            dataset_folders.append(data_path)
 
     warmup_steps = round(args.train_steps * 0.01) # Warmup for 1% of training steps
     min_decay_lr = f"{args.lr / 10:.8f}"
@@ -134,11 +144,15 @@ def main():
 
     # Build data_stages configuration
     # Helper function to create a stage config
-    def make_stage(name, start_step, folder):
+    def make_stage(name, start_step, folders):
+        num_folders = len(folders)
+        weights = [1.0 / num_folders] * num_folders
+        folders_str = ", ".join(folders)
+        weights_str = ", ".join([str(w) for w in weights])
         return f"""- data:
     dataset:
-      dataset_folder: [{folder}]
-      dataset_weights: [1.0]
+      dataset_folder: [{folders_str}]
+      dataset_weights: [{weights_str}]
       pad_samples_to_global_batch_size: false
       return_positions: true
       token_size_in_bytes: 4
@@ -155,11 +169,11 @@ def main():
     # 2. Second stage at checkpoint_step + 1 (the new dataset for decay phase)
     # Note: Both stages point to the same dataset since the first stage is never actually used
     if args.decay_exp:
-        dummy_stage = make_stage("warmup_stable_phase", 1, dataset_folder)
-        decay_stage = make_stage("decay_phase", checkpoint_step + 1, dataset_folder)
+        dummy_stage = make_stage("warmup_stable_phase", 1, dataset_folders)
+        decay_stage = make_stage("decay_phase", checkpoint_step + 1, dataset_folders)
         data_stages_config = f"{dummy_stage}\n{decay_stage}"
     else:
-        data_stages_config = make_stage("stable", 1, dataset_folder)
+        data_stages_config = make_stage("stable", 1, dataset_folders)
 
     MODEL_CONFIG = f"""
 checkpoints:
@@ -317,11 +331,11 @@ lighteval:
     # Build dataset download command if needed
     dataset_download_cmd = ""
     run_cmd = "" if args.job_id else "srun"
-    if args.data.startswith("s3://"):
-        dataset_download_cmd = f"""
-{run_cmd} rm -rf {LOCAL_TMP_PATH_ON_NODE}/dataset
-{run_cmd} {S5CMD_PATH} cp '{args.data.removesuffix("/")}/*' {local_dataset_path}
-# """
+    if local_dataset_paths:
+        dataset_download_cmd = f"{run_cmd} rm -rf {LOCAL_TMP_PATH_ON_NODE}/dataset\n"
+        for s3_path, local_path in local_dataset_paths:
+            dataset_download_cmd += f"{run_cmd} {S5CMD_PATH} cp '{s3_path.removesuffix('/')}/*' {local_path}\n"
+        dataset_download_cmd += "# "
     
     # Build SLURM job script
     job_name = name
@@ -397,7 +411,7 @@ echo "END TIME: $(date)"
 
 # Clean up dataset if downloaded from S3
 {
-    "" if not args.data.startswith("s3://") else f"{run_cmd} rm -rf {local_dataset_path}"
+    "" if not local_dataset_paths else f"{run_cmd} rm -rf {LOCAL_TMP_PATH_ON_NODE}/dataset"
 }
 """
     

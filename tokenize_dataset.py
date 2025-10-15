@@ -229,8 +229,8 @@ def main():
             time="20:00:00",
             partition="hopper-cpu",
             logging_dir=f"{logging_base_path}/tokenized_merged",
-            cpus_per_task=8,
-            mem_per_cpu_gb=2,
+            cpus_per_task=2,
+            mem_per_cpu_gb=8,
             qos=args.qos,
             depends=tokenizer_executor
         )

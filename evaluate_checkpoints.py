@@ -373,7 +373,6 @@ module purge
 module load cuda/12.4
 
 hf auth login --token {os.getenv('HF_TOKEN')}
-hf auth whoami
 
 echo "Running on $COUNT_NODE nodes: $HOSTNAMES"
 
@@ -439,7 +438,7 @@ echo "Running evaluation for checkpoint $STEP with tasks: $TASKS_TO_EVAL"
 CUDA_DEVICE_MAX_CONNECTIONS=1 accelerate launch {'--multi_gpu' if args.gpus > 1 else ''} {'--num_processes ' + str(args.gpus) if args.gpus > 1 else ''} \\
     -m lighteval accelerate \\
     --custom-tasks {custom_tasks_path} \\
-    --dataset-loading-processes {11*args.gpus} \\
+    --dataset-loading-processes 0 \\
     --max-samples 1000 \\
     --output-dir {args.logging_dir} \\
     --save-details \\

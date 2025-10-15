@@ -230,7 +230,10 @@ def read_tasks_from_file(tasks_list_path: str) -> Set[str]:
 parser = argparse.ArgumentParser("Launch evals for a set of checkpoints.")
 
 parser.add_argument(
-    "--name", type=str, required=True, help="Model name on s3. Example: fineweb-edu-lq-20BT-21B-seed-606. Use commas for multiple models"
+    "--name", type=str, required=False, help="Model name on s3. Example: fineweb-edu-lq-20BT-21B-seed-606. Use commas for multiple models"
+)
+parser.add_argument(
+    "--all", action="store_true", default=False, help="Evaluate all models found in s3_prefix. Overrides --name"
 )
 parser.add_argument(
     "--s3_prefix", type=str, help="s3://path/to/models/ by default", default=f"{S3_BASE_PATH}/checkpoints"
@@ -259,8 +262,33 @@ parser.add_argument("--debug", action="store_true", default=False)
 def main():
     args = parser.parse_args()
 
+    # Determine which models to evaluate
+    if args.all:
+        # Discover all models in the S3 prefix
+        logger.info(f"Discovering all models in {args.s3_prefix}")
+        df = get_datafolder(args.s3_prefix)
+        try:
+            all_models = sorted(df.ls("", detail=False))
+            if not all_models:
+                logger.error(f"No models found in {args.s3_prefix}")
+                return
+            logger.info(f"Found {len(all_models)} models: {all_models}")
+            model_names = all_models
+        except FileNotFoundError:
+            logger.error(f"S3 path not found: {args.s3_prefix}")
+            return
+        except Exception as e:
+            logger.error(f"Error accessing S3 path {args.s3_prefix}: {e}")
+            return
+    elif args.name:
+        model_names = args.name.split(",")
+    else:
+        logger.error("Either --name or --all must be specified")
+        parser.print_help()
+        return
+
     job_id = None
-    for model_name, seed in itertools.product(args.name.split(","), args.seed.split(",")):
+    for model_name, seed in itertools.product(model_names, args.seed.split(",")):
         formatted_model_name = args.model_template.format(name=model_name, seed=seed)
         
         # Use the provided task paths (English only)

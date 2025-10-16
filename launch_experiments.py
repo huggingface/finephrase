@@ -135,14 +135,13 @@ class ExperimentLauncher:
         # Add the run name as --name argument first
         cmd.extend(['--name', run_config['name']])
         
-        # Add fixed arguments (apply to all runs)
+        # Merge fixed_args and run args, with run args overriding fixed_args
         fixed_args = self.config.get('fixed_args', {})
-        for key, value in fixed_args.items():
-            self._add_argument_to_command(cmd, key, value)
-        
-        # Add variable arguments (specific to this run)
         var_args = run_config.get('args', {})
-        for key, value in var_args.items():
+        merged_args = {**fixed_args, **var_args}
+        
+        # Add merged arguments to command
+        for key, value in merged_args.items():
             self._add_argument_to_command(cmd, key, value)
         
         return cmd

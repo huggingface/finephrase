@@ -19,7 +19,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
@@ -169,8 +169,8 @@ class ExperimentLauncher:
             return True
         return run_name in self.selected_runs
     
-    def _execute_command(self, cmd: List[str], run_name: str) -> int:
-        """Execute a command (Slurm job submission) and return the exit code."""
+    def _execute_command(self, cmd: List[str], run_name: str) -> Tuple[int, bool]:
+        """Execute a command (Slurm job submission) and indicate if it was skipped."""
         print(f"\n{'='*60}")
         print(f"Submitting Slurm job for run: {run_name}")
         print(f"Command: {' '.join(cmd)}")
@@ -178,7 +178,7 @@ class ExperimentLauncher:
         
         if self.dry_run:
             print("[DRY RUN] Slurm job would be submitted")
-            return 0
+            return 0, False
         
         try:
             # Execute the command (which will submit a Slurm job)
@@ -189,19 +189,19 @@ class ExperimentLauncher:
                 print(f"Job submission output: {result.stdout.strip()}")
             if result.stderr:
                 print(f"Job submission errors: {result.stderr.strip()}")
-                
-            if result.returncode == 0:
-                print(f"✅ Slurm job for {run_name} submitted successfully")
-            else:
+            combined_output = "\n".join(filter(None, [result.stdout, result.stderr]))
+            skipped = "Skipping launch" in combined_output or "already been completed" in combined_output
+
+            if result.returncode != 0:
                 print(f"❌ Failed to submit Slurm job for {run_name}")
-                
-            return result.returncode
+            
+            return result.returncode, skipped
         except KeyboardInterrupt:
             print(f"\nInterrupted during job submission for run: {run_name}")
             raise
         except Exception as e:
             print(f"Error submitting job for run {run_name}: {e}")
-            return 1
+            return 1, False
     
     def launch(self) -> Dict[str, int]:
         """
@@ -222,6 +222,7 @@ class ExperimentLauncher:
             print(f"Selected runs: {', '.join(self.selected_runs)}")
         
         results = {}
+        skipped_runs = set()
         
         for run_config in self.config['runs']:
             run_name = run_config['name']
@@ -232,8 +233,10 @@ class ExperimentLauncher:
             
             # Build and submit Slurm job
             cmd = self._build_command(run_config)
-            exit_code = self._execute_command(cmd, run_name)
+            exit_code, skipped = self._execute_command(cmd, run_name)
             results[run_name] = exit_code
+            if skipped:
+                skipped_runs.add(run_name)
             
             if exit_code != 0:
                 print(f"❌ Slurm job submission failed for {run_name} (exit code {exit_code})")
@@ -243,7 +246,10 @@ class ExperimentLauncher:
                     print("Stopping job submissions due to failure")
                     break
             elif not self.dry_run:
-                print(f"✅ Slurm job submitted successfully for {run_name}")
+                if skipped:
+                    print(f"ℹ️ Slurm job skipped for {run_name} (already completed)")
+                else:
+                    print(f"✅ Slurm job submitted successfully for {run_name}")
         
         # Print summary
         print(f"\n{'='*60}")
@@ -254,15 +260,22 @@ class ExperimentLauncher:
             if self.dry_run:
                 status = "✅ WOULD SUBMIT" if exit_code == 0 else f"❌ WOULD FAIL ({exit_code})"
             else:
-                status = "✅ SUBMITTED" if exit_code == 0 else f"❌ FAILED ({exit_code})"
+                if run_name in skipped_runs:
+                    status = "⏭️ SKIPPED"
+                else:
+                    status = "✅ SUBMITTED" if exit_code == 0 else f"❌ FAILED ({exit_code})"
             print(f"{run_name:<30} {status}")
         
         if results:
-            successful_submissions = sum(1 for code in results.values() if code == 0)
+            successful_submissions = sum(
+                1 for name, code in results.items() if code == 0 and name not in skipped_runs
+            )
             if self.dry_run:
                 print(f"\n{successful_submissions}/{len(results)} jobs would be submitted successfully")
             else:
                 print(f"\n{successful_submissions}/{len(results)} jobs submitted successfully")
+                if skipped_runs:
+                    print(f"{len(skipped_runs)} job(s) skipped (already completed)")
                 if successful_submissions > 0:
                     print("Use 'squeue -u $USER' to monitor job status")
                     print("Use 'scancel <job_id>' to cancel jobs if needed")

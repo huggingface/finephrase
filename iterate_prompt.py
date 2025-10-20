@@ -1,18 +1,30 @@
 """
 Interactive script to iterate through dataset examples with quick prompt changes.
 
-Uses LiteLLM API for fast iteration with Gemma models on HF inference endpoints.
-Allows changing prompts and re-running on same or new examples interactively.
+Supports Gemma models via LiteLLM (HF inference endpoints) or optional local
+transformers generation. Allows changing prompts and re-running on same or new
+examples interactively.
 """
 
 import argparse
 import os
 import random
 from pathlib import Path
+from typing import Optional, Tuple
+
 import litellm
+import torch
 from datasets import load_dataset
 from dotenv import load_dotenv
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    PreTrainedModel,
+    PreTrainedTokenizer,
+)
+
+torch.set_float32_matmul_precision('high')
 
 from utils import calculate_edu_score_dict, print_debug_output
 from datatrove.data import Document
@@ -121,6 +133,9 @@ def count_tokens(text: str, tokenizer) -> int:
     return 0
 
 
+LocalModelBundle = Tuple[PreTrainedTokenizer, PreTrainedModel, torch.device]
+
+
 def call_model(
     prompt: str,
     api_base: str,
@@ -130,8 +145,27 @@ def call_model(
     temperature: float,
     top_p: float,
     top_k: int,
+    run_local: bool = False,
+    local_model_bundle: Optional[LocalModelBundle] = None,
 ) -> str:
-    """Call the model via LiteLLM API."""
+    """Generate a response either remotely (LiteLLM) or locally (transformers)."""
+    if run_local:
+        if not local_model_bundle:
+            raise ValueError("Local model bundle is required when run_local=True")
+
+        tokenizer, model, device = local_model_bundle
+
+        return run_local_generation(
+            tokenizer,
+            model,
+            device,
+            prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+        )
+
     messages = [
         {"role": "user", "content": prompt}
     ]
@@ -151,6 +185,41 @@ def call_model(
     return response.choices[0].message.content
 
 
+def run_local_generation(
+    tokenizer: PreTrainedTokenizer,
+    model: PreTrainedModel,
+    device: torch.device,
+    prompt: str,
+    *,
+    max_tokens: int,
+    temperature: float,
+    top_p: float,
+    top_k: int,
+) -> str:
+    tokenizer.pad_token_id = tokenizer.pad_token_id or tokenizer.eos_token_id
+
+    inputs = tokenizer(prompt, return_tensors="pt")
+    if device:
+        inputs = {key: value.to(device) for key, value in inputs.items()}
+
+    with torch.no_grad():
+        output_ids = model.generate(
+            inputs["input_ids"],
+            attention_mask=inputs.get("attention_mask"),
+            max_new_tokens=max_tokens,
+            do_sample=temperature > 0,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.pad_token_id,
+        )
+
+    # Decode only the newly generated continuation
+    generated_only = output_ids[0][inputs["input_ids"].shape[1]:]
+    return tokenizer.decode(generated_only, skip_special_tokens=True)
+
+
 def process_example(
     text: str,
     prompt: str,
@@ -163,13 +232,24 @@ def process_example(
     top_k: int,
     tokenizer,
     edu_tokenizer,
-    edu_model
+    edu_model,
+    *,
+    run_local: bool,
+    local_model_bundle: Optional[LocalModelBundle],
 ) -> Document:
     """Process a single example and return Document with metadata."""
     # Run rephrasing
     generated_text = call_model(
-        prompt.replace("[TEXT]", text), api_base, api_key, model_name,
-        max_tokens, temperature, top_p, top_k
+        prompt.replace("[TEXT]", text),
+        api_base,
+        api_key,
+        model_name,
+        max_tokens,
+        temperature,
+        top_p,
+        top_k,
+        run_local=run_local,
+        local_model_bundle=local_model_bundle,
     )
     
     # Calculate metrics
@@ -213,7 +293,10 @@ def run_examples(
     top_k: int,
     tokenizer,
     edu_tokenizer,
-    edu_model
+    edu_model,
+    *,
+    run_local: bool,
+    local_model_bundle: Optional[LocalModelBundle],
 ):
     """Run rephrasing on examples and display results."""
     print(f"\n{'='*100}")
@@ -229,7 +312,9 @@ def run_examples(
             doc = process_example(
                 text, prompt, api_base, api_key, model_name,
                 max_tokens, temperature, top_p, top_k,
-                tokenizer, edu_tokenizer, edu_model
+                tokenizer, edu_tokenizer, edu_model,
+                run_local=run_local,
+                local_model_bundle=local_model_bundle,
             )
             print_debug_output(doc, "", doc.text)
         except Exception as e:
@@ -242,6 +327,7 @@ def warmup_model(api_base: str, api_key: str, model_name: str) -> None:
     """Send a test request to wake up the model endpoint."""
     print(f"🔥 Warming up {model_name}...")
     try:
+        # Only perform warmup for remote usage. Local run should not call remote.
         response = call_model(
             prompt="You are a helpful assistant.",
             api_base=api_base,
@@ -251,6 +337,7 @@ def warmup_model(api_base: str, api_key: str, model_name: str) -> None:
             temperature=1.0,
             top_p=0.95,
             top_k=64,
+            run_local=False,
         )
         print(f"✓ {model_name} ready! (Response: {response[:50]}...)")
     except Exception as e:
@@ -277,11 +364,52 @@ def setup_model(model_size: str) -> tuple[str, str, str]:
     return model_name, api_base, api_key
 
 
+def setup_local_model(model_name: str) -> LocalModelBundle:
+    """Download and load a local causal LM for streaming inference."""
+    print(f"\n🎯 Setting up local model: {model_name}")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        print(f"   Using CUDA device: {torch.cuda.get_device_name(0)}")
+    else:
+        print("   Using CPU (this may be slow!) Run `srun --gpus=1 --qos=high --time=\"04:00:00\" --pty bash` to speed up generation.")
+
+    if device.type == "cuda" and hasattr(torch.cuda, "is_bf16_supported") and torch.cuda.is_bf16_supported():
+        torch_dtype = torch.bfloat16
+    elif device.type == "cuda":
+        torch_dtype = torch.float16
+    else:
+        torch_dtype = torch.float32
+
+    generation_tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if generation_tokenizer.pad_token_id is None:
+        generation_tokenizer.pad_token_id = generation_tokenizer.eos_token_id
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype=torch_dtype,
+        low_cpu_mem_usage=True,
+    )
+    model = model.to(device)
+    model.eval()
+
+    print("✓ Local model ready!")
+    return generation_tokenizer, model, device
+
+
 def interactive_loop(args):
     """Main interactive loop."""
     # Setup initial model
     current_model_size = args.model_size
-    model_name, api_base, api_key = setup_model(current_model_size)
+
+    local_model_bundle = None
+    if args.run_local:
+        remote_friendly_name = GEMMA_MODELS[current_model_size]["name"]
+        model_name = remote_friendly_name.replace("huggingface/", "")
+        api_base = ""
+        api_key = ""
+        local_model_bundle = setup_local_model(model_name)
+    else:
+        model_name, api_base, api_key = setup_model(current_model_size)
     
     # Load tokenizer for counting
     print(f"📊 Loading tokenizer: {args.tokenizer}")
@@ -347,7 +475,9 @@ def interactive_loop(args):
                 current_examples, current_prompt,
                 api_base, api_key, model_name,
                 args.max_tokens, args.temperature, args.top_p, args.top_k,
-                tokenizer, edu_tokenizer, edu_model
+                tokenizer, edu_tokenizer, edu_model,
+                run_local=args.run_local,
+                local_model_bundle=local_model_bundle,
             )
             
         elif choice == "2":
@@ -373,7 +503,9 @@ def interactive_loop(args):
                 current_examples, current_prompt,
                 api_base, api_key, model_name,
                 args.max_tokens, args.temperature, args.top_p, args.top_k,
-                tokenizer, edu_tokenizer, edu_model
+                tokenizer, edu_tokenizer, edu_model,
+                run_local=args.run_local,
+                local_model_bundle=local_model_bundle,
             )
             
         elif choice == "3":
@@ -383,7 +515,14 @@ def interactive_loop(args):
             
             if new_model_size in GEMMA_MODELS:
                 current_model_size = new_model_size
-                model_name, api_base, api_key = setup_model(current_model_size)
+                if args.run_local:
+                    remote_friendly_name = GEMMA_MODELS[current_model_size]["name"]
+                    model_name = remote_friendly_name.replace("huggingface/", "")
+                    local_model_bundle = setup_local_model(model_name)
+                    api_base = ""
+                    api_key = ""
+                else:
+                    model_name, api_base, api_key = setup_model(current_model_size)
             else:
                 print(f"❌ Invalid model size. Supported: {', '.join(GEMMA_MODELS.keys())}")
             
@@ -400,11 +539,16 @@ parser.add_argument(
     "--prompt", type=str, required=True, help="Prompt template path (relative to prompts/)"
 )
 parser.add_argument(
-    "--model-size", 
-    type=str, 
+    "--model-size",
+    type=str,
     default="4b",
     choices=list(GEMMA_MODELS.keys()),
     help="Gemma model size (default: 4b)"
+)
+parser.add_argument(
+    "--run-local",
+    action="store_true",
+    help="Run inference locally using transformers instead of remote endpoint",
 )
 parser.add_argument(
     "--n-examples", type=int, default=5, help="Number of examples to process"

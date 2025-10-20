@@ -97,13 +97,18 @@ class ExperimentLauncher:
         
         # Get the set of varied arguments from the first run
         first_run_args = set(self.config['runs'][0].get('args', {}).keys())
+        fixed_args = set(self.config.get('fixed_args', {}).keys())
         
         # Check that all runs have the same varied arguments
         for i, run in enumerate(self.config['runs'][1:], 1):
             run_args = set(run.get('args', {}).keys())
-            if run_args != first_run_args:
-                missing_in_run = first_run_args - run_args
-                extra_in_run = run_args - first_run_args
+
+            comparable_first_run_args = first_run_args - fixed_args
+            comparable_run_args = run_args - fixed_args
+
+            if comparable_run_args != comparable_first_run_args:
+                missing_in_run = comparable_first_run_args - comparable_run_args
+                extra_in_run = comparable_run_args - comparable_first_run_args
                 error_parts = []
                 if missing_in_run:
                     error_parts.append(f"missing: {', '.join(missing_in_run)}")

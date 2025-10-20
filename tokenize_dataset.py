@@ -1,5 +1,6 @@
 import argparse
 
+from datatrove.io import get_datafolder
 from datatrove.pipeline.base import PipelineStep
 
 from utils import ENV_COMMAND, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
@@ -104,6 +105,38 @@ class DocumentSplitter(PipelineStep):
         
         # Absolute last resort: hard split at character limit
         return max_chars
+
+
+class PruneEmptyTokenizedFiles(PipelineStep):
+    def __init__(self, input_folder: str):
+        super().__init__()
+        self.input_folder = get_datafolder(input_folder)
+
+    def run(self, data, rank: int = 0, world_size: int = 1):
+        assert world_size == 1, "world_size must be 1 for pruning empty tokenized files"
+
+        datafiles = self.input_folder.list_files(glob_pattern="*.ds")
+        for datafile in datafiles:
+            index_path = f"{datafile}.index"
+            if not self.input_folder.exists(index_path):
+                continue
+
+            with self.input_folder.open(index_path, "rb") as index_file:
+                if index_file.read(1):
+                    continue
+
+            self.input_folder.rm_file(datafile)
+            self.input_folder.rm_file(index_path)
+
+            metadata_path = f"{datafile}.metadata"
+            if self.input_folder.exists(metadata_path):
+                self.input_folder.rm_file(metadata_path)
+
+            loss_path = f"{datafile}.loss"
+            if self.input_folder.exists(loss_path):
+                self.input_folder.rm_file(loss_path)
+
+        return data
 
 parser = argparse.ArgumentParser("Sample and tokenize a dataset.")
 
@@ -218,6 +251,9 @@ def main():
         merge_executor = SlurmPipelineExecutor(
                 job_name=f"merge-{args.name}",
                 pipeline=[
+                PruneEmptyTokenizedFiles(
+                    input_folder=f"{args.output_path}/tokenized/{args.name}",
+                ),
                 DocumentTokenizerMerger(
                     input_folder=f"{args.output_path}/tokenized/{args.name}",
                     output_folder=f"{args.output_path}/tokenized_merged/{args.name}",
@@ -230,7 +266,7 @@ def main():
             partition="hopper-cpu",
             logging_dir=f"{logging_base_path}/tokenized_merged",
             cpus_per_task=2,
-            mem_per_cpu_gb=8,
+            mem_per_cpu_gb=32,
             qos=args.qos,
             depends=tokenizer_executor
         )

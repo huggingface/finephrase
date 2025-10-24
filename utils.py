@@ -10,6 +10,7 @@ USER = os.environ.get('USER')
 PROJECT_NAME = "finephrase"
 
 BASE_PATH = f"/fsx/{USER}"
+CACHE_PATH = f"/fsx/{USER}/.cache"  # This is also the HUGGINGFACE_HUB_CACHE
 PROJECT_PATH = f"{BASE_PATH}/projects/{PROJECT_NAME}"
 CHECKPOINTS_PATH = f"{BASE_PATH}/checkpoints/{PROJECT_NAME}"
 LOG_BASE_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments"

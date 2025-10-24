@@ -83,7 +83,6 @@ parser.add_argument("--resume-checkpoint-path", help="Path to the checkpoint to 
 parser.add_argument("--decay-exp", help="Run a decay experiment", action="store_true")
 parser.add_argument("--dep-job-id", help="Dependency job", type=str, default=None)
 
-# Current command: train s3://finephrase/experiments/tokenized/fineweb-100BT/ fineweb-20BT --nodes 4 --qos high
 
 def main():
     args = parser.parse_args()

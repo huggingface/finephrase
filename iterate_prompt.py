@@ -546,6 +546,8 @@ parser.add_argument(
     help="Gemma model size (default: 4b)"
 )
 parser.add_argument(
+    # TODO: In this version the model often goes on for a long time before stopping,
+    #  we might need to add stop sequences or switch to vllm
     "--run-local",
     action="store_true",
     help="Run inference locally using transformers instead of remote endpoint",

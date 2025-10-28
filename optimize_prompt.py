@@ -26,7 +26,8 @@ from dotenv import load_dotenv
 from statistics import mean
 from tqdm import tqdm
 
-from utils import ENV_COMMAND, LOG_BASE_PATH, calculate_edu_score, calculate_dclm_score
+from utils import ENV_COMMAND, LOG_BASE_PATH
+from quality_scores import calculate_edu_score, calculate_dclm_score
 
 SCORE_WEIGHTS = {
     "edu_improvement": 0.40,
@@ -105,7 +106,7 @@ class DspyGepaOptimizer(PipelineStep):
         
 
     def calculate_edu_score(self, text: str) -> float:
-        return calculate_edu_score(text, self.edu_tokenizer, self.edu_model)
+        return calculate_edu_score(text)
 
     def _ensure_models(self) -> None:
         if self.lm is None:
@@ -200,10 +201,6 @@ class DspyGepaOptimizer(PipelineStep):
             # Prepare datasets
             self.trainset, self.valset, self.testset = self.prepare_datasets(self.train_size, self.val_size, self.test_size, self.seed)
 
-            # Load edu classifier lazily here (keeps submission lightweight)
-            from transformers import AutoTokenizer, AutoModelForSequenceClassification
-            self.edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceFW/fineweb-edu-classifier")
-            self.edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceFW/fineweb-edu-classifier").eval()
         
             # Run optimization
             optimized_module = self.optimize_task_module()

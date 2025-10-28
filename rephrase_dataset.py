@@ -22,13 +22,13 @@ from utils import (
     LOG_BASE_PATH,
     S3_BASE_PATH,
     build_reader,
-    EduScoreStatsLogger,
-    calculate_edu_score_dict,
     print_debug_output,
 )
-
-EDU_CLASSIFIER_NAME = "HuggingFaceFW/fineweb-edu-classifier"
-
+from quality_scores import (
+    QualityScoreStatsLogger,
+    calculate_edu_score,
+    calculate_dclm_score,
+)
 
 def load_prompt_template(template_path: str) -> str:
     """
@@ -153,10 +153,6 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
     """
     # Lazily initialized cache for token counting tokenizer
     tokenizer = None
-    from transformers import AutoTokenizer, AutoModelForSequenceClassification
-
-    edu_tokenizer = AutoTokenizer.from_pretrained(EDU_CLASSIFIER_NAME, local_files_only=True)
-    edu_model = AutoModelForSequenceClassification.from_pretrained(EDU_CLASSIFIER_NAME, local_files_only=True).eval()
         
 
     def count_tokens(text: str) -> int:
@@ -292,9 +288,15 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         thinking_token_count = count_tokens(thinking_text)
         final_output_token_count = count_tokens(final_output_text)
         
-        input_edu_scores = calculate_edu_score_dict(document.text, edu_tokenizer, edu_model)
-        thinking_edu_scores = calculate_edu_score_dict(thinking_text, edu_tokenizer, edu_model)
-        final_output_edu_scores = calculate_edu_score_dict(final_output_text, edu_tokenizer, edu_model)
+        # Calculate EDU scores
+        input_edu_score = calculate_edu_score(document.text)
+        thinking_edu_score = calculate_edu_score(thinking_text)
+        final_output_edu_score = calculate_edu_score(final_output_text)
+
+        # Calculate DCLM scores
+        input_dclm_score = calculate_dclm_score(document.text)
+        thinking_dclm_score = calculate_dclm_score(thinking_text)
+        final_output_dclm_score = calculate_dclm_score(final_output_text)
         
         # Collect input-related metadata fields to move
         input_metadata_fields = ["dump", "url", "date", "file_path", "language", "language_score", "filter_reason"]
@@ -307,22 +309,27 @@ def create_postprocess_fn(debug: bool = False, tokenizer_name=None, model_name=N
         document.metadata["input"] = {
             "text": document.text,
             "token_count": input_token_count,
-            **input_edu_scores,
+            "edu_score": input_edu_score,
+            "dclm_score": input_dclm_score,
             **input_metadata
         }
         
         document.metadata["thinking"] = {
             "text": thinking_text,
             "token_count": thinking_token_count,
-            **thinking_edu_scores
+            "edu_score": thinking_edu_score,
+            "dclm_score": thinking_dclm_score
         }
         
         # Store final output metrics at top level
         document.metadata["token_count"] = final_output_token_count
-        document.metadata.update(final_output_edu_scores)
+        document.metadata["edu_score"] = final_output_edu_score
+        document.metadata["dclm_score"] = final_output_dclm_score
         document.metadata["token_reduction"] = input_token_count - final_output_token_count
-        document.metadata["edu_score_difference"] = final_output_edu_scores["score"] - input_edu_scores["score"]
-        document.metadata["edu_score_improvement"] = 1 if final_output_edu_scores["score"] > input_edu_scores["score"] else 0
+        document.metadata["edu_score_difference"] = final_output_edu_score - input_edu_score
+        document.metadata["edu_score_improvement"] = 1 if final_output_edu_score > input_edu_score else 0
+        document.metadata["dclm_score_difference"] = final_output_dclm_score - input_dclm_score
+        document.metadata["dclm_score_improvement"] = 1 if final_output_dclm_score > input_dclm_score else 0
         
         # Store processing configuration
         if tokenizer_name:
@@ -478,7 +485,7 @@ def main():
     # Pre-cache models before job submission to ensure they're available when HF_HUB_OFFLINE=1 is set on workers
     # This runs in the main submission process where network access is available
     if not args.run_local:
-        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        from transformers import AutoTokenizer
         from huggingface_hub import snapshot_download
         print("Verifying models are cached (required for offline workers)...")
         try:
@@ -489,11 +496,6 @@ def main():
             # Cache the token counting tokenizer
             print(f"  - Caching {args.tokenizer} tokenizer...")
             AutoTokenizer.from_pretrained(args.tokenizer)
-            
-            # Cache the edu-classifier (used in postprocessing)
-            print(f"  - Caching fineweb-edu-classifier (model + tokenizer)...")
-            AutoTokenizer.from_pretrained(EDU_CLASSIFIER_NAME)
-            AutoModelForSequenceClassification.from_pretrained(EDU_CLASSIFIER_NAME)
             
             print("✓ All models cached successfully - workers can run offline")
         except Exception as e:
@@ -563,7 +565,7 @@ def main():
                 ),
             ),
             JsonlReader(output_path),
-            EduScoreStatsLogger(),
+            QualityScoreStatsLogger(),
         ]
 
     if args.run_local:

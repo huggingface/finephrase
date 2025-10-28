@@ -26,7 +26,8 @@ from transformers import (
 
 torch.set_float32_matmul_precision('high')
 
-from utils import calculate_edu_score_dict, print_debug_output
+from utils import print_debug_output
+from quality_scores import calculate_edu_score, calculate_dclm_score
 from datatrove.data import Document
 
 # Load environment variables
@@ -231,8 +232,6 @@ def process_example(
     top_p: float,
     top_k: int,
     tokenizer,
-    edu_tokenizer,
-    edu_model,
     *,
     run_local: bool,
     local_model_bundle: Optional[LocalModelBundle],
@@ -256,8 +255,13 @@ def process_example(
     input_token_count = count_tokens(text, tokenizer)
     output_token_count = count_tokens(generated_text, tokenizer)
     
-    input_edu_scores = calculate_edu_score_dict(text, edu_tokenizer, edu_model)
-    output_edu_scores = calculate_edu_score_dict(generated_text, edu_tokenizer, edu_model)
+    # EDU scores
+    input_edu_score = calculate_edu_score(text)
+    output_edu_score = calculate_edu_score(generated_text)
+    
+    # DCLM scores
+    input_dclm_score = calculate_dclm_score(text)
+    output_dclm_score = calculate_dclm_score(generated_text)
     
     # Create document with metadata
     doc = Document(id="", text=generated_text)
@@ -265,17 +269,23 @@ def process_example(
         "input": {
             "text": text,
             "token_count": input_token_count,
-            **input_edu_scores
+            "edu_score": input_edu_score,
+            "dclm_score": input_dclm_score,
         },
         "thinking": {
             "text": "",
             "token_count": 0,
+            "edu_score": 0.0,
+            "dclm_score": 0.0,
         },
         "token_count": output_token_count,
-        **output_edu_scores,
         "token_reduction": input_token_count - output_token_count,
-        "edu_score_difference": output_edu_scores["score"] - input_edu_scores["score"],
-        "edu_score_improvement": 1 if output_edu_scores["score"] > input_edu_scores["score"] else 0,
+        "edu_score": output_edu_score,
+        "edu_score_difference": output_edu_score - input_edu_score,
+        "edu_score_improvement": 1 if output_edu_score > input_edu_score else 0,
+        "dclm_score": output_dclm_score,
+        "dclm_score_difference": output_dclm_score - input_dclm_score,
+        "dclm_score_improvement": 1 if output_dclm_score > input_dclm_score else 0,
     }
     
     return doc
@@ -292,8 +302,6 @@ def run_examples(
     top_p: float,
     top_k: int,
     tokenizer,
-    edu_tokenizer,
-    edu_model,
     *,
     run_local: bool,
     local_model_bundle: Optional[LocalModelBundle],
@@ -312,7 +320,7 @@ def run_examples(
             doc = process_example(
                 text, prompt, api_base, api_key, model_name,
                 max_tokens, temperature, top_p, top_k,
-                tokenizer, edu_tokenizer, edu_model,
+                tokenizer,
                 run_local=run_local,
                 local_model_bundle=local_model_bundle,
             )
@@ -475,7 +483,7 @@ def interactive_loop(args):
                 current_examples, current_prompt,
                 api_base, api_key, model_name,
                 args.max_tokens, args.temperature, args.top_p, args.top_k,
-                tokenizer, edu_tokenizer, edu_model,
+                tokenizer,
                 run_local=args.run_local,
                 local_model_bundle=local_model_bundle,
             )
@@ -503,7 +511,7 @@ def interactive_loop(args):
                 current_examples, current_prompt,
                 api_base, api_key, model_name,
                 args.max_tokens, args.temperature, args.top_p, args.top_k,
-                tokenizer, edu_tokenizer, edu_model,
+                tokenizer,
                 run_local=args.run_local,
                 local_model_bundle=local_model_bundle,
             )

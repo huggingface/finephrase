@@ -153,14 +153,14 @@ class DspyGepaOptimizer(PipelineStep):
         orig = self.calculate_edu_score(original_text)
         gen = self.calculate_edu_score(generated_text)
         improvement = gen - orig
-        normalized = max(0.0, min(1.0, (improvement + 5.0) / 10.0))
+        normalized = 0.0 if improvement <= 0 else min(1.0, improvement / 5.0)
         return orig, gen, improvement, normalized
 
     def compute_dclm_improvement(self, original_text: str, generated_text: str) -> tuple[float, float, float, float]:
         orig = calculate_dclm_score(original_text)
         gen = calculate_dclm_score(generated_text)
         improvement = gen - orig
-        normalized = max(0.0, min(1.0, (improvement + 1.0) / 2.0))
+        normalized = 0.0 if improvement <= 0 else min(1.0, improvement)
         return orig, gen, improvement, normalized
 
     def get_prompt_tokens(self) -> int:

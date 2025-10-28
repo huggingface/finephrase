@@ -26,7 +26,14 @@ from dotenv import load_dotenv
 from statistics import mean
 from tqdm import tqdm
 
-from utils import ENV_COMMAND, LOG_BASE_PATH, calculate_edu_score
+from utils import ENV_COMMAND, LOG_BASE_PATH, calculate_edu_score, calculate_dclm_score
+
+SCORE_WEIGHTS = {
+    "edu_improvement": 0.40,
+    "dclm_improvement": 0.40,
+    "length_similarity": 0.15,
+    "prompt_efficiency": 0.05,
+}
 
 from datatrove.pipeline.base import PipelineStep
 from datatrove.data import DocumentsPipeline
@@ -87,28 +94,11 @@ class DspyGepaOptimizer(PipelineStep):
         self.run_dir = f"{self.log_dir}/{self.task}/{generation_model_name}/{train_val_size}/{run_name}"
         Path(self.run_dir).mkdir(parents=True, exist_ok=True)
         
-        # Parse model strings and create models
-        generation_provider, generation_model_name = self.parse_model_string(self.generation_model)
-        reflection_provider, reflection_model_name = self.parse_model_string(self.reflection_model)
-        
-        # Create models
-        self.lm = self.configure_model_provider(
-            generation_provider, 
-            generation_model_name, 
-            max_tokens=4096,  # we only train on 4096 tokens
-            temperature=1.0,
-            top_p=0.95,
-            top_k=64,
-        )
-        
-        self.reflection_lm = self.configure_model_provider(
-            reflection_provider, 
-            reflection_model_name, 
-            max_tokens=16384, 
-            temperature=0.6, 
-            top_p=0.95, 
-            top_k=64
-        )
+        # Parse model strings and store provider/model info; defer actual LM creation to run() to speed submission
+        self.generation_provider, self.generation_model_name = self.parse_model_string(self.generation_model)
+        self.reflection_provider, self.reflection_model_name = self.parse_model_string(self.reflection_model)
+        self.lm = None
+        self.reflection_lm = None
 
         # Set signature class
         self.signature_cls = Rephraser if self.task == "rephrase" else Summarizer
@@ -117,12 +107,90 @@ class DspyGepaOptimizer(PipelineStep):
     def calculate_edu_score(self, text: str) -> float:
         return calculate_edu_score(text, self.edu_tokenizer, self.edu_model)
 
+    def _ensure_models(self) -> None:
+        if self.lm is None:
+            self.lm = self.configure_model_provider(
+                self.generation_provider,
+                self.generation_model_name,
+                max_tokens=4096, # we only train on 4096 tokens
+                temperature=1.0,
+                top_p=0.95,
+                top_k=64,
+            )
+        if self.reflection_lm is None:
+            self.reflection_lm = self.configure_model_provider(
+                self.reflection_provider,
+                self.reflection_model_name,
+                max_tokens=16384,
+                temperature=0.6,
+                top_p=0.95,
+                top_k=64,
+            )
+
+    # Make pickling/lightweight submission faster by dropping heavy runtime-only attributes
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        for attr in ("lm", "reflection_lm", "edu_tokenizer", "edu_model"):
+            if attr in state:
+                state[attr] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def calculate_prompt_efficiency_score(self, prompt_tokens: int) -> float:
+        max_reasonable_prompt_tokens = 500  # Keep existing behavior; can be tuned
+        return max(0.0, 1.0 - (prompt_tokens / max_reasonable_prompt_tokens))
+
+    def compute_length_similarity(self, original_text: str, generated_text: str) -> float:
+        input_token_count = len(original_text.split())
+        output_token_count = len(generated_text.split())
+        token_diff = abs(input_token_count - output_token_count)
+        return max(0.0, 1.0 - (token_diff / max(input_token_count, 1)))
+
+    def compute_edu_improvement(self, original_text: str, generated_text: str) -> tuple[float, float, float, float]:
+        orig = self.calculate_edu_score(original_text)
+        gen = self.calculate_edu_score(generated_text)
+        improvement = gen - orig
+        normalized = max(0.0, min(1.0, (improvement + 5.0) / 10.0))
+        return orig, gen, improvement, normalized
+
+    def compute_dclm_improvement(self, original_text: str, generated_text: str) -> tuple[float, float, float, float]:
+        orig = calculate_dclm_score(original_text)
+        gen = calculate_dclm_score(generated_text)
+        improvement = gen - orig
+        normalized = max(0.0, min(1.0, (improvement + 1.0) / 2.0))
+        return orig, gen, improvement, normalized
+
+    def get_prompt_tokens(self) -> int:
+        prompt_tokens = 0
+        if hasattr(self, 'lm') and hasattr(self.lm, 'history') and self.lm.history:
+            prompt_text = self.lm.history[-1]['messages'][0]['content']
+            prompt_tokens = len(prompt_text.split())
+        return prompt_tokens
+
+    def compute_final_score(
+        self,
+        normalized_edu_improvement_score: float,
+        normalized_dclm_improvement_score: float,
+        length_similarity_score: float,
+        prompt_efficiency_score: float,
+    ) -> float:
+        return (
+            SCORE_WEIGHTS["edu_improvement"] * normalized_edu_improvement_score
+            + SCORE_WEIGHTS["dclm_improvement"] * normalized_dclm_improvement_score
+            + SCORE_WEIGHTS["length_similarity"] * length_similarity_score
+            + SCORE_WEIGHTS["prompt_efficiency"] * prompt_efficiency_score
+        )
+
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         """
         Run DSPy GEPA optimization for prompt optimization.
         This pipeline step doesn't process input data but performs optimization and saves results.
         """
         with self.track_time():
+            # Lazily create models on the worker to avoid slowing submission
+            self._ensure_models()
             dspy.settings.configure(lm=self.lm)
 
             # Create slurm logs directory
@@ -132,7 +200,7 @@ class DspyGepaOptimizer(PipelineStep):
             # Prepare datasets
             self.trainset, self.valset, self.testset = self.prepare_datasets(self.train_size, self.val_size, self.test_size, self.seed)
 
-            # Load edu classifier
+            # Load edu classifier lazily here (keeps submission lightweight)
             from transformers import AutoTokenizer, AutoModelForSequenceClassification
             self.edu_tokenizer = AutoTokenizer.from_pretrained("HuggingFaceFW/fineweb-edu-classifier")
             self.edu_model = AutoModelForSequenceClassification.from_pretrained("HuggingFaceFW/fineweb-edu-classifier").eval()
@@ -162,29 +230,82 @@ class DspyGepaOptimizer(PipelineStep):
         trace: Optional[Any] = None,
         pred_name: Optional[str] = None,
         pred_trace: Optional[Any] = None,
-    ) -> float:
+    ) -> dspy.Prediction:
         """
-        Metric function for GEPA that evaluates the educational quality improvement.
-        Returns a numeric score for compatibility with DSPy's evaluation system.
+        GEPA metric with four components:
+        1. Educational quality improvement (maximize) - weight {SCORE_WEIGHTS['edu_improvement']}
+        2. DCLM quality improvement (maximize) - weight {SCORE_WEIGHTS['dclm_improvement']}
+        3. Length similarity between input/output (minimize absolute difference) - weight {SCORE_WEIGHTS['length_similarity']}
+        4. Prompt efficiency (minimize prompt tokens) - weight {SCORE_WEIGHTS['prompt_efficiency']}
+        Returns a Prediction with score and feedback. The improvement components are normalized to [0, 1].
         """
         try:
             # Get the original and generated text
-            original_text = gold.original_text
-            generated_text = pred.generated_text
+            original_text, generated_text = gold.original_text, pred.generated_text
             
-            # Calculate edu scores for both
-            original_score = self.calculate_edu_score(original_text)
-            generated_score = self.calculate_edu_score(generated_text)
+            # Component 1: Educational score improvement (maximize)
+            original_edu_score, generated_edu_score, edu_improvement, normalized_edu_improvement_score = self.compute_edu_improvement(original_text, generated_text)
+
+            # Component 2: DCLM score improvement (maximize)
+            original_dclm_score, generated_dclm_score, dclm_improvement, normalized_dclm_improvement_score = self.compute_dclm_improvement(original_text, generated_text)
+
+            # Component 3: Length similarity (minimize absolute difference)
+            length_similarity_score = self.compute_length_similarity(original_text, generated_text)
+
+            # Component 4: Prompt efficiency (minimize prompt tokens)
+            prompt_tokens = self.get_prompt_tokens()
+            prompt_efficiency_score = self.calculate_prompt_efficiency_score(prompt_tokens)
+
+            # Combine components with weights
+            final_score = self.compute_final_score(
+                normalized_edu_improvement_score,
+                normalized_dclm_improvement_score,
+                length_similarity_score,
+                prompt_efficiency_score,
+            )
             
-            # Return the improvement in educational score
-            improvement = generated_score - original_score
+            # Create detailed feedback
+            feedback_text = f"Evaluation Results:\n"
+            feedback_text += (
+                f"• Educational Quality (improvement, w={SCORE_WEIGHTS['edu_improvement']:.2f}): Original={original_edu_score:.3f}, "
+                f"Generated={generated_edu_score:.3f}, Improvement={edu_improvement:.3f} "
+                f"(normalized: {normalized_edu_improvement_score:.3f})\n"
+            )
+            feedback_text += (
+                f"• DCLM Quality (improvement, w={SCORE_WEIGHTS['dclm_improvement']:.2f}): Original={original_dclm_score:.3f}, "
+                f"Generated={generated_dclm_score:.3f}, Improvement={dclm_improvement:.3f} "
+                f"(normalized: {normalized_dclm_improvement_score:.3f})\n"
+            )
+            feedback_text += (
+                f"• Length Similarity (w={SCORE_WEIGHTS['length_similarity']:.2f}): Similarity Score={length_similarity_score:.3f}\n"
+            )
+            feedback_text += f"• Prompt Efficiency (w={SCORE_WEIGHTS['prompt_efficiency']:.2f}): {prompt_tokens} tokens, Efficiency Score={prompt_efficiency_score:.3f}\n"
+            feedback_text += f"• Final Score: {final_score:.3f} (weighted sum)\n"
             
-            # Log feedback for debugging (since we can't return it in dict format)
-            logging.debug(f"Evaluation: Original={original_score:.2f}, Output={generated_score:.2f}, Improvement={improvement:.2f}")
-            return improvement
+            # Add improvement suggestions
+            if length_similarity_score < 0.8:
+                feedback_text += "→ Maintain similar length to the input text to improve the length similarity score.\n"
+            if prompt_efficiency_score < 0.5:
+                feedback_text += "→ Make the prompt shorter to improve the prompt efficiency score.\n"
+            
+            # Log for debugging
+            logging.debug(
+                "GEPA Metric - Edu: %.3f, DCLM: %.3f, Length: %.3f, Prompt: %.3f, Final: %.3f",
+                normalized_edu_improvement_score,
+                normalized_dclm_improvement_score,
+                length_similarity_score,
+                prompt_efficiency_score,
+                final_score,
+            )
+            
+            print(feedback_text)
+
+            return dspy.Prediction(score=final_score, feedback=feedback_text)
+            
         except Exception as e:
-            logging.error(f"Error in metric evaluation: {e}")
-            return 0.0
+            error_msg = f"Error in metric evaluation: {e}"
+            logging.error(error_msg)
+            return dspy.Prediction(score=0.0, feedback=f"Evaluation failed: {error_msg}")
 
 
     def load_fineweb_samples(self, n_samples: int = 100) -> list:
@@ -426,7 +547,7 @@ class DspyGepaOptimizer(PipelineStep):
                     "kwargs": last_entry.get("kwargs"),
                 }
                 with open(Path(self.run_dir) / "last_lm_interaction.json", "w", encoding="utf-8") as f:
-                    json.dump(record, f, ensure_ascii=False, indent=2)
+                    json.dump(record, f, ensure_ascii=False, indent=2, default=str)
 
                 # Write system.md and user.md
                 messages = last_entry.get("messages") or []
@@ -475,9 +596,20 @@ class DspyGepaOptimizer(PipelineStep):
             logging.warning("Test set is empty; skipping evaluation and stats computation.")
             stats = {
                 "n": 0,
-                "mean_original_edu_score": 0.0,
-                "mean_generated_edu_score": 0.0,
-                "mean_edu_score_improvement": 0.0,
+                "means": {
+                    "original_edu": 0.0,
+                    "generated_edu": 0.0,
+                    "edu_improvement": 0.0,
+                    "original_dclm": 0.0,
+                    "generated_dclm": 0.0,
+                    "dclm_improvement": 0.0,
+                    "length_similarity": 0.0,
+                    "prompt_efficiency": 0.0,
+                    "normalized_edu_improvement": 0.0,
+                    "normalized_dclm_improvement": 0.0,
+                    "final_score": 0.0,
+                },
+                "weights": SCORE_WEIGHTS,
             }
         else:
             example_length = 2000
@@ -498,29 +630,80 @@ class DspyGepaOptimizer(PipelineStep):
             logging.info(f"Improvement: {output_score - original_score:.2f}")
 
             # Compute statistics across full test set
-            original_scores = []
-            generated_scores = []
-            improvements = []
-            
+            original_edu_scores = []
+            generated_edu_scores = []
+            edu_improvements = []
+            original_dclm_scores = []
+            generated_dclm_scores = []
+            dclm_improvements = []
+            length_similarity_scores = []
+            prompt_efficiency_scores = []
+            normalized_edu_improvement_scores = []
+            normalized_dclm_improvement_scores = []
+            final_scores = []
+
             for ex in tqdm(self.testset, desc="Evaluating test examples"):
-                orig = self.calculate_edu_score(ex.original_text)
-                gen_text = optimized_module(original_text=ex.original_text).generated_text
-                gen = self.calculate_edu_score(gen_text)
-                original_scores.append(orig)
-                generated_scores.append(gen)
-                improvements.append(gen - orig)
+                # Input/output texts
+                original_text = ex.original_text
+                result = optimized_module(original_text=original_text)
+                generated_text = result.generated_text
+
+                # EDU scores and improvement
+                orig_edu, gen_edu, edu_impr, norm_edu_impr = self.compute_edu_improvement(original_text, generated_text)
+
+                # DCLM scores and improvement
+                orig_dclm, gen_dclm, dclm_impr, norm_dclm_impr = self.compute_dclm_improvement(original_text, generated_text)
+
+                # Length similarity
+                length_sim = self.compute_length_similarity(original_text, generated_text)
+
+                # Prompt efficiency
+                prompt_tokens = self.get_prompt_tokens()
+                prompt_eff = self.calculate_prompt_efficiency_score(prompt_tokens)
+
+                # Final weighted score (align with gepa_metric weights)
+                final = self.compute_final_score(
+                    norm_edu_impr,
+                    norm_dclm_impr,
+                    length_sim,
+                    prompt_eff,
+                )
+
+                # Accumulate
+                original_edu_scores.append(orig_edu)
+                generated_edu_scores.append(gen_edu)
+                edu_improvements.append(edu_impr)
+                original_dclm_scores.append(orig_dclm)
+                generated_dclm_scores.append(gen_dclm)
+                dclm_improvements.append(dclm_impr)
+                length_similarity_scores.append(length_sim)
+                prompt_efficiency_scores.append(prompt_eff)
+                normalized_edu_improvement_scores.append(norm_edu_impr)
+                normalized_dclm_improvement_scores.append(norm_dclm_impr)
+                final_scores.append(final)
 
             stats = {
                 "n": n_test,
-                "mean_original_edu_score": float(mean(original_scores)) if original_scores else 0.0,
-                "mean_generated_edu_score": float(mean(generated_scores)) if generated_scores else 0.0,
-                "mean_edu_score_improvement": float(mean(improvements)) if improvements else 0.0,
+                "means": {
+                    "original_edu": float(mean(original_edu_scores)) if original_edu_scores else 0.0,
+                    "generated_edu": float(mean(generated_edu_scores)) if generated_edu_scores else 0.0,
+                    "edu_improvement": float(mean(edu_improvements)) if edu_improvements else 0.0,
+                    "original_dclm": float(mean(original_dclm_scores)) if original_dclm_scores else 0.0,
+                    "generated_dclm": float(mean(generated_dclm_scores)) if generated_dclm_scores else 0.0,
+                    "dclm_improvement": float(mean(dclm_improvements)) if dclm_improvements else 0.0,
+                    "length_similarity": float(mean(length_similarity_scores)) if length_similarity_scores else 0.0,
+                    "prompt_efficiency": float(mean(prompt_efficiency_scores)) if prompt_efficiency_scores else 0.0,
+                    "normalized_edu_improvement": float(mean(normalized_edu_improvement_scores)) if normalized_edu_improvement_scores else 0.0,
+                    "normalized_dclm_improvement": float(mean(normalized_dclm_improvement_scores)) if normalized_dclm_improvement_scores else 0.0,
+                    "final_score": float(mean(final_scores)) if final_scores else 0.0,
+                },
+                "weights": SCORE_WEIGHTS,
             }
 
-        stats_path = Path(self.run_dir) / "edu_score_stats.json"
+        stats_path = Path(self.run_dir) / "score_stats.json"
         with open(stats_path, "w", encoding="utf-8") as f:
             json.dump(stats, f, ensure_ascii=False, indent=2)
-        logging.info(f"Saved edu score statistics to {stats_path}")
+        logging.info(f"Saved score statistics to {stats_path}")
         
         return stats
 
@@ -538,6 +721,7 @@ parser.add_argument(
     default="huggingface/deepseek-ai/DeepSeek-V3.1-Terminus",
     help="Model name for reflection in format {provider}/{model_name} (default: huggingface/deepseek-ai/DeepSeek-V3.1-Terminus)."
 )
+# NOTE: The paper uses 150, 300, 300 in most tasks
 parser.add_argument(
     "--train-size",
     type=int,
@@ -594,8 +778,8 @@ parser.add_argument(
 parser.add_argument(
     "--qos",
     type=str,
-    default="normal",
-    help="Slurm QoS (default: normal)",
+    default="high",
+    help="Slurm QoS (default: high)",
 )
 parser.add_argument(
     "--dep-job-id",

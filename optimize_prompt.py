@@ -280,10 +280,14 @@ class DspyGepaOptimizer(PipelineStep):
             feedback_text += f"• Final Score: {final_score:.3f} (weighted sum)\n"
             
             # Add improvement suggestions
+            if normalized_edu_improvement_score < 0.2:
+                feedback_text += "→ Enhance the educational quality beyond the original text to improve the score.\n"
+            if normalized_dclm_improvement_score < 0.2:
+                feedback_text += "→ Enhance the DCLM quality beyond the original text to improve the score.\n"
             if length_similarity_score < 0.8:
-                feedback_text += "→ Maintain similar length to the input text to improve the length similarity score.\n"
+                feedback_text += "→ Keep the generated text closer to the original length to improve the score.\n"
             if prompt_efficiency_score < 0.5:
-                feedback_text += "→ Make the prompt shorter to improve the prompt efficiency score.\n"
+                feedback_text += "→ Reduce prompt length to improve efficiency.\n"
             
             # Log for debugging
             logging.debug(
@@ -294,8 +298,7 @@ class DspyGepaOptimizer(PipelineStep):
                 prompt_efficiency_score,
                 final_score,
             )
-            
-            print(feedback_text)
+            logging.debug(feedback_text)
 
             return dspy.Prediction(score=final_score, feedback=feedback_text)
             

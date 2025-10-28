@@ -44,6 +44,8 @@ dependencies = [
     "kaleido",
     "pyyaml",
     "python-dotenv",
+    "fasttext",
+    "numpy<2", # Needed for the dclm classifier
     # Note: torch and torchvision with CUDA versions installed separately via --find-links
     # "torch==2.6.0+cu124"
     # "torchvision==0.21.0+cu124"

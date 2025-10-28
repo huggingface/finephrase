@@ -1,5 +1,8 @@
 import os
 import logging
+import threading
+import urllib.request
+from pathlib import Path
 from datatrove.pipeline.base import PipelineStep
 
 from dotenv import load_dotenv
@@ -94,6 +97,7 @@ def calculate_edu_score(text: str, tokenizer, model) -> float:
     if not text or not text.strip():
         return 0.0
     try:
+        # Import torch here to avoid heavy import at module load
         import torch
         
         inputs = tokenizer(text, return_tensors="pt", padding="longest", truncation=True)
@@ -310,3 +314,76 @@ def print_debug_output(document, thinking_text: str, final_output_text: str) -> 
 {delimiter_outside}
 """
     )
+
+
+# -----------------------------
+# DCLM classifier utilities (FastText OH/ELI5)
+# -----------------------------
+
+# Model hosted on Hugging Face; we store it under CACHE_PATH for reuse
+_DCLM_MODEL_URL = (
+    "https://huggingface.co/mlfoundations/fasttext-oh-eli5/resolve/main/"
+    "openhermes_reddit_eli5_vs_rw_v2_bigram_200k_train.bin"
+)
+_DCLM_MODEL_PATH = Path(CACHE_PATH) / "dclm" / "fasttext_oh_eli5.bin"
+
+_DCLM_MODEL = None
+_DCLM_MODEL_LOCK = threading.Lock()
+
+
+def _download_dclm_model_if_needed() -> Path:
+    _DCLM_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not _DCLM_MODEL_PATH.exists():
+        logging.info(f"Downloading DCLM classifier model to {_DCLM_MODEL_PATH} ...")
+        urllib.request.urlretrieve(_DCLM_MODEL_URL, _DCLM_MODEL_PATH.as_posix())
+        logging.info("DCLM classifier model download complete.")
+    else:
+        logging.info(f"DCLM classifier model already present at {_DCLM_MODEL_PATH}.")
+
+
+def _load_dclm_model():
+    try:
+        import fasttext  # Imported here to avoid heavy import at module load
+    except Exception as e:
+        logging.warning(f"Failed to import fasttext for DCLM classifier: {e}")
+        raise
+
+    _download_dclm_model_if_needed()
+    logging.info(f"Loading DCLM classifier model from {_DCLM_MODEL_PATH} ...")
+    model = fasttext.load_model(_DCLM_MODEL_PATH.as_posix())
+    logging.info("DCLM classifier model loaded.")
+    return model
+
+
+def _get_dclm_model():
+    global _DCLM_MODEL
+    if _DCLM_MODEL is None:
+        with _DCLM_MODEL_LOCK:
+            if _DCLM_MODEL is None:
+                _DCLM_MODEL = _load_dclm_model()
+    return _DCLM_MODEL
+
+
+def calculate_dclm_score(text: str) -> float:
+    """Return the DCLM classifier score (probability of __label__hq) for given text.
+
+    Find more information about the classifier here: https://github.com/mlfoundations/dclm/tree/main/baselines#fasttext-filtering
+
+    Returns a float in [0, 1]. On error or empty text, returns 0.0.
+    """
+    if not text or not text.strip():
+        return 0.0
+    try:
+        threshold = 0.018112 # default
+        # FastText expects a single line of text; remove newlines and collapse whitespace
+        sanitized_text = " ".join(text.split())
+        if not sanitized_text:
+            return 0.0
+        model = _get_dclm_model()
+        labels, probs = model.predict(sanitized_text, k=2, threshold=threshold)
+        label_to_prob = {label: prob for label, prob in zip(labels, probs)}
+        return float(label_to_prob.get("__label__hq", 0.0))
+    except Exception as e:
+        logging.warning(f"calculate_dclm_score failed; returning 0.0. Error: {e}", exc_info=True)
+        return 0.0
+

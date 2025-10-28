@@ -541,9 +541,9 @@ parser.add_argument(
 parser.add_argument(
     "--model-size",
     type=str,
-    default="4b",
+    default="1b",
     choices=list(GEMMA_MODELS.keys()),
-    help="Gemma model size (default: 4b)"
+    help="Gemma model size (default: 1b)"
 )
 parser.add_argument(
     # TODO: In this version the model often goes on for a long time before stopping,

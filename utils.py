@@ -249,7 +249,7 @@ def format_document_structure(doc) -> str:
     return "\n".join(structure_info)
 
 
-def print_debug_output(document, thinking_text: str, final_output_text: str) -> None:
+def print_debug_output(document, thinking_text: str, output_text: str) -> None:
     """
     Print debug output showing input/output pair with tokens and educational scores.
 
@@ -259,30 +259,26 @@ def print_debug_output(document, thinking_text: str, final_output_text: str) -> 
     Args:
         document: The processed (or raw) document
         thinking_text: The extracted thinking text (can be empty)
-        final_output_text: The final output text (for raw docs, pass document.text)
+        output_text: The output text (for raw docs, pass document.text)
     """
     # Safely extract fields with fallbacks
-    metadata = getattr(document, "metadata", {}) or {}
-    input_meta = metadata.get("input", {}) if isinstance(metadata.get("input", {}), dict) else {}
-    input_text = input_meta.get("text", getattr(document, "text", ""))
-    input_tokens = input_meta.get("token_count", 0)
+    out_meta = getattr(document, "metadata", {}) or {}
+    in_meta = out_meta.get("input", {}) if isinstance(out_meta.get("input", {}), dict) else {}
+    thinking_meta = out_meta.get("thinking", {}) if isinstance(out_meta.get("thinking", {}), dict) else {}
+    
+    input_text = in_meta.get("text", getattr(document, "text", ""))
+    input_tokens = in_meta.get("token_count", 0)
+    input_edu = in_meta.get("edu_score", 0.0)
+    input_dclm = in_meta.get("dclm_score", 0.0)
 
-    thinking_meta = metadata.get("thinking", {}) if isinstance(metadata.get("thinking", {}), dict) else {}
     thinking_tokens = thinking_meta.get("token_count", 0)
-
-    final_output_tokens = metadata.get("token_count", 0)
-    output_score = metadata.get("score", 0.0)
-    output_int_score = metadata.get("int_score", 0)
-
-    input_scores = {
-        "score": input_meta.get("score", 0.0),
-        "int_score": input_meta.get("int_score", 0),
-    }
-    thinking_scores = {
-        "score": thinking_meta.get("score", 0.0),
-        "int_score": thinking_meta.get("int_score", 0),
-    }
-
+    thinking_edu = thinking_meta.get("edu_score", 0.0)
+    thinking_dclm = thinking_meta.get("dclm_score", 0.0)
+   
+    output_tokens = out_meta.get("token_count", 0)
+    output_edu = out_meta.get("edu_score", 0.0)
+    output_dclm = out_meta.get("dclm_score", 0.0)
+    
     document_structure = format_document_structure(document)
 
     log_cutoff = 2500
@@ -290,7 +286,7 @@ def print_debug_output(document, thinking_text: str, final_output_text: str) -> 
     delimiter_inside = "-" * 50
 
     thinking_part = f"""{delimiter_inside}
-🧠 THINKING ({thinking_tokens} tokens, edu score: {thinking_scores['score']:.2f}/{thinking_scores['int_score']}):
+🧠 THINKING ({thinking_tokens} tokens, edu score: {thinking_edu:.2f}, dclm score: {thinking_dclm:.2f}):
 {delimiter_inside}
 {format_thinking_display(thinking_text)}
 """ if thinking_tokens > 0 else ""
@@ -300,13 +296,13 @@ def print_debug_output(document, thinking_text: str, final_output_text: str) -> 
 {delimiter_outside}
 🔍 DEBUG: INPUT/OUTPUT PAIR
 {delimiter_outside}
-📝 INPUT ({input_tokens} tokens, edu score: {input_scores['score']:.2f}/{input_scores['int_score']}):
+📝 INPUT ({input_tokens} tokens, edu score: {input_edu:.2f}, dclm score: {input_dclm:.2f}):
 {delimiter_inside}
 {(input_text or '')[:log_cutoff] + ('...' if len(input_text or '') > log_cutoff else '')}
 {thinking_part}{delimiter_inside}
-🔄 FINAL OUTPUT ({final_output_tokens} tokens, edu score: {output_score:.2f}/{output_int_score}):
+🔄 OUTPUT ({output_tokens} tokens, edu score: {output_edu:.2f}, dclm score: {output_dclm:.2f}):
 {delimiter_inside}
-{final_output_text}
+{output_text}
 {delimiter_inside}
 📋 DOCUMENT STRUCTURE:
 {delimiter_inside}

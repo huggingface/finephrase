@@ -25,7 +25,7 @@ class FormatterStep(PipelineStep):
                 doc.text = doc.metadata.get(self.text_key, doc.text)
 
             # For raw inputs without inference results, show text as final_output_text
-            print_debug_output(document=doc, thinking_text="", final_output_text=getattr(doc, "text", ""))
+            print_debug_output(document=doc, thinking_text="", output_text=getattr(doc, "text", ""))
             count += 1
             if 0 < self.limit <= count:
                 break

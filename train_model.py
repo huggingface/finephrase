@@ -301,12 +301,12 @@ lighteval:
   nanotron_path: {NANOTRON_PATH}
   batch_size: 8
   slurm:
-    gpus_per_node: 4
+    gpus_per_node: {NUM_GPUS}
     hf_cache: "{BASE_PATH}/.cache/huggingface"
     partition: "hopper-prod"
-    cpus_per_task: {11*4}
+    cpus_per_task: {11*NUM_GPUS}
     qos: "normal"
-    time: "2:00:00"
+    time: "1:00:00"
   tasks:
     tasks: {TASKS_PATH}
     custom_tasks: {TASK_LIST_PATH}

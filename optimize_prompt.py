@@ -25,6 +25,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from tqdm import tqdm
 import pandas as pd
+import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from utils import ENV_COMMAND, LOG_BASE_PATH
@@ -74,11 +75,11 @@ class DspyGepaOptimizer(PipelineStep):
         self,
         generation_model: str = "huggingface/google/gemma-3-27b-it",
         reflection_model: str = "huggingface/deepseek-ai/DeepSeek-V3.1",
-        train_size: int = 50,
-        val_size: int = 20,
-        test_size: int = 1000,
+        train_size: int = 500,
+        val_size: int = 250,
+        test_size: int = 500,
         seed: int = 42,
-        budget: int = 5,
+        budget: int = 10,
         task: str = "rephrase",
         name: str = "",
         log_dir: str = f"{LOG_BASE_PATH}/prompt_optimization"
@@ -148,8 +149,9 @@ class DspyGepaOptimizer(PipelineStep):
         self.__dict__.update(state)
 
     def calculate_prompt_efficiency_score(self, prompt_tokens: int) -> float:
-        max_reasonable_prompt_tokens = 500  # Keep existing behavior; can be tuned
-        return max(0.0, 1.0 - (prompt_tokens / max_reasonable_prompt_tokens))
+        # 100 tokens => 1, 200 tokens => 0.81, 300 tokens => 0.67, 400 tokens => 0.55, 500 tokens => 0.45
+        # 600 tokens => 0.37, 700 tokens => 0.30, 800 tokens => 0.25, 900 tokens => 0.20, 1000 tokens => 0.17
+        return max(0.0, min(1.0, math.exp(0.2- 0.002 * prompt_tokens)))
 
     def compute_length_similarity(self, original_text: str, generated_text: str) -> float:
         input_token_count = len(original_text.split())
@@ -754,8 +756,8 @@ parser.add_argument(
 parser.add_argument(
     "--val-size",
     type=int,
-    default=100,
-    help="Number of validation examples (default: 100)"
+    default=250,
+    help="Number of validation examples (default: 250)"
 )
 parser.add_argument(
     "--test-size",

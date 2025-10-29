@@ -23,7 +23,7 @@ def _download_edu_model_if_needed():
         return
     # Cache the edu-classifier, since they are loaded with local_files_only=True afterwards
     try:
-        print(f"  - Caching {_EDU_MODEL_NAME} (model + tokenizer)...")
+        logging.info(f"  - Caching {_EDU_MODEL_NAME} (model + tokenizer)...")
         from huggingface_hub import snapshot_download
         snapshot_download(repo_id=_EDU_MODEL_NAME, ignore_patterns=["*.gguf", "*.msgpack", "src/**", "utils/**"])
         _EDU_MODEL_DOWNLOADED = True

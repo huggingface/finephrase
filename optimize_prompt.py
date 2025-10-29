@@ -25,21 +25,30 @@ from pathlib import Path
 from dotenv import load_dotenv
 from tqdm import tqdm
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from utils import ENV_COMMAND, LOG_BASE_PATH
 from quality_scores import calculate_edu_score, calculate_dclm_score
 
 SCORE_WEIGHTS = {
-    "edu_improvement": 0.40,
-    "dclm_improvement": 0.40,
-    "length_similarity": 0.15,
-    "prompt_efficiency": 0.05,
+    "edu_improvement": 0.4,
+    "dclm_improvement": 0.4,
+    "length_similarity": 0.1,
+    "prompt_efficiency": 0.1,
 }
 
 from datatrove.pipeline.base import PipelineStep
 from datatrove.data import DocumentsPipeline
 
 load_dotenv() # Load environment variables from .env file
+
+# Configure logging to show INFO messages
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    force=True  # Override any existing configuration
+)
 
 # Ensure LiteLLM does not forward unsupported params (e.g., max_retries) to providers
 litellm.drop_params = True
@@ -608,19 +617,76 @@ class DspyGepaOptimizer(PipelineStep):
         logging.info(f"Output text: {output_preview}")
         logging.info(f"Improvement: {output_score - original_score:.2f}")
 
-        # Evaluate all test examples and collect results
+        # Pre-compute scores for original texts (done once, not per iteration)
+        logging.info("Pre-computing quality scores for original texts...")
+        original_texts = [ex.original_text for ex in self.testset]
+        logging.info(f"Computing EDU scores for {len(original_texts)} original texts...")
+        original_edu_scores = [self.calculate_edu_score(text) for text in tqdm(original_texts, desc="Computing original EDU scores")]
+        logging.info(f"Computing DCLM scores for {len(original_texts)} original texts...")
+        original_dclm_scores = [calculate_dclm_score(text) for text in tqdm(original_texts, desc="Computing original DCLM scores")]
+        
+        # Generate all texts with concurrent execution (this is the slow part - LLM inference)
+        logging.info("Generating texts with optimized module (concurrent)...")
+        
+        # Adjust concurrency based on provider (dedicated endpoints need lower concurrency)
+        if self.generation_provider == "huggingface":
+            max_workers = 4  # Lower for dedicated endpoints to avoid overload
+        else:
+            max_workers = 16  # Higher for API services (OpenRouter, DeepSeek)
+        
+        logging.info(f"Using {max_workers} concurrent workers for generation")
+        
+        def generate_single(idx_text):
+            idx, text = idx_text
+            try:
+                result = optimized_module(original_text=text)
+                return idx, result.generated_text
+            except Exception as e:
+                logging.warning(f"Generation failed for index {idx}: {e}")
+                return idx, ""
+        
+        # Use ThreadPoolExecutor for concurrent API calls
+        generated_texts_dict = {}
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            futures = {executor.submit(generate_single, (idx, text)): idx 
+                      for idx, text in enumerate(original_texts)}
+            
+            # Collect results with progress bar
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Generating texts"):
+                idx, generated_text = future.result()
+                generated_texts_dict[idx] = generated_text
+        
+        # Ensure correct ordering
+        generated_texts = [generated_texts_dict[i] for i in range(len(original_texts))]
+        logging.info(f"Generated {len(generated_texts)} texts")
+        
+        # Compute scores for generated texts
+        logging.info("Computing quality scores for generated texts...")
+        logging.info(f"Computing EDU scores for {len(generated_texts)} generated texts...")
+        generated_edu_scores = [self.calculate_edu_score(text) for text in tqdm(generated_texts, desc="Computing generated EDU scores")]
+        logging.info(f"Computing DCLM scores for {len(generated_texts)} generated texts...")
+        generated_dclm_scores = [calculate_dclm_score(text) for text in tqdm(generated_texts, desc="Computing generated DCLM scores")]
+        
+        # Compute all other scores and assemble results
+        logging.info("Computing final scores and assembling results...")
+        prompt_tokens = self.get_prompt_tokens()
+        prompt_eff = self.calculate_prompt_efficiency_score(prompt_tokens)
+        
         results = []
-        for ex in tqdm(self.testset, desc="Evaluating test examples"):
-            original_text = ex.original_text
-            result = optimized_module(original_text=original_text)
-            generated_text = result.generated_text
-
-            # Compute all scores
-            orig_edu, gen_edu, edu_impr, norm_edu_impr = self.compute_edu_improvement(original_text, generated_text)
-            orig_dclm, gen_dclm, dclm_impr, norm_dclm_impr = self.compute_dclm_improvement(original_text, generated_text)
+        for i, (original_text, generated_text) in enumerate(zip(original_texts, generated_texts)):
+            # Use pre-computed scores
+            orig_edu = original_edu_scores[i]
+            gen_edu = generated_edu_scores[i]
+            edu_impr = gen_edu - orig_edu
+            norm_edu_impr = 0.0 if edu_impr <= 0 else min(1.0, edu_impr / 5.0)
+            
+            orig_dclm = original_dclm_scores[i]
+            gen_dclm = generated_dclm_scores[i]
+            dclm_impr = gen_dclm - orig_dclm
+            norm_dclm_impr = 0.0 if dclm_impr <= 0 else min(1.0, dclm_impr)
+            
             length_sim = self.compute_length_similarity(original_text, generated_text)
-            prompt_tokens = self.get_prompt_tokens()
-            prompt_eff = self.calculate_prompt_efficiency_score(prompt_tokens)
             final = self.compute_final_score(norm_edu_impr, norm_dclm_impr, length_sim, prompt_eff)
 
             results.append({

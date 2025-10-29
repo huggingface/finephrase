@@ -25,7 +25,7 @@ def _download_edu_model_if_needed():
     try:
         print(f"  - Caching {_EDU_MODEL_NAME} (model + tokenizer)...")
         from huggingface_hub import snapshot_download
-        snapshot_download(repo_id=_EDU_MODEL_NAME, ignore_patterns=["*.gguf", "*.msgpack"])
+        snapshot_download(repo_id=_EDU_MODEL_NAME, ignore_patterns=["*.gguf", "*.msgpack", "src/**", "utils/**"])
         _EDU_MODEL_DOWNLOADED = True
     except Exception as e:
         logging.warning(f"Failed to pre-cache EDU classifier: {e}", exc_info=True)

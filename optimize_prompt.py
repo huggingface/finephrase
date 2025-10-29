@@ -23,8 +23,8 @@ import argparse
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
-from statistics import mean
 from tqdm import tqdm
+import pandas as pd
 
 from utils import ENV_COMMAND, LOG_BASE_PATH
 from quality_scores import calculate_edu_score, calculate_dclm_score
@@ -39,8 +39,7 @@ SCORE_WEIGHTS = {
 from datatrove.pipeline.base import PipelineStep
 from datatrove.data import DocumentsPipeline
 
-# Load environment variables from .env file
-load_dotenv()
+load_dotenv() # Load environment variables from .env file
 
 # Ensure LiteLLM does not forward unsupported params (e.g., max_retries) to providers
 litellm.drop_params = True
@@ -517,14 +516,10 @@ class DspyGepaOptimizer(PipelineStep):
             "api_base": api_base,
             "max_tokens": max_tokens,
             "default_headers": {"X-HF-Bill-To": "huggingface"} if provider == "huggingface" else None,
+            **({"temperature": temperature} if temperature is not None else {}),
+            **({"top_p": top_p} if top_p is not None else {}),
+            **({"top_k": top_k} if top_k is not None else {}),
         }
-        
-        if temperature is not None:
-            lm_kwargs["temperature"] = temperature
-        if top_p is not None:
-            lm_kwargs["top_p"] = top_p
-        if top_k is not None:
-            lm_kwargs["top_k"] = top_k
         
         return dspy.LM(**lm_kwargs)
 
@@ -594,111 +589,73 @@ class DspyGepaOptimizer(PipelineStep):
         n_test = len(self.testset)
         if n_test == 0:
             logging.warning("Test set is empty; skipping evaluation and stats computation.")
-            stats = {
-                "n": 0,
-                "means": {
-                    "original_edu": 0.0,
-                    "generated_edu": 0.0,
-                    "edu_improvement": 0.0,
-                    "original_dclm": 0.0,
-                    "generated_dclm": 0.0,
-                    "dclm_improvement": 0.0,
-                    "length_similarity": 0.0,
-                    "prompt_efficiency": 0.0,
-                    "normalized_edu_improvement": 0.0,
-                    "normalized_dclm_improvement": 0.0,
-                    "final_score": 0.0,
-                },
-                "weights": SCORE_WEIGHTS,
-            }
-        else:
-            example_length = 2000
-            # Show a single example
-            example = self.testset[0]
-            original_score = self.calculate_edu_score(example.original_text)
-            original_preview = example.original_text[:example_length] + "..." if len(example.original_text) > example_length else example.original_text
-            logging.info("--- Test Example 1 ---")
-            logging.info(f"Original (edu score: {original_score:.2f}):")
-            logging.info(f"Original text: {original_preview}")
+            return {"n": 0, "weights": SCORE_WEIGHTS, "means": {}}
 
-            result = optimized_module(original_text=example.original_text)
-            output_text = result.generated_text
-            output_score = self.calculate_edu_score(output_text)
-            output_preview = output_text[:example_length] + "..." if len(output_text) > example_length else output_text
-            logging.info(f"Output (edu score: {output_score:.2f}):")
-            logging.info(f"Output text: {output_preview}")
-            logging.info(f"Improvement: {output_score - original_score:.2f}")
+        # Show a single example
+        example_length = 2000
+        example = self.testset[0]
+        original_score = self.calculate_edu_score(example.original_text)
+        original_preview = example.original_text[:example_length] + "..." if len(example.original_text) > example_length else example.original_text
+        logging.info("--- Test Example 1 ---")
+        logging.info(f"Original (edu score: {original_score:.2f}):")
+        logging.info(f"Original text: {original_preview}")
 
-            # Compute statistics across full test set
-            original_edu_scores = []
-            generated_edu_scores = []
-            edu_improvements = []
-            original_dclm_scores = []
-            generated_dclm_scores = []
-            dclm_improvements = []
-            length_similarity_scores = []
-            prompt_efficiency_scores = []
-            normalized_edu_improvement_scores = []
-            normalized_dclm_improvement_scores = []
-            final_scores = []
+        result = optimized_module(original_text=example.original_text)
+        output_text = result.generated_text
+        output_score = self.calculate_edu_score(output_text)
+        output_preview = output_text[:example_length] + "..." if len(output_text) > example_length else output_text
+        logging.info(f"Output (edu score: {output_score:.2f}):")
+        logging.info(f"Output text: {output_preview}")
+        logging.info(f"Improvement: {output_score - original_score:.2f}")
 
-            for ex in tqdm(self.testset, desc="Evaluating test examples"):
-                # Input/output texts
-                original_text = ex.original_text
-                result = optimized_module(original_text=original_text)
-                generated_text = result.generated_text
+        # Evaluate all test examples and collect results
+        results = []
+        for ex in tqdm(self.testset, desc="Evaluating test examples"):
+            original_text = ex.original_text
+            result = optimized_module(original_text=original_text)
+            generated_text = result.generated_text
 
-                # EDU scores and improvement
-                orig_edu, gen_edu, edu_impr, norm_edu_impr = self.compute_edu_improvement(original_text, generated_text)
+            # Compute all scores
+            orig_edu, gen_edu, edu_impr, norm_edu_impr = self.compute_edu_improvement(original_text, generated_text)
+            orig_dclm, gen_dclm, dclm_impr, norm_dclm_impr = self.compute_dclm_improvement(original_text, generated_text)
+            length_sim = self.compute_length_similarity(original_text, generated_text)
+            prompt_tokens = self.get_prompt_tokens()
+            prompt_eff = self.calculate_prompt_efficiency_score(prompt_tokens)
+            final = self.compute_final_score(norm_edu_impr, norm_dclm_impr, length_sim, prompt_eff)
 
-                # DCLM scores and improvement
-                orig_dclm, gen_dclm, dclm_impr, norm_dclm_impr = self.compute_dclm_improvement(original_text, generated_text)
+            results.append({
+                "original_text": original_text,
+                "generated_text": generated_text,
+                "original_edu": orig_edu,
+                "generated_edu": gen_edu,
+                "edu_improvement": edu_impr,
+                "normalized_edu_improvement": norm_edu_impr,
+                "original_dclm": orig_dclm,
+                "generated_dclm": gen_dclm,
+                "dclm_improvement": dclm_impr,
+                "normalized_dclm_improvement": norm_dclm_impr,
+                "length_similarity": length_sim,
+                "prompt_efficiency": prompt_eff,
+                "final_score": final,
+            })
 
-                # Length similarity
-                length_sim = self.compute_length_similarity(original_text, generated_text)
+        # Create DataFrame and compute statistics
+        df = pd.DataFrame(results)
+        
+        # Save test examples as parquet
+        test_examples_path = Path(self.run_dir) / "test_examples.parquet"
+        df.to_parquet(test_examples_path, index=False)
+        logging.info(f"Saved {len(df)} test examples to {test_examples_path}")
 
-                # Prompt efficiency
-                prompt_tokens = self.get_prompt_tokens()
-                prompt_eff = self.calculate_prompt_efficiency_score(prompt_tokens)
-
-                # Final weighted score (align with gepa_metric weights)
-                final = self.compute_final_score(
-                    norm_edu_impr,
-                    norm_dclm_impr,
-                    length_sim,
-                    prompt_eff,
-                )
-
-                # Accumulate
-                original_edu_scores.append(orig_edu)
-                generated_edu_scores.append(gen_edu)
-                edu_improvements.append(edu_impr)
-                original_dclm_scores.append(orig_dclm)
-                generated_dclm_scores.append(gen_dclm)
-                dclm_improvements.append(dclm_impr)
-                length_similarity_scores.append(length_sim)
-                prompt_efficiency_scores.append(prompt_eff)
-                normalized_edu_improvement_scores.append(norm_edu_impr)
-                normalized_dclm_improvement_scores.append(norm_dclm_impr)
-                final_scores.append(final)
-
-            stats = {
-                "n": n_test,
-                "means": {
-                    "original_edu": float(mean(original_edu_scores)) if original_edu_scores else 0.0,
-                    "generated_edu": float(mean(generated_edu_scores)) if generated_edu_scores else 0.0,
-                    "edu_improvement": float(mean(edu_improvements)) if edu_improvements else 0.0,
-                    "original_dclm": float(mean(original_dclm_scores)) if original_dclm_scores else 0.0,
-                    "generated_dclm": float(mean(generated_dclm_scores)) if generated_dclm_scores else 0.0,
-                    "dclm_improvement": float(mean(dclm_improvements)) if dclm_improvements else 0.0,
-                    "length_similarity": float(mean(length_similarity_scores)) if length_similarity_scores else 0.0,
-                    "prompt_efficiency": float(mean(prompt_efficiency_scores)) if prompt_efficiency_scores else 0.0,
-                    "normalized_edu_improvement": float(mean(normalized_edu_improvement_scores)) if normalized_edu_improvement_scores else 0.0,
-                    "normalized_dclm_improvement": float(mean(normalized_dclm_improvement_scores)) if normalized_dclm_improvement_scores else 0.0,
-                    "final_score": float(mean(final_scores)) if final_scores else 0.0,
-                },
-                "weights": SCORE_WEIGHTS,
-            }
+        # Compute mean statistics
+        score_columns = [col for col in df.columns if col not in ["original_text", "generated_text"]]
+        means = df[score_columns].mean().to_dict()
+        
+        stats = {
+            "n": n_test,
+            "weights": SCORE_WEIGHTS,
+            "means": means,
+        }
 
         stats_path = Path(self.run_dir) / "score_stats.json"
         with open(stats_path, "w", encoding="utf-8") as f:
@@ -737,8 +694,8 @@ parser.add_argument(
 parser.add_argument(
     "--test-size",
     type=int,
-    default=100,
-    help="Number of new FineWeb samples for post-optimization evaluation (default: 100)"
+    default=500,
+    help="Number of new FineWeb samples for post-optimization evaluation (default: 500)"
 )
 parser.add_argument(
     "--seed",
@@ -838,7 +795,7 @@ def main():
             pipeline=[optimizer_step],
             tasks=1,
             time=args.time,
-            partition="hopper-prod",
+            partition="hopper-prod", # Still on GPU to speed up quality score computation
             cpus_per_task=11,
             mem_per_cpu_gb=22,
             qos=args.qos,

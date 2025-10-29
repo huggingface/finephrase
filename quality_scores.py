@@ -23,17 +23,15 @@ def _download_edu_model_if_needed():
         return
     # Cache the edu-classifier, since they are loaded with local_files_only=True afterwards
     try:
-        print(f"  - Caching fineweb-edu-classifier (model + tokenizer)...")
-        from transformers import AutoTokenizer, AutoModelForSequenceClassification
-        AutoTokenizer.from_pretrained(_EDU_MODEL_NAME)
-        AutoModelForSequenceClassification.from_pretrained(_EDU_MODEL_NAME)
+        print(f"  - Caching {_EDU_MODEL_NAME} (model + tokenizer)...")
+        from huggingface_hub import snapshot_download
+        snapshot_download(repo_id=_EDU_MODEL_NAME, ignore_patterns=["*.gguf", "*.msgpack"])
         _EDU_MODEL_DOWNLOADED = True
     except Exception as e:
         logging.warning(f"Failed to pre-cache EDU classifier: {e}", exc_info=True)
 
 def _load_edu_model_and_tokenizer():
-    # Download model if not already cached
-    _download_edu_model_if_needed()
+    _download_edu_model_if_needed() # Download model if not already cached
     
     try:
         # Imported here to avoid heavy import at module load

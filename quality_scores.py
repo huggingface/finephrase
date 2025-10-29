@@ -15,22 +15,26 @@ _EDU_MODEL_NAME = "HuggingFaceFW/fineweb-edu-classifier"
 _EDU_TOKENIZER = None
 _EDU_MODEL = None
 _EDU_MODEL_LOCK = threading.Lock()
+_EDU_MODEL_DOWNLOADED = False
 
-
-def _download_edu_model_if_needed() -> Path:
+def _download_edu_model_if_needed():
+    global _EDU_MODEL_DOWNLOADED
+    if _EDU_MODEL_DOWNLOADED:
+        return
     # Cache the edu-classifier, since they are loaded with local_files_only=True afterwards
-    print(f"  - Caching fineweb-edu-classifier (model + tokenizer)...")
-    from transformers import AutoTokenizer, AutoModelForSequenceClassification
-    AutoTokenizer.from_pretrained(_EDU_MODEL_NAME)
-    AutoModelForSequenceClassification.from_pretrained(_EDU_MODEL_NAME)
-
-# Execute once at module import to ensure the EDU classifier is cached
-try:
-    _download_edu_model_if_needed()
-except Exception as e:
-    logging.warning(f"Failed to pre-cache EDU classifier: {e}", exc_info=True)
+    try:
+        print(f"  - Caching fineweb-edu-classifier (model + tokenizer)...")
+        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        AutoTokenizer.from_pretrained(_EDU_MODEL_NAME)
+        AutoModelForSequenceClassification.from_pretrained(_EDU_MODEL_NAME)
+        _EDU_MODEL_DOWNLOADED = True
+    except Exception as e:
+        logging.warning(f"Failed to pre-cache EDU classifier: {e}", exc_info=True)
 
 def _load_edu_model_and_tokenizer():
+    # Download model if not already cached
+    _download_edu_model_if_needed()
+    
     try:
         # Imported here to avoid heavy import at module load
         from transformers import AutoTokenizer, AutoModelForSequenceClassification

@@ -110,8 +110,8 @@ def main():
     total_tokens_consumed = round(tokens_per_step * args.train_steps / 1e9) # in billions
     print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
     
-    # Naming convention: {stage1_data}-decay-{stage2_data}
-    name = args.name.replace(" ", "_")
+    # Naming convention: {stage1_data}-decay-{stage2_data}-seed-{data_seed*100+seed}
+    name = args.name.replace(" ", "_") + f"-seed-{(args.data_seed * 100) + args.seed}"
     
     # Parse multiple comma-separated data paths
     data_paths = [path.strip() for path in args.data.split(",")]

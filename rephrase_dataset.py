@@ -427,6 +427,9 @@ parser.add_argument(
     "--qos", type=str, default="low", help="Slurm QoS"
 )
 parser.add_argument(
+    "--override-unsafe", action="store_true", help="Override safety guard for large runs"
+)
+parser.add_argument(
     "--dep-job-id", type=str, default=None, help="Optional Slurm dependency job id"
 )
 parser.add_argument(
@@ -480,7 +483,10 @@ def main():
             and (args.n_workers == -1 or args.n_workers > 16):
             print(f"It looks like you are trying to run a large rephrasing experiment. " \
             "Please change qos to low or limit the number of workers.")
-            raise ValueError("Unsafe configuration")
+            if not args.override_unsafe:
+                raise ValueError("Unsafe configuration")
+            else:
+                print("Proceeding despite unsafe configuration due to --override-unsafe.")
 
     # Pre-cache models before job submission to ensure they're available when HF_HUB_OFFLINE=1 is set on workers
     # This runs in the main submission process where network access is available

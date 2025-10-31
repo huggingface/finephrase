@@ -9,12 +9,13 @@ This script allows you to define experiments with:
 - Automatic experiment naming and logging
 
 Example usage:
-    python launch_experiments.py config/rephrase_benchmark.yaml
-    python launch_experiments.py config/rephrase_benchmark.yaml --dry-run
-    python launch_experiments.py config/rephrase_benchmark.yaml --run-names "run1,run3"
+    python launch_experiments.py configs/rephrasing.yaml
+    python launch_experiments.py configs/rephrasing.yaml --dry-run
+    python launch_experiments.py configs/rephrasing.yaml --run-names "run1,run3"
 """
 
 import argparse
+import re
 import subprocess
 import sys
 import time
@@ -22,6 +23,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
+from itertools import product
 
 
 class ExperimentLauncher:
@@ -90,6 +92,54 @@ class ExperimentLauncher:
         # Validate that all runs have the same varied arguments (for fair comparison)
         self._validate_consistent_varied_args()
     
+    def _sanitize_for_name(self, value: Any) -> str:
+        """Sanitize a value to be safely embedded into a run name."""
+        if isinstance(value, bool):
+            val_str = "true" if value else "false"
+        elif isinstance(value, float):
+            val_str = f"{value:.6g}"
+        else:
+            val_str = str(value)
+
+        # Replace path separators to avoid directory-like names
+        val_str = val_str.replace('/', '-')
+        # Keep only safe characters
+        val_str = re.sub(r"[^A-Za-z0-9._-]+", "_", val_str)
+        # Collapse multiple underscores and trim
+        val_str = re.sub(r"_{2,}", "_", val_str).strip('_')
+        return val_str
+
+    def _expand_run(self, run_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Expand a single run config into multiple runs if any args values are lists.
+
+        If multiple args contain lists, generate the cartesian product (all permutations).
+        """
+        args = run_config.get('args', {}) or {}
+        sweep_keys = [key for key, value in args.items() if isinstance(value, list) and len(value) > 0]
+
+        if not sweep_keys:
+            return [run_config]
+
+        ordered_keys = sorted(sweep_keys)
+        value_lists = [args[key] for key in ordered_keys]
+
+        expanded_runs: List[Dict[str, Any]] = []
+        for combo in product(*value_lists):
+            new_args = dict(args)
+            for key, val in zip(ordered_keys, combo):
+                new_args[key] = val
+
+            suffix_parts = [f"{key}={self._sanitize_for_name(val)}" for key, val in zip(ordered_keys, combo)]
+            suffix = "-".join(suffix_parts)
+            new_name = f"{run_config['name']}--{suffix}" if suffix else run_config['name']
+
+            expanded_runs.append({
+                'name': new_name,
+                'args': new_args,
+            })
+
+        return expanded_runs
+
     def _validate_consistent_varied_args(self) -> None:
         """Validate that all runs vary the same arguments for fair comparison."""
         if len(self.config['runs']) < 2:
@@ -224,7 +274,12 @@ class ExperimentLauncher:
         results = {}
         skipped_runs = set()
         
-        for run_config in self.config['runs']:
+        # Expand runs to handle sweeps (lists in args produce cartesian product of values)
+        expanded_runs: List[Dict[str, Any]] = []
+        for base_run in self.config['runs']:
+            expanded_runs.extend(self._expand_run(base_run))
+
+        for run_config in expanded_runs:
             run_name = run_config['name']
             
             if not self._should_run(run_name):

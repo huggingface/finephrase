@@ -31,6 +31,8 @@ MICRO_BATCH_SIZE = 2 # We cannot fit more with the current setup
 
 SEQUENCE_LENGTH = 4096
 
+DEFAULT_SEED_VALUE = 6
+
 def launch_slurm_job(launch_file_contents, job_id, nodes, background, name, timestamp, *args):
     """
     Small helper function to save a sbatch script and call it.
@@ -67,8 +69,8 @@ parser = argparse.ArgumentParser(description="Launch training job with updated c
 parser.add_argument("--data", help="Dataset folder paths (can be S3 path)", type=str, required=True)
 parser.add_argument("--name", help="Run name", type=str, required=True)
 parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
-parser.add_argument("--seed", help="Seed", type=int, default=6)
-parser.add_argument("--data-seed", help="Data seed", type=int, default=6)
+parser.add_argument("--seed", help="Seed", type=int, default=DEFAULT_SEED_VALUE)
+parser.add_argument("--data-seed", help="Data seed", type=int, default=DEFAULT_SEED_VALUE)
 parser.add_argument("--train-steps", help="Training steps", type=int, default=10_000)
 parser.add_argument("--qos", help="QoS to use", type=str, default="normal")
 parser.add_argument("--nodes", help="Number of nodes", type=int, default=8)
@@ -111,7 +113,9 @@ def main():
     print(f"Total tokens consumed: {total_tokens_consumed}B") # 8 GPUs, 8 nodes, 10K steps: 20.97152BT
     
     # Naming convention: {stage1_data}-decay-{stage2_data}-seed-{data_seed*100+seed}
-    name = args.name.replace(" ", "_") + f"-seed-{(args.data_seed * 100) + args.seed}"
+    name = args.name.replace(" ", "_") 
+    if args.data_seed != DEFAULT_SEED_VALUE and args.seed != DEFAULT_SEED_VALUE: # Only add them if they are not the default values
+      name += f"-seed-{(args.data_seed * 100) + args.seed}"
     
     # Parse multiple comma-separated data paths
     data_paths = [path.strip() for path in args.data.split(",")]

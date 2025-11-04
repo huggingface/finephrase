@@ -89,9 +89,6 @@ class ExperimentLauncher:
                     f"The run name is automatically passed as --name to the script."
                 )
         
-        # Validate that all runs have the same varied arguments (for fair comparison)
-        self._validate_consistent_varied_args()
-    
     def _sanitize_for_name(self, value: Any) -> str:
         """Sanitize a value to be safely embedded into a run name."""
         if isinstance(value, bool):
@@ -139,35 +136,6 @@ class ExperimentLauncher:
             })
 
         return expanded_runs
-
-    def _validate_consistent_varied_args(self) -> None:
-        """Validate that all runs vary the same arguments for fair comparison."""
-        if len(self.config['runs']) < 2:
-            return  # No need to validate if there's only one run
-        
-        # Get the set of varied arguments from the first run
-        first_run_args = set(self.config['runs'][0].get('args', {}).keys())
-        fixed_args = set(self.config.get('fixed_args', {}).keys())
-        
-        # Check that all runs have the same varied arguments
-        for i, run in enumerate(self.config['runs'][1:], 1):
-            run_args = set(run.get('args', {}).keys())
-
-            comparable_first_run_args = first_run_args - fixed_args
-            comparable_run_args = run_args - fixed_args
-
-            if comparable_run_args != comparable_first_run_args:
-                missing_in_run = comparable_first_run_args - comparable_run_args
-                extra_in_run = comparable_run_args - comparable_first_run_args
-                error_parts = []
-                if missing_in_run:
-                    error_parts.append(f"missing: {', '.join(missing_in_run)}")
-                if extra_in_run:
-                    error_parts.append(f"extra: {', '.join(extra_in_run)}")
-                raise ValueError(
-                    f"Run '{run['name']}' has inconsistent varied arguments compared to '{self.config['runs'][0]['name']}'. "
-                    f"{'; '.join(error_parts)}. All runs must vary the same set of arguments for fair comparison."
-                )
     
     def _build_command(self, run_config: Dict[str, Any]) -> List[str]:
         """

@@ -128,7 +128,7 @@ optimize-prompt --budget 10
 
 Iterate on prompts manually:
 ```bash
-iterate-prompt --prompt format/qa.md --model-size 1b --data-path hf://datasets/HuggingFaceFW/fineweb-edu
+iterate-prompt --prompt format/faq.md --model-size 1b --data-path hf://datasets/HuggingFaceFW/fineweb-edu
 ```
 
 ## Data Generation

@@ -8,7 +8,7 @@ Your task is to rewrite knowledge from the provided text following these instruc
 - Do not add titles, subtitles, note, or comment.
 
 Text:
-[DOCUMENT SEGMENT]
+[TEXT]
 
 Task:
 Rewrite facts and knowledge from the above text as a passage or passages following the instructions.

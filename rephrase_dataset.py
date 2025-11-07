@@ -90,14 +90,8 @@ def create_templated_query_builder(
             Query payload for the inference server
         """
         # Prepare user content
-        if is_dspy:
-            # Use system prompt (loaded template) + structured user template
-            user_content = load_prompt_template("dspy/user.md").replace("[TEXT]", document.text)
-        else:
-            # Simple: use the prompt template as user prompt
-            user_content = prompt_template.replace("[DOCUMENT SEGMENT]", document.text)
-            user_content = user_content.replace("[ORIGINAL DOCUMENT]", document.text)
-            user_content = user_content.replace("[TEXT]", document.text)
+        user_content = load_prompt_template("dspy/user.md") if is_dspy else prompt_template
+        user_content = user_content.replace("[TEXT]", document.text)
 
         # Truncate user content if too long to avoid server errors
         max_chars = 4 * max_tokens  # rough heuristic for average token length

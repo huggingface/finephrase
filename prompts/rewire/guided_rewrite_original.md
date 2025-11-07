@@ -13,4 +13,4 @@ Finally, write an improved response after thinking about how to accomplish the t
 
 IMPORTANT: Start your analysis and thinking right away. DO NOT add any filler text, explanations or notes about your response. Put the thinking and planning between <thinking starts> and <thinking ends>, and the improved response between <improved response starts> and <improved response ends>.
 
-Original Draft: [ORIGINAL DOCUMENT]
+Original Draft: [TEXT]

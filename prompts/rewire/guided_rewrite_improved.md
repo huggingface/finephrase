@@ -14,4 +14,5 @@ Finally, rewrite the original content from the author's perspective, maintaining
 
 IMPORTANT: Your output must be ONLY the actual rewritten content itself - nothing else. Do NOT include any analysis, commentary, description, summary, or explanation about the improvements made. Do NOT add any meta-commentary like "This version improves..." or similar statements. Do NOT reference "the original draft" or "the draft" in your output. Output ONLY the content as if it were the final published piece that readers would see, with absolutely no additional text before or after it.
 
-Original Draft: [ORIGINAL DOCUMENT]
+Original Draft:
+[TEXT]

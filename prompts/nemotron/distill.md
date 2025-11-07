@@ -7,7 +7,7 @@ Your task is to read and paraphrase the provided text following these instructio
 - Write in plain text.
 
 Here is the text:
-[DOCUMENT SEGMENT]
+[TEXT]
 
 Task:
 After thoroughly reading the above text, paraphrase it in high-quality and clear English following the instructions.

@@ -5,7 +5,7 @@ Review the text and extract the key information. Follow these instructions:
 - Do not add titles or headings.
 
 Text:
-[DOCUMENT SEGMENT]
+[TEXT]
 
 Task:
 Extract the factual information, concrete details, and key concepts from the above text following the instructions.

@@ -15,7 +15,7 @@ Follow these instructions:
 6. Each question and answer pair should be on a separate line. Tag the question with "Question:" and the answer with "Answer:".
 
 Text:
-[DOCUMENT SEGMENT]
+[TEXT]
 
 Task:
 After reading the above text, ask up to 8 questions and provide the correct answers following the instructions. Give your response in this format:

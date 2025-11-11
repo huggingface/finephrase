@@ -67,7 +67,20 @@ def build_reader(path: str, *, limit: int, n_tasks: int, shuffle_files: bool = T
         An initialized reader instance
     """
     per_task_limit = -1 if limit < 0 else limit // n_tasks
-    return get_reader(path)(path, shuffle_files=shuffle_files, limit=per_task_limit, text_key=text_key)
+    # Restrict files to appropriate types by default to avoid attempting to read non-data files
+    if path.startswith("hf://"):
+        glob_pattern = "**/*.parquet"
+    elif path.startswith("s3://"):
+        glob_pattern = "**/*.jsonl"
+    else:
+        raise ValueError(f"Invalid path: {path}")
+    return get_reader(path)(
+        path,
+        shuffle_files=shuffle_files,
+        limit=per_task_limit,
+        text_key=text_key,
+        glob_pattern=glob_pattern,
+    )
 
 
 def human_readable(num):

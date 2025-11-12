@@ -169,7 +169,7 @@ parser.add_argument(
     "--tokenizer", type=str, help="tokenizer to use", default="hynky/Llama-3.2-1B-no-bos"
 )
 parser.add_argument(
-    "--text-key", type=str, default="text"
+    "--text-key", type=str, default="text", help="Use comma-separated keys to concatenate per row, e.g. 'title,body'."
 )
 parser.add_argument(
     "--sample", type=float, default=1.0

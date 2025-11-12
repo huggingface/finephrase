@@ -29,6 +29,8 @@ FAULTY_NODES = [
     "ip-26-0-164-0",
     "ip-26-0-164-25",
     "ip-26-0-164-236",
+    "ip-26-0-166-125",
+    "ip-26-0-166-214",
     "ip-26-0-169-247",
 ]
 FAULTY_NODES = ",".join(FAULTY_NODES)
@@ -61,12 +63,50 @@ def build_reader(path: str, *, limit: int, n_tasks: int, shuffle_files: bool = T
         limit: Global limit across all tasks (-1 means unlimited)
         n_tasks: Total number of tasks across which to shard the limit
         shuffle_files: Whether to shuffle input files
-        text_key: Text field key for JSONL inputs (ignored by parquet)
+        text_key: Text field key for JSONL inputs (ignored by parquet). Can be a comma-separated list to concatenate.
 
     Returns:
         An initialized reader instance
     """
     per_task_limit = -1 if limit < 0 else limit // n_tasks
+    # If multiple text keys are provided as a comma-separated list, build a custom adapter
+    adapter = None
+    primary_text_key = text_key
+    if isinstance(text_key, str) and ("," in text_key):
+        concat_keys = [k.strip() for k in text_key.split(",") if k.strip()]
+        if len(concat_keys) >= 2:
+            primary_text_key = concat_keys[0]
+
+            def _concat_adapter(self, data: dict, path: str, id_in_file: int | str):
+                # Mirror BaseReader._default_adapter behavior while concatenating multiple fields
+                metadata = data.pop("metadata", {})
+                if isinstance(metadata, str):
+                    import json
+                    try:
+                        metadata = json.loads(metadata)
+                    except json.JSONDecodeError:
+                        pass
+                if not isinstance(metadata, dict):
+                    metadata = {"metadata": metadata}
+
+                parts = []
+                for key in concat_keys:
+                    value = data.pop(key, "")
+                    if value is None:
+                        value = ""
+                    elif not isinstance(value, str):
+                        value = str(value)
+                    if value:
+                        parts.append(value)
+                text = "\n\n".join(parts)
+
+                return {
+                    "text": text,
+                    "id": data.pop(self.id_key, f"{path}/{id_in_file}"),
+                    "media": data.pop("media", []),
+                    "metadata": metadata | data,
+                }
+            adapter = _concat_adapter
     # Restrict files to appropriate types by default to avoid attempting to read non-data files
     if path.startswith("hf://"):
         glob_pattern = "**/*.parquet"
@@ -78,7 +118,8 @@ def build_reader(path: str, *, limit: int, n_tasks: int, shuffle_files: bool = T
         path,
         shuffle_files=shuffle_files,
         limit=per_task_limit,
-        text_key=text_key,
+        adapter=adapter,
+        text_key=primary_text_key,
         glob_pattern=glob_pattern,
     )
 

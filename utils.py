@@ -111,7 +111,7 @@ def build_reader(path: str, *, limit: int, n_tasks: int, shuffle_files: bool = T
     if path.startswith("hf://"):
         glob_pattern = "**/*.parquet"
     elif path.startswith("s3://"):
-        glob_pattern = "**/*.jsonl"
+        glob_pattern = "**/*.jsonl.gz"
     else:
         raise ValueError(f"Invalid path: {path}")
     return get_reader(path)(

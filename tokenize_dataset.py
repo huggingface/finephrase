@@ -258,6 +258,7 @@ def main():
                     input_folder=f"{args.output_path}/tokenized/{args.name}",
                     output_folder=f"{args.output_path}/tokenized_merged/{args.name}",
                     save_filename="tokenized_dataset",
+                    max_tokens_per_file=args.max_toks,
                     shuffle_chunk_size=args.shuffle_chunk_size + 1 if args.shuffle_chunk_size else None
                 ),
             ],

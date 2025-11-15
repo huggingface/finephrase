@@ -44,13 +44,15 @@ python -c "import nanotron"
 
 After installation, you can use these console commands for different aspects of the data pipeline:
 
-- `report-tokens`       - Report tokens (report_tokens.py)
-- `filter-fineweb-edu`  - Filter fineweb edu data (filter_fineweb_edu.py)
-- `rephrase`            - Rephrase datasets (rephrase_dataset.py)
-- `tokenize`            - Tokenize datasets (tokenize_dataset.py)
-- `train`               - Train models (train_model.py)
-- `evaluate`            - Evaluate checkpoints (evaluate_checkpoints.py)
-- `launch-experiments`  - Launch multiple Slurm experiments from YAML configs (launch_experiments.py)
+- `report-tokens`         - Report tokens (report_tokens.py)
+- `filter`                - Filter datasets with selectable filters (filter_dataset.py)
+- `rephrase`              - Rephrase datasets (rephrase_dataset.py)
+- `tokenize`              - Tokenize datasets (tokenize_dataset.py)
+- `train`                 - Train models (train_model.py)
+- `evaluate`              - Evaluate checkpoints (evaluate_checkpoints.py)
+- `launch-experiments`    - Launch multiple Slurm experiments from YAML configs (launch_experiments.py)
+- `benchmark-vllm`        - Submit vLLM serving benchmarks to Slurm (benchmark_vllm.py)
+- `analyze-benchmarking` - Analyze benchmark results and export CSV (analyze_benchmarking.py)
 
 All commands support `--help` to see available options.
 
@@ -63,27 +65,38 @@ Get comprehensive token statistics for any dataset:
 report-tokens --data s3://path/to/dataset1,hf://datasets/owner/dataset2
 ```
 
-### Filtering Educational Data
-Use `filter-fineweb-edu` to create datasets with specific educational quality scores.
+### Filtering Data
+Use `filter` to filter datasets using predefined filter functions. Supported filters include:
+- `fineweb_edu_hq` (FineWeb-Edu HQ: rounded int_score 4,5)
+- `fineweb_edu_lq` (FineWeb-Edu LQ: rounded int_score 0,1)
+- `noop` (no filtering, copy all data)
 
-**HQ data** (rounded int_score 4,5 or score > 3.5):
+**HQ data**:
 ```bash
-filter-fineweb-edu \
+filter \
   --data hf://datasets/HuggingFaceFW/fineweb-edu/data \
-  --quality hq \
+  --filter fineweb_edu_hq \
   --name fineweb-edu-hq-20BT \
   --subset-tokens 21.5e9 \
   --total-tokens 217715141792
 ```
 
-**LQ data** (rounded int_score 0,1 or score < 1.5):
+**LQ data**:
 ```bash
-filter-fineweb-edu \
+filter \
   --data s3://fineweb-data-processing-us-east-1/edu_annotated/score1_2 \
-  --quality lq \
+  --filter fineweb_edu_lq \
   --name fineweb-edu-lq-20BT \
   --subset-tokens 21.5e9 \
   --total-tokens 1644271223950
+```
+
+**Noop filter (copy all data)**:
+```bash
+filter \
+  --data hf://datasets/mlfoundations/dclm-baseline-1.0-parquet/filtered/OH_eli5_vs_rw_v2_bigram_200k_train/fasttext_openhermes_reddit_eli5_vs_rw_v2_bigram_200k_train/processed_data/global-shard_01_of_10/local-shard_0_of_10 \
+  --filter noop \
+  --name dclm-37BT
 ```
 
 **Data sources:**
@@ -91,7 +104,7 @@ filter-fineweb-edu \
 - Hub (fineweb-edu-score-2): all dumps with score >= 2
 - S3 bucket: new dumps, data for all scores (score1_2 for <3, score3 for >=3)
 
-Note: `TokensCounter` runs before writing, adding `token_count` to metadata.
+Note: Token counting is handled separately via `report-tokens`.
 
 ### Tokenizing Datasets
 Prepare datasets for training by tokenizing them:
@@ -116,6 +129,11 @@ Run evaluations manually if automatic ones fail during training:
 
 ```bash
 evaluate --name fw_edu_hq,fw_edu_lq
+```
+
+Run all missing evaluations:
+```bash
+evaluate --all
 ```
 
 ## Prompt Optimization

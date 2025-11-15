@@ -74,7 +74,7 @@ Issues = "https://github.com/huggingface/finephrase/issues"
 
 [project.scripts]
 report-tokens = "report_tokens:main"
-filter-fineweb-edu = "filter_fineweb_edu:main"
+filter = "filter_dataset:main"
 rephrase = "rephrase_dataset:main"
 tokenize = "tokenize_dataset:main"
 train = "train_model:main"
@@ -87,7 +87,7 @@ inspect-data = "inspect_data:main"
 iterate-prompt = "iterate_prompt:main"
 
 [tool.setuptools]
-py-modules = ["filter_fineweb_edu", "report_tokens", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "benchmark_vllm", "analyze_benchmarking", "inspect_data", "iterate_prompt", "utils", "quality_scores"]
+py-modules = ["report_tokens", "filter_dataset", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "benchmark_vllm", "analyze_benchmarking", "inspect_data", "iterate_prompt", "utils", "quality_scores"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]

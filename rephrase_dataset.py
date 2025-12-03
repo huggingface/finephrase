@@ -15,6 +15,9 @@ from typing import Any
 from datatrove.data import Document
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 
+from transformers import GenerationConfig
+
+
 from utils import (
     CHECKPOINTS_PATH,
     ENV_COMMAND,
@@ -371,13 +374,13 @@ parser.add_argument(
     "--n-workers", type=int, help="Number of workers (jobs to run in parallel)", default=-1
 )
 parser.add_argument(
-    "--temperature", type=float, help="Temperature for inference", default=1
+    "--temperature", type=float, help="Temperature for inference", default=None
 )
 parser.add_argument(
-    "--top-p", type=float, help="Top-p (nucleus sampling) for inference", default=0.95
+    "--top-p", type=float, help="Top-p (nucleus sampling) for inference", default=None
 )
 parser.add_argument(
-    "--top-k", type=int, help="Top-k sampling for inference", default=64
+    "--top-k", type=int, help="Top-k sampling for inference", default=None
 )
 parser.add_argument(
     "--enable-thinking", action="store_true", help="Enable thinking in chat template"
@@ -530,6 +533,11 @@ def main():
         "dtype": "bfloat16",
         **({"speculative_config": args.speculative_config} if args.speculative_config else {}),
     }
+
+    generation_config = GenerationConfig.from_pretrained(args.model_name_or_path)
+    args.temperature=args.temperature if args.temperature is not None else getattr(generation_config, "temperature", 1.0)
+    args.top_p=args.top_p if args.top_p is not None else getattr(generation_config, "top_p", 1.0)
+    args.top_k=args.top_k if args.top_k is not None else getattr(generation_config, "top_k", -1)
 
     config: InferenceConfig = InferenceConfig(
         server_type=args.server_type,

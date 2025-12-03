@@ -62,6 +62,7 @@ def create_templated_query_builder(
     top_p: float = 0.8,
     top_k: int = 20,
     enable_thinking: bool = False,
+    model_max_context: int | None = None,
 ):
     """
     Create a query builder function that loads and applies the prompt template.
@@ -73,6 +74,7 @@ def create_templated_query_builder(
         top_p:                  Top-p (nucleus sampling) for inference
         top_k:                  Top-k sampling for inference
         enable_thinking:        Enable thinking in chat template
+        model_max_context:      Model maximum context window in tokens
         
     Returns:
         Query builder function
@@ -97,15 +99,11 @@ def create_templated_query_builder(
         user_content = user_content.replace("[TEXT]", document.text)
 
         # Truncate user content if too long to avoid server errors
-        max_chars = 4 * max_tokens  # rough heuristic for average token length
-        max_chars *= 2 # Since our model_max_length is 16384 and our max_tokens is 4096, we can afford to use more input tokens
-        if len(user_content) > max_chars:
-            cutoff_content = user_content[:max_chars]
-            last_newline = cutoff_content.rfind('\n')
-            if last_newline != -1:
-                user_content = user_content[:last_newline]
-            else:
-                user_content = user_content[:max_chars]
+        char_budget = (model_max_context - max_tokens) * 4
+
+        if len(user_content) > char_budget:
+            last_newline = user_content.rfind('\n', 0, char_budget)
+            user_content = user_content[:last_newline] if last_newline != -1 else user_content[:char_budget]
 
         messages = []
         
@@ -562,7 +560,8 @@ def main():
                     args.temperature, 
                     args.top_p, 
                     args.top_k, 
-                    args.enable_thinking
+                    args.enable_thinking,
+                    model_max_context=args.model_max_context,
                 ),
                 config=config,
                 records_per_chunk=1000,

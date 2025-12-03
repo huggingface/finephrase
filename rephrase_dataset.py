@@ -444,6 +444,9 @@ parser.add_argument(
 parser.add_argument(
     "--run-local", action="store_true", help="Run pipeline locally instead of using Slurm"
 )
+parser.add_argument(
+    "--reservation", type=str, default=None, help="Slurm reservation"
+)
 
 
 def main():
@@ -588,7 +591,11 @@ def main():
             env_command=ENV_COMMAND + " && export HF_HUB_OFFLINE=1",
             mail_user="joel@hf.co",
             depends_job_id=args.dep_job_id,
-            sbatch_args={"gres": f"gpu:{args.tp}", "exclude": FAULTY_NODES}
+            sbatch_args={
+                "gres": f"gpu:{args.tp}",
+                "exclude": FAULTY_NODES,
+                **({"reservation": args.reservation} if args.reservation else {}),
+            },
         )
     
     rephrase_executor.run()

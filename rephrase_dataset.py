@@ -428,7 +428,7 @@ parser.add_argument(
     "--dep-job-id", type=str, default=None, help="Optional Slurm dependency job id"
 )
 parser.add_argument(
-    "--enable-prefix-caching", action="store_true", default=True, help="Enable prefix caching"
+    "--enable-prefix-caching", action="store_true", default=False, help="Enable prefix caching"
 )
 parser.add_argument(
     "--enable-chunked-prefill", action="store_true", default=True, help="Enable chunked prefill"
@@ -600,7 +600,6 @@ def main():
             depends_job_id=args.dep_job_id,
             sbatch_args={
                 "gres": f"gpu:{args.tp}",
-                "exclude": FAULTY_NODES,
                 **({"reservation": args.reservation} if args.reservation else {}),
             },
         )

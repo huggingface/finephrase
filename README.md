@@ -21,7 +21,7 @@ In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to 
 
 ### Enter a GPU node for installation
 ```bash
-srun --gpus=1 --qos=high --time="04:00:00" --pty bash
+srun --gpus=1 --qos=high --time="01:59:00" --pty bash
 module load cuda/12.4
 ```
 
@@ -30,7 +30,7 @@ module load cuda/12.4
 uv pip install setuptools
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch==2.6.0+cu124"
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ "torchvision==0.21.0+cu124"
-uv pip install --no-build-isolation  "flash_attn==2.7.4.post1"
+uv pip install --no-build-isolation "flash_attn==2.7.4.post1"
 uv pip install -e "nanotron" && uv pip install -e "lighteval[math,multilingual]" && uv pip install -e "datatrove[s3,io,processing]"
 uv pip install -e .
 ```
@@ -97,6 +97,11 @@ filter \
   --data hf://datasets/mlfoundations/dclm-baseline-1.0-parquet/filtered/OH_eli5_vs_rw_v2_bigram_200k_train/fasttext_openhermes_reddit_eli5_vs_rw_v2_bigram_200k_train/processed_data/global-shard_01_of_10/local-shard_0_of_10 \
   --filter noop \
   --name dclm-37BT
+
+filter \
+  --data hf://datasets/HuggingFaceTB/cosmopedia/data \
+  --filter noop \
+  --name cosmopedia-25BT
 ```
 
 **Data sources:**

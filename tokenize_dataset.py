@@ -198,6 +198,12 @@ parser.add_argument(
 parser.add_argument(
     "--shuffle-seed", type=int, default=42, help="Seed for the tokenizer shuffle random number generator"
 )
+parser.add_argument(
+    "--file-type", type=str, default=None, choices=["jsonl", "parquet"], help="Explicit file type (auto-detect if not set)"
+)
+parser.add_argument(
+    "--compression", type=str, default=None, help="Explicit compression (e.g., 'zstd', 'gzip'). Auto-detects if not set."
+)
 
 
 def main():
@@ -218,7 +224,7 @@ def main():
     tokenizer_executor = SlurmPipelineExecutor(
         job_name=f"tok-{args.name}",
         pipeline=[
-            *([build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True, text_key=args.text_key) for data_path in data]),
+            *([build_reader(data_path, limit=args.limit, n_tasks=args.n_tasks, shuffle_files=True, text_key=args.text_key, file_type=args.file_type, compression=args.compression) for data_path in data]),
             SamplerFilter(rate=args.sample, seed=args.sample_seed),
             *([JsonlWriter(args.jsonl_output)] if args.jsonl_output else []),
             *([DocumentSplitter(args.max_chars_per_document)] if args.max_chars_per_document else []),

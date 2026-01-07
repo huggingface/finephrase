@@ -53,20 +53,51 @@ ENV_COMMAND = f"sleep $((RANDOM % 30)) && module load cuda/12.4 && hf auth login
 # Reader utilities
 # -----------------------------
 
-def get_reader(path):
+def get_reader_config(
+    path: str,
+    file_type: str | None = None,
+    compression: str | None = None,
+) -> tuple:
+    """Determine reader class, glob pattern, and compression for a path.
+
+    Args:
+        path: Dataset path (hf://... or s3://...)
+        file_type: Explicit file type ("jsonl" or "parquet"). Auto-detects from path if None.
+        compression: Compression type ("zstd", "gzip", etc.). Defaults to "infer" for jsonl.
+
+    Returns:
+        Tuple of (ReaderClass, glob_pattern, compression)
+    """
     from datatrove.pipeline.readers import JsonlReader, ParquetReader
 
-    if path.startswith("hf://"):
-        # hf datasets are usually in Parquet format
-        return ParquetReader
-    elif path.startswith("s3://"):
-        # s3 datasets are usually in JSONL format
-        return JsonlReader
-    else:
-        raise ValueError(f"Invalid path: {path}")
+    path_lower = path.lower()
+    is_jsonl = file_type == "jsonl" or any(ext in path_lower for ext in [".jsonl"])
+    is_parquet = file_type == "parquet" or ".parquet" in path_lower
+
+    # Default to jsonl for s3, parquet for hf
+    if not is_jsonl and not is_parquet:
+        is_jsonl = path.startswith("s3://")
+        is_parquet = path.startswith("hf://")
+
+    if is_jsonl:
+        return JsonlReader, "**/*.jsonl*", compression or "infer"
+
+    if is_parquet:
+        return ParquetReader, "**/*.parquet", None
+
+    raise ValueError(f"Cannot determine file type for path: {path}")
 
 
-def build_reader(path: str, *, limit: int, n_tasks: int, shuffle_files: bool = True, text_key: str = "text"):
+def build_reader(
+    path: str,
+    *,
+    limit: int,
+    n_tasks: int,
+    shuffle_files: bool = True,
+    text_key: str = "text",
+    file_type: str | None = None,
+    compression: str | None = None,
+):
     """Construct a reader instance with a per-task limit.
 
     Args:
@@ -74,7 +105,9 @@ def build_reader(path: str, *, limit: int, n_tasks: int, shuffle_files: bool = T
         limit: Global limit across all tasks (-1 means unlimited)
         n_tasks: Total number of tasks across which to shard the limit
         shuffle_files: Whether to shuffle input files
-        text_key: Text field key for JSONL inputs (ignored by parquet). Can be a comma-separated list to concatenate.
+        text_key: Text field key. Can be comma-separated to concatenate multiple fields.
+        file_type: Explicit file type ("jsonl" or "parquet"). Auto-detects if None.
+        compression: Explicit compression ("zstd", "gzip", etc.). Auto-detects if None.
 
     Returns:
         An initialized reader instance
@@ -118,21 +151,16 @@ def build_reader(path: str, *, limit: int, n_tasks: int, shuffle_files: bool = T
                     "metadata": metadata | data,
                 }
             adapter = _concat_adapter
-    # Restrict files to appropriate types by default to avoid attempting to read non-data files
-    if path.startswith("hf://"):
-        glob_pattern = "**/*.parquet"
-    elif path.startswith("s3://"):
-        glob_pattern = "**/*.jsonl.gz"
-    else:
-        raise ValueError(f"Invalid path: {path}")
-    return get_reader(path)(
-        path,
-        shuffle_files=shuffle_files,
-        limit=per_task_limit,
-        adapter=adapter,
-        text_key=primary_text_key,
-        glob_pattern=glob_pattern,
-    )
+    reader_class, glob_pattern, resolved_compression = get_reader_config(path, file_type, compression)
+    reader_kwargs = {
+        "shuffle_files": shuffle_files,
+        "limit": per_task_limit,
+        "adapter": adapter,
+        "text_key": primary_text_key,
+        "glob_pattern": glob_pattern,
+        **({} if resolved_compression is None else {"compression": resolved_compression})
+    }
+    return reader_class(path, **reader_kwargs)
 
 
 def human_readable(num):

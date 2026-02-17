@@ -2,7 +2,7 @@
 
 Walks beyondweb/, format/, nemotron/, rewire/ folders under the rephrasing logs dir,
 filters to runs with >= 90 completions, loads or aggregates stats, and extracts
-token counts, quality scores, model, source dataset, and prompt info.
+token counts, quality scores, GPU time, model, source dataset, and prompt info.
 """
 
 import json
@@ -35,12 +35,12 @@ KNOWN_PROMPTS: dict[str, list[str]] = {
 }
 
 
-def count_completions(run_dir: Path) -> int:
-    """Count entries in the completions directory."""
+def has_enough_completions(run_dir: Path) -> bool:
+    """Check whether the run has at least MIN_COMPLETIONS completion files."""
     completions_dir = run_dir / "completions"
     if not completions_dir.exists():
-        return 0
-    return len(list(completions_dir.iterdir()))
+        return False
+    return len(list(completions_dir.iterdir())) >= MIN_COMPLETIONS
 
 
 def load_or_aggregate_stats(run_dir: Path) -> list[dict] | None:
@@ -118,11 +118,49 @@ def derive_prompt(category: str, run_name: str) -> str:
     return f"{category}/{run_name}.md"
 
 
-def _stat_value(stats: dict, key: str, field: str) -> float | None:
+def _format_count(n: float) -> str:
+    """Format a large number with a human-readable suffix (e.g. 15.3B, 420.1M)."""
+    for suffix, threshold in [("T", 1e12), ("B", 1e9), ("M", 1e6), ("K", 1e3)]:
+        if n >= threshold:
+            return f"{n / threshold:.1f}{suffix}"
+    return str(int(n))
+
+
+def _format_duration(seconds: float) -> str:
+    """Format a duration in seconds as a human-readable string."""
+    parts: list[str] = []
+    remaining = int(seconds)
+
+    for unit, divisor in [("years", 365 * 86400), ("months", 30 * 86400), ("days", 86400), ("hours", 3600), ("minutes", 60)]:
+        if remaining >= divisor:
+            count, remaining = divmod(remaining, divisor)
+            parts.append(f"{count} {unit}" if count > 1 else f"{count} {unit.rstrip('s')}")
+
+    # Always include seconds with fractional part
+    frac_seconds = seconds - int(seconds)
+    parts.append(f"{remaining + frac_seconds:.2f} seconds")
+
+    if len(parts) == 1:
+        return parts[0]
+    return ", ".join(parts[:-1]) + " and " + parts[-1]
+
+
+# GPU multiplier: larger models use tensor parallelism across multiple GPUs
+_GPU_MULTIPLIER: dict[str, int] = {"12b": 2, "27b": 4}
+
+
+def _gpu_multiplier_for_model(model_name: str) -> int:
+    """Return the GPU multiplier based on model size (12b -> 2, 27b -> 4, else 1)."""
+    name_lower = model_name.lower()
+    for size_tag, multiplier in _GPU_MULTIPLIER.items():
+        if size_tag in name_lower:
+            return multiplier
+    return 1
+
+
+def _stat_value(stats: dict, key: str, field: str) -> float:
     """Extract a field from a stat entry that may be a dict or scalar."""
-    value = stats.get(key)
-    if value is None:
-        return None
+    value = stats[key]
     if isinstance(value, dict):
         return value[field]
     return value
@@ -136,47 +174,69 @@ def _find_stage(stats: list[dict], name_substring: str) -> dict | None:
     return None
 
 
-def extract_metrics(stats: list[dict]) -> dict[str, float | None]:
-    """Extract token counts and quality scores from aggregated pipeline stats."""
-    metrics: dict[str, float | None] = {}
+def extract_metrics(stats: list[dict], model_name: str) -> dict[str, float | str]:
+    """Extract token counts, GPU time, and quality scores from pipeline stats.
 
-    # Token counts and runtime from the inference stage
+    Token counts come from the Quality Score stage (input_token_count / output_token_count),
+    GPU time comes from the Inference stage's time_stats, multiplied by the number of GPUs
+    used for tensor parallelism (2x for 12b models, 4x for 27b models).
+    """
+    metrics: dict[str, float | str] = {}
     inference = _find_stage(stats, "Inference")
-    if inference:
-        s = inference["stats"]
-        metrics["prompt_tokens"] = _stat_value(s, "prompt_tokens", "total")
-        metrics["completion_tokens"] = _stat_value(s, "completion_tokens", "total")
-        metrics["failed_requests"] = _stat_value(s, "failed_requests", "total")
-
-        # Total runtime in hours and output throughput
-        runtime_seconds = inference["time_stats"]["total"]
-        metrics["total_runtime_hours"] = round(runtime_seconds / 3600, 2)
-        completion_tokens = metrics["completion_tokens"]
-        if completion_tokens and runtime_seconds > 0:
-            metrics["output_tokens_per_second"] = round(completion_tokens / runtime_seconds, 1)
-
-        # Compression ratio: output / input tokens
-        prompt_tokens = metrics["prompt_tokens"]
-        if prompt_tokens and completion_tokens:
-            metrics["compression_ratio"] = round(completion_tokens / prompt_tokens, 4)
-
-    # Number of input documents from the first reader stage
     reader = _find_stage(stats, "READER")
+
+    # Failed requests and num_documents first
+    if inference:
+        metrics["failed_requests"] = _stat_value(inference["stats"], "failed_requests", "total")
     if reader:
         metrics["num_documents"] = _stat_value(reader["stats"], "documents", "total")
 
-    # Quality scores from the quality/education stats logger stage
+    # GPU time from the inference stage, adjusted for tensor parallelism
+    gpu_time_seconds: float | None = None
+    if inference:
+        multiplier = _gpu_multiplier_for_model(model_name)
+        gpu_time_seconds = inference["time_stats"]["total"] * multiplier
+        metrics["gpu_time_seconds"] = gpu_time_seconds
+        metrics["gpu_time_human"] = _format_duration(gpu_time_seconds)
+
+    # Token counts and quality scores from the quality/education stats logger stage
     quality = _find_stage(stats, "Quality Score") or _find_stage(stats, "Education Score")
     if quality:
         s = quality["stats"]
+
+        # Total token counts
+        input_tokens = _stat_value(s, "input_token_count", "total")
+        output_tokens = _stat_value(s, "output_token_count", "total")
+        metrics["input_tokens"] = input_tokens
+        metrics["input_tokens_human"] = _format_count(input_tokens)
+        metrics["output_tokens"] = output_tokens
+        metrics["output_tokens_human"] = _format_count(output_tokens)
+
+        # Mean token counts
+        metrics["input_token_count_mean"] = _stat_value(s, "input_token_count", "mean")
+        metrics["output_token_count_mean"] = _stat_value(s, "output_token_count", "mean")
+        metrics["token_reduction_mean"] = _stat_value(s, "token_reduction", "mean")
+
+        # Compression ratio: output / input tokens
+        if input_tokens and output_tokens:
+            metrics["compression_ratio"] = round(output_tokens / input_tokens, 4)
+
+        # Output throughput per GPU using adjusted GPU time
+        if gpu_time_seconds and output_tokens:
+            metrics["output_tps_per_gpu"] = round(output_tokens / gpu_time_seconds, 1)
+
+        # Quality scores
         metrics["input_edu_score"] = _stat_value(s, "input_edu_score", "mean")
         metrics["output_edu_score"] = _stat_value(s, "output_edu_score", "mean")
         metrics["edu_score_difference"] = _stat_value(s, "edu_score_difference", "mean")
         metrics["edu_score_improvement"] = _stat_value(s, "edu_score_improvement", "mean")
-        metrics["input_dclm_score"] = _stat_value(s, "input_dclm_score", "mean")
-        metrics["output_dclm_score"] = _stat_value(s, "output_dclm_score", "mean")
-        metrics["dclm_score_difference"] = _stat_value(s, "dclm_score_difference", "mean")
-        metrics["dclm_score_improvement"] = _stat_value(s, "dclm_score_improvement", "mean")
+
+        # DCLM scores (not present in older runs using Education Score stage)
+        if "input_dclm_score" in s:
+            metrics["input_dclm_score"] = _stat_value(s, "input_dclm_score", "mean")
+            metrics["output_dclm_score"] = _stat_value(s, "output_dclm_score", "mean")
+            metrics["dclm_score_difference"] = _stat_value(s, "dclm_score_difference", "mean")
+            metrics["dclm_score_improvement"] = _stat_value(s, "dclm_score_improvement", "mean")
 
     return metrics
 
@@ -195,19 +255,9 @@ def main() -> None:
         run_dirs = sorted(d for d in category_dir.iterdir() if d.is_dir())
 
         for run_dir in tqdm(run_dirs, desc=f"Processing {category}"):
-            num_completions = count_completions(run_dir)
-            if num_completions < MIN_COMPLETIONS:
-                logger.info(
-                    f"Skipping {category}/{run_dir.name}: only {num_completions} completions"
-                )
+            if not has_enough_completions(run_dir):
+                logger.info(f"Skipping {category}/{run_dir.name}: not enough completions")
                 continue
-
-            stats = load_or_aggregate_stats(run_dir)
-            if stats is None:
-                logger.warning(f"No stats found for {category}/{run_dir.name}")
-                continue
-
-            metrics = extract_metrics(stats)
 
             try:
                 model, source_dataset = extract_model_and_dataset(run_dir)
@@ -217,6 +267,13 @@ def main() -> None:
                 )
                 continue
 
+            stats = load_or_aggregate_stats(run_dir)
+            if stats is None:
+                logger.warning(f"No stats found for {category}/{run_dir.name}")
+                continue
+
+            metrics = extract_metrics(stats, model)
+
             prompt = derive_prompt(category, run_dir.name)
 
             results.append({
@@ -224,16 +281,15 @@ def main() -> None:
                 "model": model,
                 "source_dataset": source_dataset,
                 "prompt": prompt,
-                "num_completions": num_completions,
                 **metrics,
             })
 
     # Filter out runs missing DCLM scores
     results = [
         r for r in results
-        if r.get("input_dclm_score") is not None
-        and r.get("output_dclm_score") is not None
-        and r.get("dclm_score_difference") is not None
+        if "input_dclm_score" in r
+        and "output_dclm_score" in r
+        and "dclm_score_difference" in r
     ]
 
     output_path = Path(__file__).parent / "rephrasing_metadata.json"

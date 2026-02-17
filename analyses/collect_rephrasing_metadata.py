@@ -2,7 +2,13 @@
 
 Walks beyondweb/, format/, nemotron/, rewire/ folders under the rephrasing logs dir,
 filters to runs with >= 90 completions, loads or aggregates stats, and extracts
-token counts, quality scores, GPU time, model, source dataset, and prompt info.
+token counts, quality scores, GPU time, model, source dataset, prompt info,
+and downstream benchmark evaluation results from S3.
+
+Usage:
+    python analyses/collect_rephrasing_metadata.py
+
+Output is written to analyses/rephrasing_metadata.json.
 """
 
 import json
@@ -10,6 +16,7 @@ import logging
 import re
 from pathlib import Path
 
+from fsspec.core import url_to_fs
 from tqdm import tqdm
 
 from datatrove.utils.stats import PipelineStats
@@ -19,6 +26,44 @@ logger = logging.getLogger(__name__)
 BASE_PATH = Path("/fsx/joel_niklaus/logs/finephrase/experiments/rephrasing")
 CATEGORIES = ["beyondweb", "format", "nemotron", "rewire"]
 MIN_COMPLETIONS = 90
+S3_EVALS_PATH = "s3://finephrase/experiments/evals-test/results"
+FINAL_CHECKPOINT = "10000"
+
+# Maps source dataset names (from executor.json) to training mix base names
+SOURCE_DATASET_SHORT_NAMES: dict[str, str] = {
+    "fineweb-edu-hq-20BT": "fw_edu_hq",
+    "fineweb-edu-lq-20BT": "fw_edu_lq",
+    "dclm-37BT": "dclm",
+    "cosmopedia-25BT": "cosmopedia",
+}
+
+# English benchmark tasks (from joel-board dashboard agg_score_metrics.py).
+# In "prob" mode (default), the dashboard transforms all metrics to prob_norm_token.
+BENCHMARK_TASKS: list[str] = [
+    "lighteval|squad_v2|3",
+    "lighteval|arc_cf:easy|3",
+    "lighteval|hellaswag_cf|3",
+    "lighteval|mmlu_redux_cf:_average|3",
+    "lighteval|gsm8k|3",
+    "lighteval|drop|3",
+    "lighteval|wikitablequestions|3",
+    "lighteval|treb_qa|3",
+    "lighteval|winogrande_cf|3",
+    "lighteval|piqa_cf|3",
+    "lighteval|openbookqa_cf|3",
+    "lighteval|xcsqa_cf|3",
+]
+BENCHMARK_METRIC = "prob_norm_token"
+
+# Category groupings for aggregate scores (from joel-board task_type_mapping.py)
+BENCHMARK_CATEGORIES: dict[str, list[str]] = {
+    "GK": ["arc_cf:easy", "mmlu_redux_cf:_average"],
+    "RC": ["squad_v2", "drop"],
+    "RES": ["openbookqa_cf", "piqa_cf", "xcsqa_cf"],
+    "NLU": ["hellaswag_cf", "winogrande_cf"],
+    "MATH": ["gsm8k"],
+    "TABLE": ["wikitablequestions", "treb_qa"],
+}
 
 # Known prompt names per category, sorted longest-first to avoid prefix collisions
 KNOWN_PROMPTS: dict[str, list[str]] = {
@@ -158,6 +203,77 @@ def _gpu_multiplier_for_model(model_name: str) -> int:
     return 1
 
 
+def _short_task_name(task_key: str) -> str:
+    """Strip 'lighteval|' prefix and '|3' suffix from a task key."""
+    return task_key.removeprefix("lighteval|").removesuffix("|3")
+
+
+def derive_training_run_name(run_name: str, source_dataset: str) -> str | None:
+    """Derive the training experiment name from a rephrasing run folder name and source dataset.
+
+    Returns None if the source dataset is not in SOURCE_DATASET_SHORT_NAMES.
+    E.g. run_name='faq-1b-hq', source_dataset='fineweb-edu-hq-20BT' -> 'mix-fw_edu_hq-faq_1b_hq'
+    """
+    base = SOURCE_DATASET_SHORT_NAMES.get(source_dataset)
+    if base is None:
+        return None
+    tokenized_name = run_name.replace("-", "_")
+    return f"mix-{base}-{tokenized_name}"
+
+
+def fetch_benchmark_results(training_run: str, fs: object) -> dict[str, float] | None:
+    """Fetch benchmark evaluation results from S3 for a training run.
+
+    Reads the latest results JSON at step 10000, extracts scores using the correct
+    metric per task, and computes category and overall aggregate scores.
+    Returns None if no results are found.
+    """
+    results_path = f"{S3_EVALS_PATH}/{training_run}/{FINAL_CHECKPOINT}".replace("s3://", "")
+    try:
+        result_files = fs.glob(f"{results_path}/results_*.json")
+    except FileNotFoundError:
+        return None
+    if not result_files:
+        return None
+
+    # Use the latest results file
+    result_files.sort()
+    with fs.open(result_files[-1], "r") as f:
+        data = json.load(f)
+
+    raw_results = data["results"]
+    scores: dict[str, float] = {}
+
+    # Extract individual benchmark scores (all use prob_norm_token in prob mode)
+    for task_key in BENCHMARK_TASKS:
+        if task_key in raw_results and BENCHMARK_METRIC in raw_results[task_key]:
+            short_name = _short_task_name(task_key)
+            scores[short_name] = raw_results[task_key][BENCHMARK_METRIC]
+
+    if not scores:
+        return None
+
+    # Compute category aggregate scores
+    category_scores: list[float] = []
+    for category, members in BENCHMARK_CATEGORIES.items():
+        member_scores = [scores[m] for m in members if m in scores]
+        if member_scores:
+            cat_avg = sum(member_scores) / len(member_scores)
+            scores[f"agg_score_{category}"] = cat_avg
+            category_scores.append(cat_avg)
+
+    # Macro average: mean of category averages
+    if category_scores:
+        scores["agg_score_macro"] = sum(category_scores) / len(category_scores)
+
+    # Micro average: mean of all individual benchmark scores (excluding aggregates)
+    individual = [v for k, v in scores.items() if not k.startswith("agg_score_")]
+    if individual:
+        scores["agg_score_micro"] = sum(individual) / len(individual)
+
+    return scores
+
+
 def _stat_value(stats: dict, key: str, field: str) -> float:
     """Extract a field from a stat entry that may be a dict or scalar."""
     value = stats[key]
@@ -244,6 +360,7 @@ def extract_metrics(stats: list[dict], model_name: str) -> dict[str, float | str
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
+    fs, _ = url_to_fs(S3_EVALS_PATH)
     results: list[dict] = []
 
     for category in CATEGORIES:
@@ -273,16 +390,22 @@ def main() -> None:
                 continue
 
             metrics = extract_metrics(stats, model)
-
             prompt = derive_prompt(category, run_dir.name)
 
-            results.append({
+            record: dict = {
                 "run": f"{category}/{run_dir.name}",
                 "model": model,
                 "source_dataset": source_dataset,
                 "prompt": prompt,
                 **metrics,
-            })
+            }
+
+            # Derive training run name and fetch benchmark results from S3
+            training_run = derive_training_run_name(run_dir.name, source_dataset)
+            record["training_run"] = training_run
+            record["results"] = fetch_benchmark_results(training_run, fs) if training_run else None
+
+            results.append(record)
 
     # Filter out runs missing DCLM scores
     results = [

@@ -320,13 +320,17 @@ def extract_metrics(stats: list[dict], model_name: str) -> dict[str, float | str
     if quality:
         s = quality["stats"]
 
+        # Output throughput per GPU (placed after gpu_time_human in output)
+        output_tokens_total = _stat_value(s, "output_token_count", "total")
+        if gpu_time_seconds and output_tokens_total:
+            metrics["output_tps_per_gpu"] = round(output_tokens_total / gpu_time_seconds, 1)
+
         # Total token counts
         input_tokens = _stat_value(s, "input_token_count", "total")
-        output_tokens = _stat_value(s, "output_token_count", "total")
         metrics["input_tokens"] = input_tokens
         metrics["input_tokens_human"] = _format_count(input_tokens)
-        metrics["output_tokens"] = output_tokens
-        metrics["output_tokens_human"] = _format_count(output_tokens)
+        metrics["output_tokens"] = output_tokens_total
+        metrics["output_tokens_human"] = _format_count(output_tokens_total)
 
         # Mean token counts
         metrics["input_token_count_mean"] = _stat_value(s, "input_token_count", "mean")
@@ -334,12 +338,8 @@ def extract_metrics(stats: list[dict], model_name: str) -> dict[str, float | str
         metrics["token_reduction_mean"] = _stat_value(s, "token_reduction", "mean")
 
         # Compression ratio: output / input tokens
-        if input_tokens and output_tokens:
-            metrics["compression_ratio"] = round(output_tokens / input_tokens, 4)
-
-        # Output throughput per GPU using adjusted GPU time
-        if gpu_time_seconds and output_tokens:
-            metrics["output_tps_per_gpu"] = round(output_tokens / gpu_time_seconds, 1)
+        if input_tokens and output_tokens_total:
+            metrics["compression_ratio"] = round(output_tokens_total / input_tokens, 4)
 
         # Quality scores
         metrics["input_edu_score"] = _stat_value(s, "input_edu_score", "mean")

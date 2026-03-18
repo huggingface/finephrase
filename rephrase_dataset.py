@@ -532,7 +532,7 @@ def main():
         **({"speculative_config": args.speculative_config} if args.speculative_config else {}),
     }
 
-    generation_config = GenerationConfig.from_pretrained(args.model_name_or_path)
+    generation_config = GenerationConfig.from_pretrained(args.model_name_or_path, local_files_only=True)
     args.temperature=args.temperature if args.temperature is not None else getattr(generation_config, "temperature", 1.0)
     args.top_p=args.top_p if args.top_p is not None else getattr(generation_config, "top_p", 1.0)
     args.top_k=args.top_k if args.top_k is not None else getattr(generation_config, "top_k", -1)

@@ -27,30 +27,31 @@ NUM_GPUS = 8
 NUM_CPUS_IN_NODE = 88
 
 GLOBAL_BATCH_SIZE = 512
+VOCAB_SIZE = 128256
+NUM_HIDDEN_LAYERS = 28
+NUM_ATTENTION_HEADS = 16
+NUM_KEY_VALUE_HEADS = 8
 
 QWEN_SIZE_PRESETS = {
-    "0.6b": {
+    "0.5b": {
         "hidden_size": 1024,
         "intermediate_size": 3072,
-        "num_hidden_layers": 28,
-        "num_attention_heads": 16,
-        "num_key_value_heads": 8,
+        "tp": 1,
+        "recompute_layer": False,
         "micro_batch_size": 4,
     },
     "1.7b": {
         "hidden_size": 2048,
         "intermediate_size": 6144,
-        "num_hidden_layers": 28,
-        "num_attention_heads": 16,
-        "num_key_value_heads": 8,
+        "tp": 1,
+        "recompute_layer": False,
         "micro_batch_size": 2,
     },
-    "4b": {
+    "2.9b": {
         "hidden_size": 2560,
-        "intermediate_size": 9728,
-        "num_hidden_layers": 36,
-        "num_attention_heads": 32,
-        "num_key_value_heads": 8,
+        "intermediate_size": 9216,
+        "tp": 1,
+        "recompute_layer": True,
         "micro_batch_size": 1,
     },
 }
@@ -60,6 +61,46 @@ DEFAULT_MODEL_SIZE = "1.7b"
 SEQUENCE_LENGTH = 4096
 
 DEFAULT_SEED_VALUE = 6
+
+
+def calculate_qwen_parameter_count(
+    model_preset: dict[str, int | bool],
+    vocab_size: int,
+    tie_word_embeddings: bool = True,
+) -> int:
+    """Return total trainable parameter count for the configured Qwen architecture."""
+    hidden_size = model_preset["hidden_size"]
+    intermediate_size = model_preset["intermediate_size"]
+    num_hidden_layers = NUM_HIDDEN_LAYERS
+    num_attention_heads = NUM_ATTENTION_HEADS
+    num_key_value_heads = NUM_KEY_VALUE_HEADS
+
+    if hidden_size % num_attention_heads != 0:
+        raise ValueError(
+            f"hidden_size ({hidden_size}) must be divisible by num_attention_heads ({num_attention_heads})"
+        )
+
+    head_dim = hidden_size // num_attention_heads
+
+    # Per-layer parameters for Qwen2-style blocks (no linear biases):
+    # attention: q_proj + k_proj + v_proj + o_proj
+    attention_params = (
+        (hidden_size * hidden_size)
+        + (hidden_size * num_key_value_heads * head_dim)
+        + (hidden_size * num_key_value_heads * head_dim)
+        + (hidden_size * hidden_size)
+    )
+    # MLP: gate_proj + up_proj + down_proj
+    mlp_params = (hidden_size * intermediate_size) + (hidden_size * intermediate_size) + (intermediate_size * hidden_size)
+    # Norms: input + post-attention RMSNorm
+    layer_norm_params = hidden_size + hidden_size
+    params_per_layer = attention_params + mlp_params + layer_norm_params
+
+    embedding_params = vocab_size * hidden_size
+    final_norm_params = hidden_size
+    lm_head_params = 0 if tie_word_embeddings else (vocab_size * hidden_size)
+
+    return embedding_params + (num_hidden_layers * params_per_layer) + final_norm_params + lm_head_params
 
 def launch_slurm_job(launch_file_contents, job_id, nodes, background, name, timestamp, *args):
     """
@@ -84,7 +125,6 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, name, time
         srun_args += ["--output", f"{slurm_logs_dir}/train-{timestamp}.out", "--error", f"{slurm_logs_dir}/train-{timestamp}.err"]
         # Run the job in background - DOES NOT WAIT
         subprocess.Popen(srun_args + list(args) + [f.name])
-        subprocess
         print(f"Running in background. Logs: {slurm_logs_dir}/train-{timestamp}.out {slurm_logs_dir}/train-{timestamp}.err")
       else:
         # Run in foreground till job is done - WAITS
@@ -109,7 +149,6 @@ parser.add_argument("--lr-schedule", help="Learning rate schedule", type=str, de
 parser.add_argument("--background", help="Run in background", action="store_true")
 parser.add_argument("--reservation", help="SLURM reservation name", type=str, default=None)
 parser.add_argument("--time", help="SLURM time", type=str, default="1-00:00:00") # It should finish within 3 hours already with 8 nodes
-parser.add_argument("--resume-checkpoint-path", help="Path to the checkpoint to resume from", type=str, default=None)
 parser.add_argument("--decay-exp", help="Run a decay experiment", action="store_true")
 parser.add_argument("--dep-job-id", help="Dependency job", type=str, default=None)
 parser.add_argument(
@@ -125,12 +164,25 @@ def main():
     args = parser.parse_args()
     model_preset = QWEN_SIZE_PRESETS[args.model_size]
     micro_batch_size = model_preset["micro_batch_size"]
+    tp_size = int(model_preset["tp"])
+    recompute_layer = bool(model_preset["recompute_layer"])
+    model_param_count = calculate_qwen_parameter_count(
+        model_preset=model_preset,
+        vocab_size=VOCAB_SIZE,
+        tie_word_embeddings=True,
+    )
+    print(f"Model parameters: {model_param_count:,} ({model_param_count / 1e9:.3f}B)")
 
     # Debug mode settings
     if args.debug:
         args.nodes = 1 # Only use one node for debugging
 
-    # For decay experiments, we need to set up two data stages
+    world_size = args.nodes * NUM_GPUS
+    if world_size % tp_size != 0:
+        raise ValueError(
+            f"World size ({world_size}) must be divisible by tensor parallel size ({tp_size})"
+        )
+    dp_size = world_size // tp_size
     if args.decay_exp:
       # Hard code to the lq checkpoint because we see larger differences there
       args.resume_checkpoint_path = "s3://finephrase/experiments/checkpoints/fw_edu_lq/9000/"
@@ -139,13 +191,20 @@ def main():
       assert args.lr_schedule == "wsd", "LR schedule must be wsd for decay experiments"
 
     
-    # batch size == batch_accumulation_per_replica * micro_batch_size * dp: 4 * 2 * 64 = 512
-    batch_accumulation_per_replica = GLOBAL_BATCH_SIZE // (micro_batch_size * NUM_GPUS * args.nodes)
+    # batch size == batch_accumulation_per_replica * micro_batch_size * dp
+    per_accum_batch = micro_batch_size * dp_size
+    batch_accumulation_per_replica, remainder = divmod(GLOBAL_BATCH_SIZE, per_accum_batch)
+    if remainder:
+        raise ValueError(
+            f"GLOBAL_BATCH_SIZE ({GLOBAL_BATCH_SIZE}) must be divisible by micro_batch_size * dp "
+            f"({micro_batch_size} * {dp_size} = {per_accum_batch})"
+        )
     print(
         f"Training Qwen-{args.model_size} on {args.nodes} nodes with {NUM_GPUS} GPUs per node, "
-        f"micro batch size {micro_batch_size}, and {batch_accumulation_per_replica} batch accumulation per replica"
+        f"tp={tp_size}, dp={dp_size}, micro batch size {micro_batch_size}, "
+        f"and {batch_accumulation_per_replica} batch accumulation per replica"
     )
-    batch_size = batch_accumulation_per_replica * micro_batch_size * NUM_GPUS * args.nodes
+    batch_size = batch_accumulation_per_replica * per_accum_batch
     assert batch_size == GLOBAL_BATCH_SIZE, f"Batch size {batch_size} is not equal to global batch size {GLOBAL_BATCH_SIZE}"
     tokens_per_step = SEQUENCE_LENGTH * batch_size # sequence length * batch size: 4096 * 512 = 2097152
     print(f"Batch size: {batch_size} examples / {tokens_per_step} tokens")
@@ -201,7 +260,7 @@ def main():
       token_size_in_bytes: 4
       use_old_brrr_dataloader: false
       tokenizer_name: {args.tokenizer}
-      vocab_size: 128256
+      vocab_size: {VOCAB_SIZE}
     num_loading_workers: 0
     seed: {args.data_seed}
   name: {name}
@@ -265,9 +324,9 @@ model:
     is_qwen2_config: true
     max_position_embeddings: {SEQUENCE_LENGTH}
     moe_config: null
-    num_attention_heads: {model_preset["num_attention_heads"]}
-    num_hidden_layers: {model_preset["num_hidden_layers"]}
-    num_key_value_heads: {model_preset["num_key_value_heads"]}
+    num_attention_heads: {NUM_ATTENTION_HEADS}
+    num_hidden_layers: {NUM_HIDDEN_LAYERS}
+    num_key_value_heads: {NUM_KEY_VALUE_HEADS}
     pad_token_id: null
     pretraining_tp: 1
     rms_norm_eps: 1.0e-06
@@ -277,7 +336,7 @@ model:
     sliding_window_size: null
     tie_word_embeddings: true
     use_cache: true
-    vocab_size: 128256
+    vocab_size: {VOCAB_SIZE}
     z_loss_coefficient: 1.0e-05
     z_loss_enabled: false
     no_rope_layer: null
@@ -304,12 +363,12 @@ optimizer:
   zero_stage: 0
 parallelism:
   context_parallel_size: 1
-  dp: {args.nodes * NUM_GPUS}
+  dp: {dp_size}
   expert_parallel_size: 1
   pp: 1
   pp_engine: 1f1b
-  recompute_layer: false
-  tp: 1
+  recompute_layer: {str(recompute_layer).lower()}
+  tp: {tp_size}
   tp_linear_async_communication: true
   tp_mode: REDUCE_SCATTER
   tp_recompute_allgather: true

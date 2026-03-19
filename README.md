@@ -122,11 +122,12 @@ tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name 
 ## Model Training & Evaluation
 
 ### Training Models
-Train 1B parameter models on your tokenized datasets:
+Train Qwen-size models (`0.6b`, `1.7b`, `4b`) on your tokenized datasets:
 
 ```bash
 train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq
 train --data s3://finephrase/experiments/tokenized/fw_edu_lq --name fw_edu_lq
+train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq_4b --model-size 4b
 ```
 
 ### Evaluating Checkpoints

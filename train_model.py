@@ -27,7 +27,35 @@ NUM_GPUS = 8
 NUM_CPUS_IN_NODE = 88
 
 GLOBAL_BATCH_SIZE = 512
-MICRO_BATCH_SIZE = 2 # We cannot fit more with the current setup
+
+QWEN_SIZE_PRESETS = {
+    "0.6b": {
+        "hidden_size": 1024,
+        "intermediate_size": 3072,
+        "num_hidden_layers": 28,
+        "num_attention_heads": 16,
+        "num_key_value_heads": 8,
+        "micro_batch_size": 4,
+    },
+    "1.7b": {
+        "hidden_size": 2048,
+        "intermediate_size": 6144,
+        "num_hidden_layers": 28,
+        "num_attention_heads": 16,
+        "num_key_value_heads": 8,
+        "micro_batch_size": 2,
+    },
+    "4b": {
+        "hidden_size": 2560,
+        "intermediate_size": 9728,
+        "num_hidden_layers": 36,
+        "num_attention_heads": 32,
+        "num_key_value_heads": 8,
+        "micro_batch_size": 1,
+    },
+}
+
+DEFAULT_MODEL_SIZE = "1.7b"
 
 SEQUENCE_LENGTH = 4096
 
@@ -84,10 +112,19 @@ parser.add_argument("--time", help="SLURM time", type=str, default="1-00:00:00")
 parser.add_argument("--resume-checkpoint-path", help="Path to the checkpoint to resume from", type=str, default=None)
 parser.add_argument("--decay-exp", help="Run a decay experiment", action="store_true")
 parser.add_argument("--dep-job-id", help="Dependency job", type=str, default=None)
+parser.add_argument(
+    "--model-size",
+    help="Qwen model size preset",
+    type=str,
+    default=DEFAULT_MODEL_SIZE,
+    choices=tuple(QWEN_SIZE_PRESETS.keys()),
+)
 
 
 def main():
     args = parser.parse_args()
+    model_preset = QWEN_SIZE_PRESETS[args.model_size]
+    micro_batch_size = model_preset["micro_batch_size"]
 
     # Debug mode settings
     if args.debug:
@@ -103,9 +140,12 @@ def main():
 
     
     # batch size == batch_accumulation_per_replica * micro_batch_size * dp: 4 * 2 * 64 = 512
-    batch_accumulation_per_replica = GLOBAL_BATCH_SIZE // (MICRO_BATCH_SIZE * NUM_GPUS * args.nodes)
-    print(f"Training on {args.nodes} nodes with {NUM_GPUS} GPUs per node and {batch_accumulation_per_replica} batch accumulation per replica")
-    batch_size = batch_accumulation_per_replica * MICRO_BATCH_SIZE * NUM_GPUS * args.nodes
+    batch_accumulation_per_replica = GLOBAL_BATCH_SIZE // (micro_batch_size * NUM_GPUS * args.nodes)
+    print(
+        f"Training Qwen-{args.model_size} on {args.nodes} nodes with {NUM_GPUS} GPUs per node, "
+        f"micro batch size {micro_batch_size}, and {batch_accumulation_per_replica} batch accumulation per replica"
+    )
+    batch_size = batch_accumulation_per_replica * micro_batch_size * NUM_GPUS * args.nodes
     assert batch_size == GLOBAL_BATCH_SIZE, f"Batch size {batch_size} is not equal to global batch size {GLOBAL_BATCH_SIZE}"
     tokens_per_step = SEQUENCE_LENGTH * batch_size # sequence length * batch size: 4096 * 512 = 2097152
     print(f"Batch size: {batch_size} examples / {tokens_per_step} tokens")
@@ -219,15 +259,15 @@ model:
     eos_token_id: 128001
     flex_attention_mask: null
     hidden_act: silu
-    hidden_size: 2048
+    hidden_size: {model_preset["hidden_size"]}
     initializer_range: 0.02
-    intermediate_size: 6144
+    intermediate_size: {model_preset["intermediate_size"]}
     is_qwen2_config: true
     max_position_embeddings: {SEQUENCE_LENGTH}
     moe_config: null
-    num_attention_heads: 16
-    num_hidden_layers: 28
-    num_key_value_heads: 8
+    num_attention_heads: {model_preset["num_attention_heads"]}
+    num_hidden_layers: {model_preset["num_hidden_layers"]}
+    num_key_value_heads: {model_preset["num_key_value_heads"]}
     pad_token_id: null
     pretraining_tp: 1
     rms_norm_eps: 1.0e-06
@@ -291,7 +331,7 @@ tokens:
   batch_accumulation_per_replica: {batch_accumulation_per_replica}
   limit_test_batches: 0
   limit_val_batches: 0
-  micro_batch_size: {MICRO_BATCH_SIZE}
+  micro_batch_size: {micro_batch_size}
   sequence_length: {SEQUENCE_LENGTH}
   train_steps: {args.train_steps}
   val_check_interval: 0

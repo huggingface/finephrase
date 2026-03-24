@@ -54,6 +54,14 @@ QWEN_SIZE_PRESETS = {
         "recompute_layer": True,
         "micro_batch_size": 1,
     },
+    "6.2b": {
+        "hidden_size": 4096,
+        "intermediate_size": 12288,
+        "tp": 2,
+        "recompute_layer": True,
+        "micro_batch_size": 1,
+    },
+    # Stop scaling because due to flash attention 2, I could not go beyond hidden size 4096 with 16 attention heads
 }
 
 DEFAULT_MODEL_SIZE = "1.7b"

@@ -133,7 +133,7 @@ Slurm jobs use `--qos low` by default, `--requeue`, and a script that picks the 
 ```bash
 train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq
 train --data s3://finephrase/experiments/tokenized/fw_edu_lq --name fw_edu_lq
-train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq_4b --model-size 4b
+train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq_2.9b --model-size 2.9b
 ```
 
 ### Evaluating Checkpoints

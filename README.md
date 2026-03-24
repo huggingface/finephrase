@@ -127,6 +127,9 @@ The launcher prints the exact parameter count for the selected preset before sub
 Tensor parallelism and recomputation are configured per model preset in `train_model.py`.
 All presets keep depth/head topology fixed and only scale `hidden_size` + `intermediate_size`.
 
+Slurm jobs use `--qos low` by default, `--requeue`, and a script that picks the **latest** checkpoint under `s3://finephrase/experiments/checkpoints/<run>/` before each run. If that step is already `>= train_steps`, training is **skipped** (clean exit) so finished runs do not reload step-`train_steps` checkpoints and crash.
+
+
 ```bash
 train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq
 train --data s3://finephrase/experiments/tokenized/fw_edu_lq --name fw_edu_lq

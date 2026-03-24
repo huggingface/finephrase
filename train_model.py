@@ -183,11 +183,12 @@ def main():
             f"World size ({world_size}) must be divisible by tensor parallel size ({tp_size})"
         )
     dp_size = world_size // tp_size
+
+    # For decay experiments, resume from a fixed checkpoint and set up two data stages
+    resume_checkpoint_path: str | None = None
     if args.decay_exp:
-      # Hard code to the lq checkpoint because we see larger differences there
-      args.resume_checkpoint_path = "s3://finephrase/experiments/checkpoints/fw_edu_lq/9000/"
-      # Extract step number from checkpoint path (e.g., "path/9000" -> 9000)
-      checkpoint_step = int(args.resume_checkpoint_path.rstrip('/').split('/')[-1])
+      resume_checkpoint_path = "s3://finephrase/experiments/checkpoints/fw_edu_lq/9000/"
+      checkpoint_step = int(resume_checkpoint_path.rstrip('/').split('/')[-1])
       assert args.lr_schedule == "wsd", "LR schedule must be wsd for decay experiments"
 
     
@@ -284,7 +285,7 @@ checkpoints:
   checkpoints_path_is_shared_file_system: false
   load_lr_scheduler: true
   load_optimizer: true
-  resume_checkpoint_path: {args.resume_checkpoint_path if args.resume_checkpoint_path else "null"}
+  resume_checkpoint_path: {resume_checkpoint_path if resume_checkpoint_path else "null"}
   save_final_state: true
   save_initial_state: false
 data_stages:
@@ -454,11 +455,17 @@ lighteval:
 #SBATCH --begin=now+0minutes
 #SBATCH --time={args.time}
 #SBATCH --exclusive
+#SBATCH --requeue
 #SBATCH --exclude={FAULTY_NODES}
 {"#SBATCH --dependency=afterok:" + args.dep_job_id if args.dep_job_id else ""}
 {"#SBATCH --reservation=" + args.reservation if args.reservation else ""}
 
 set -x -e
+
+# Handle preemption: SIGTERM is sent ~30s before SIGKILL on preemption.
+# Exit cleanly so SLURM requeues the job; nanotron's periodic checkpointing
+# ensures progress is saved.
+trap 'echo "SIGTERM received (preemption), exiting for requeue..."; exit 0' SIGTERM
 
 echo "START TIME: $(date)"
 secs_to_human(){{
@@ -485,6 +492,59 @@ hf auth whoami
 
 echo go $COUNT_NODE
 echo $HOSTNAMES
+
+# Auto-detect latest S3 checkpoint for resume (--requeue). Skip training if already done
+# (latest checkpoint step >= train_steps) so requeued jobs exit cleanly without restarting.
+{"" if args.decay_exp else f'''set +e
+python3 -c "
+import subprocess
+import sys
+import yaml
+
+train_steps = {args.train_steps}
+config_path = '{config_path_yaml}'
+s5cmd = '{S5CMD_PATH}'
+prefix = '{S3_CHECKPOINTS_PREFIX}/{name}/'
+
+with open(config_path) as f:
+    cfg = yaml.safe_load(f)
+
+result = subprocess.run([s5cmd, 'ls', prefix], capture_output=True, text=True)
+steps = sorted(
+    int(p.split()[-1].strip('/'))
+    for p in result.stdout.strip().splitlines()
+    if 'DIR' in p and p.split()[-1].strip('/').isdigit()
+)
+
+if steps and steps[-1] >= train_steps:
+    print(
+        f'Latest checkpoint step {{steps[-1]}} >= train_steps {{train_steps}}; '
+        'run already finished, not resuming'
+    )
+    cfg['checkpoints']['resume_checkpoint_path'] = None
+    with open(config_path, 'w') as f:
+        yaml.dump(cfg, f)
+    sys.exit(2)
+
+if steps:
+    resume = prefix + str(steps[-1]) + '/'
+    print(f'Auto-resuming from checkpoint: {{resume}}')
+    cfg['checkpoints']['resume_checkpoint_path'] = resume
+    with open(config_path, 'w') as f:
+        yaml.dump(cfg, f)
+else:
+    print('No existing checkpoints found, starting from scratch')
+sys.exit(0)
+"
+_ckpt_rc=$?
+set -e
+if [ "$_ckpt_rc" -eq 2 ]; then
+  echo "Skipping training: checkpoint already reached train_steps."
+  exit 0
+fi
+if [ "$_ckpt_rc" -ne 0 ]; then
+  echo "WARNING: Auto-checkpoint detection failed (exit $_ckpt_rc), continuing with existing config"
+fi'''}
 
 CMD=" \
     {NANOTRON_PATH}/run_train.py \

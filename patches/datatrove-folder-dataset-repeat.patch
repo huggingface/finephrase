@@ -1,0 +1,35 @@
+diff --git a/src/datatrove/utils/dataset.py b/src/datatrove/utils/dataset.py
+index a2a1795..a0e8889 100644
+--- a/src/datatrove/utils/dataset.py
++++ b/src/datatrove/utils/dataset.py
+@@ -318,18 +318,27 @@ if is_torch_available():
+                         [{"path": rel_path, "size": f.fsize} for rel_path, f in zip(matched_files, self.files)], f
+                     )
+ 
+-        def __getitem__(self, item):
++        def __getitem__(self, item: int):
+             """
+             Retrieves a data sample from the appropriate file based on the global index.
+ 
+-            Finds the correct file containing the item and returns the sample from that file's dataset.
++            Indices at or beyond the total number of sequences wrap with modulo so training can
++            run for more steps than a single pass over the corpus (same idea as
++            ``OldTokenizedBytesFolderDataset`` in nanotron).
+ 
+             Args:
+-                item (int): The global index of the sample to retrieve.
++                item: Global sample index (may exceed ``len(self)``; it is wrapped).
+ 
+             Returns:
+                 dict: A dictionary containing 'input_ids' and optionally 'positions'.
++
++            Raises:
++                IndexError: If the folder contains no sequences.
+             """
++            total = self.lens[-1] if self.lens else 0
++            if total == 0:
++                raise IndexError("DatatroveFolderDataset has no sequences (empty folder or zero-length files).")
++            item = item % total
+             # check if we are in the same file as before
+             if not (self.lens[self.current_file] <= item < self.lens[self.current_file + 1]):
+                 # figure out current file

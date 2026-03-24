@@ -16,6 +16,16 @@ git clone -b lighteval-experiment-setup  git@github.com:huggingface/lighteval.gi
 git clone -b fix-nanotron git@github.com:joelniklaus/datatrove.git
 ```
 
+### Patch datatrove (folder dataset index wrap)
+
+Nanotron blending can request sample indices beyond the number of sequences on disk. Apply this patch so `DatatroveFolderDataset.__getitem__` wraps with modulo (see `patches/datatrove-folder-dataset-repeat.patch`). From the FinePhrase repository root:
+
+```bash
+patch -p1 -d datatrove < patches/datatrove-folder-dataset-repeat.patch
+```
+
+Skip this step only if `datatrove` is already patched (for example your tree already contains `item = item % total` in `DatatroveFolderDataset.__getitem__`). Apply again after resetting `datatrove` to a clean remote branch.
+
 ### Enable training with recursive dataloaders
 In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to set `recursive=True`.
 
@@ -26,6 +36,9 @@ module load cuda/12.4
 ```
 
 ### Install dependencies (order is important)
+
+Ensure the [datatrove patch](#patch-datatrove-folder-dataset-index-wrap) is applied **before** `uv pip install -e "datatrove[...]"` when you rely on a fresh clone of `joelniklaus/datatrove`.
+
 ```bash
 uv pip install setuptools
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch==2.6.0+cu124"
@@ -129,6 +142,7 @@ All presets keep depth/head topology fixed and only scale `hidden_size` + `inter
 
 Slurm jobs use `--qos low` by default, `--requeue`, and a script that picks the **latest** checkpoint under `s3://finephrase/experiments/checkpoints/<run>/` before each run. If that step is already `>= train_steps`, training is **skipped** (clean exit) so finished runs do not reload step-`train_steps` checkpoints and crash.
 
+**Repeating / blended data:** Nanotron’s blend builds sample indices up to `train_steps × global_batch_size` per dataset stream. With the [datatrove patch](#patch-datatrove-folder-dataset-index-wrap), `DatatroveFolderDataset` maps any global index with `index % len(dataset)` before resolving the `.ds` file, so a smaller corpus is cycled instead of raising `IndexError` (same idea as `OldTokenizedBytesFolderDataset` in nanotron). Empty folders still fail with a clear `IndexError`.
 
 ```bash
 train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq

@@ -39,6 +39,7 @@ QWEN_SIZE_PRESETS = {
         "tp": 1,
         "recompute_layer": False,
         "micro_batch_size": 4,
+        "eval_batch_size": 32,
     },
     "1.7b": {
         "hidden_size": 2048,
@@ -46,6 +47,7 @@ QWEN_SIZE_PRESETS = {
         "tp": 1,
         "recompute_layer": False,
         "micro_batch_size": 2,
+        "eval_batch_size": 16,
     },
     "2.9b": {
         "hidden_size": 2560,
@@ -53,6 +55,7 @@ QWEN_SIZE_PRESETS = {
         "tp": 1,
         "recompute_layer": True,
         "micro_batch_size": 1,
+        "eval_batch_size": 8,
     },
     "6.2b": {
         "hidden_size": 4096,
@@ -60,6 +63,7 @@ QWEN_SIZE_PRESETS = {
         "tp": 2,
         "recompute_layer": True,
         "micro_batch_size": 1,
+        "eval_batch_size": 4,
     },
     # Stop scaling because due to flash attention 2, I could not go beyond hidden size 4096 with 16 attention heads
 }
@@ -172,6 +176,7 @@ def main():
     args = parser.parse_args()
     model_preset = QWEN_SIZE_PRESETS[args.model_size]
     micro_batch_size = model_preset["micro_batch_size"]
+    eval_batch_size = int(model_preset["eval_batch_size"])
     tp_size = int(model_preset["tp"])
     recompute_layer = bool(model_preset["recompute_layer"])
     model_param_count = calculate_qwen_parameter_count(
@@ -411,7 +416,7 @@ lighteval:
   eval_interval: 500
   eval_interval_file: null
   nanotron_path: {NANOTRON_PATH}
-  batch_size: 8
+  batch_size: {eval_batch_size}
   slurm:
     gpus_per_node: {NUM_GPUS}
     hf_cache: "{BASE_PATH}/.cache/huggingface"

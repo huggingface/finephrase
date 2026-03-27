@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from utils import FAULTY_NODES, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
+from train_model import DEFAULT_MODEL_SIZE, QWEN_SIZE_PRESETS
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
 S3_EVALS_RESULTS_PREFIX = f"{S3_BASE_PATH}/evals-test"
@@ -27,6 +28,24 @@ S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 
 TASKS_PATH = f"{PROJECT_PATH}/tasks.txt"
 TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
+
+# Run names from train_model use a trailing `-<preset>b` token (e.g. `...-6.2b`, `...-2.9b`).
+_MODEL_SIZE_SUFFIX_RE = re.compile(
+    r"-(0\.5|1\.7|2\.9|6\.2)b$",
+)
+
+
+def infer_model_size_from_run_name(run_name: str) -> str:
+    """Map a checkpoint run folder name to a `QWEN_SIZE_PRESETS` key.
+
+    Matches a trailing ``-0.5b`` / ``-1.7b`` / ``-2.9b`` / ``-6.2b`` suffix (training convention).
+    If absent, returns ``DEFAULT_MODEL_SIZE`` (1.7b).
+    """
+    m = _MODEL_SIZE_SUFFIX_RE.search(run_name)
+    if m:
+        return f"{m.group(1)}b"
+    return DEFAULT_MODEL_SIZE
+
 
 def parse_date(date_string: Optional[str]) -> Optional[datetime]:
     if date_string is None:
@@ -290,7 +309,18 @@ def main():
     job_id = None
     for model_name, seed in itertools.product(model_names, args.seed.split(",")):
         formatted_model_name = args.model_template.format(name=model_name, seed=seed)
-        
+        size_key = infer_model_size_from_run_name(formatted_model_name)
+        resolved_batch_size: int = (
+            args.batch_size
+            if args.batch_size is not None
+            else int(QWEN_SIZE_PRESETS[size_key]["eval_batch_size"])
+        )
+        batch_note = ", --batch-size override" if args.batch_size is not None else ""
+        logger.info(
+            f"{formatted_model_name}: eval batch_size={resolved_batch_size} "
+            f"(model_size={size_key}{batch_note})"
+        )
+
         # Use the provided task paths (English only)
         custom_tasks_path = args.custom_tasks
         tasks_list_path = args.tasks
@@ -331,7 +361,7 @@ def main():
         lighteval_config_yaml = {
             "model_parameters": {
                 "model_name": "$LOCAL_DOWNLOAD_CHECKPOINT_FOLDER/hf_model",
-                "batch_size": args.batch_size if args.batch_size is not None else None,
+                "batch_size": resolved_batch_size,
                 "trust_remote_code": True,
                 "dtype": "bfloat16",
                 "generation_parameters": {
@@ -453,7 +483,7 @@ LIGHTEVAL_CONFIG_PATH="$LOCAL_DOWNLOAD_CHECKPOINT_FOLDER/lighteval_config.yaml"
 cat > $LIGHTEVAL_CONFIG_PATH << EOL
 model_parameters:
   model_name: $LOCAL_DOWNLOAD_CHECKPOINT_FOLDER/hf_model
-  batch_size: {args.batch_size if args.batch_size is not None else 'null'}
+  batch_size: {resolved_batch_size}
   trust_remote_code: true
   dtype: bfloat16
   model_name_override: {formatted_model_name}/$STEP

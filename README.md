@@ -135,9 +135,10 @@ tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name 
 ## Model Training & Evaluation
 
 ### Training Models
-Train Qwen-size models (`0.5b`, `1.7b`, `2.9b`) on your tokenized datasets.
+Train Qwen-size models (`0.5b`, `1.7b`, `2.9b`, `6.2b`) on your tokenized datasets.
 The launcher prints the exact parameter count for the selected preset before submitting training.
 Tensor parallelism and recomputation are configured per model preset in `train_model.py`.
+Lighteval batch size in the generated Nanotron config scales with model size (`eval_batch_size` in `QWEN_SIZE_PRESETS`: e.g. `1.7b` → 8, `6.2b` → 2) to reduce eval OOM on larger models. Run names use a trailing `-0.5b` / `-1.7b` / `-2.9b` / `-6.2b` suffix; if missing, the `1.7b` preset is used.
 All presets keep depth/head topology fixed and only scale `hidden_size` + `intermediate_size`.
 
 Slurm jobs use `--qos low` by default, `--requeue`, and a script that picks the **latest** checkpoint under `s3://finephrase/experiments/checkpoints/<run>/` before each run. If that step is already `>= train_steps`, training is **skipped** (clean exit) so finished runs do not reload step-`train_steps` checkpoints and crash.
@@ -156,6 +157,8 @@ Run evaluations manually if automatic ones fail during training:
 ```bash
 evaluate --name fw_edu_hq,fw_edu_lq
 ```
+
+`evaluate_checkpoints.py` infers the same preset from the run folder name (suffix like `-6.2b`). Override the batch size if needed: `evaluate --batch-size 1`.
 
 Run all missing evaluations:
 ```bash

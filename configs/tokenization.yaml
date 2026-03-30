@@ -1,0 +1,462 @@
+# Tokenization experiment configuration
+script: "tokenize"
+continue_on_failure: true
+
+# Fixed arguments for all runs
+fixed_args:
+  limit: -1
+  qos: "high"
+
+# Variable arguments - creates different experiment runs
+runs:
+  # --- Baselines ---
+  #- name: "fw_edu_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT/
+  #- name: "fw_edu_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT/
+  #- name: "finepdfs_edu"
+  #  args:
+  #    data: hf://datasets/HuggingFaceFW/finepdfs-edu/data/eng_Latn/train
+  #    limit: 6_000_000 # 206M docs ~= 1.2T tokens => 6M docs ~= 35B tokens
+  #- name: "dclm"
+  #  args:
+  #    data: hf://datasets/mlfoundations/dclm-baseline-1.0-parquet/filtered
+  #    limit: 30_000_000 # 4T tokens ~= 3B documents => 40B tokens ~= 30M documents
+  #- name: "ultra_fineweb"
+  #  args:
+  #    data: hf://datasets/openbmb/Ultra-FineWeb/data/ultrafineweb_en_v1_4
+  #    text-key: content
+  #    limit: 35_000_000 # 1T tokens ~= 1.16B documents => 30B tokens ~= 35M documents
+  #- name: "cosmopedia"
+  #  args:
+  #    data: hf://datasets/HuggingFaceTB/cosmopedia/data
+  #- name: "nemotron_hq_synth" # contains 1B documents in total
+  #  args:
+  #    data: hf://datasets/nvidia/Nemotron-CC-v2/High-Quality-Synthetic
+  #    limit: 60_000_000 # Nemotron docs seem to be shorter than DCLM ones
+  #- name: "rewire"
+  #  args: # Repo: facebook/recycling_the_web, Revision: refs/convert/parquet, Path within repo: default/partial-train
+  #    #data: hf://datasets/facebook/recycling_the_web@refs/convert/parquet/default/partial-train # But this does not seem to be complete (only 1B tokens)
+  #    data: hf://datasets/facebook/recycling_the_web
+  #    file-type: jsonl
+  #    compression: zstd # compression "infer" does not work for zstd
+  #- name: "synth_answers" # contains 79,648,272 documents (~75B tokens using their tokenizer, using mine only roughly 20B tokens)
+  #  args:
+  #    data: hf://datasets/PleIAs/SYNTH
+  #    text-key: synthetic_answer
+  #- name: "synth_reasoning" # contains 79,648,272 documents (~75B tokens using their tokenizer, using mine only roughly 20B tokens)
+  #  args:
+  #    data: hf://datasets/PleIAs/SYNTH
+  #    text-key: synthetic_reasoning
+  #- name: "synth_query_reasoning_answer" # contains 79,648,272 documents (~75B tokens using their tokenizer, using mine only roughly 20B tokens)
+  #  args:
+  #    data: hf://datasets/PleIAs/SYNTH
+  #    text-key: query,synthetic_reasoning,synthetic_answer
+
+  # --- Cleaning ---
+  #- name: "essentialweb_clean"
+  #  args:
+  #    data: hf://datasets/textcleanlm/essentialweb-1.0-sample-10B/data
+  #    text-key: clean
+  #- name: "essentialweb_raw"
+  #  args:
+  #    data: hf://datasets/textcleanlm/essentialweb-1.0-sample-10B/data
+  #    text-key: raw
+
+  # --- Nemotron ---
+  #- name: "distill_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/nemotron/distill-1b-hq/
+  #- name: "diverse_qa_pairs_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/nemotron/diverse_qa_pairs-1b-hq/
+  #- name: "extract_knowledge_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/nemotron/extract_knowledge-1b-hq/
+  #- name: "knowledge_list_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/nemotron/knowledge_list-1b-hq/
+  #- name: "wikipedia_style_rephrasing_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/nemotron/wikipedia_style_rephrasing-1b-hq/
+  
+  # --- REWIRE ---
+  #- name: "guided_rewrite_original_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rewire/guided_rewrite_original-270m-hq/
+  #- name: "guided_rewrite_original_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rewire/guided_rewrite_original-1b-hq/
+  #- name: "guided_rewrite_original_4b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rewire/guided_rewrite_original-4b-hq/
+  #- name: "guided_rewrite_original_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rewire/guided_rewrite_original-12b-hq/
+  #- name: "guided_rewrite_original_27b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rewire/guided_rewrite_original-27b-hq/
+  #- name: "guided_rewrite_improved_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rewire/guided_rewrite_improved-1b-hq/
+  #- name: "guided_rewrite_improved_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rewire/guided_rewrite_improved-12b-hq/
+
+  # --- Format ---
+  # DCLM
+  #- name: "article_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-1b-dclm/
+  #- name: "commentary_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/commentary-1b-dclm/
+  #- name: "discussion_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-1b-dclm/
+  #- name: "faq_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-1b-dclm/
+  #- name: "tutorial_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-1b-dclm/
+  #- name: "table_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-1b-dclm/
+  #- name: "math_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-1b-dclm/
+
+  # Cosmopedia
+  #- name: "faq_1b_cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-1b-cosmopedia/
+  #- name: "tutorial_1b_cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-1b-cosmopedia/
+
+  # FW-EDU HQ Qwen3
+  #- name: "article_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-qwen3-1.7b-hq/
+  #- name: "commentary_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/commentary-qwen3-1.7b-hq/
+  #- name: "discussion_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-qwen3-1.7b-hq/
+  #- name: "faq_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-qwen3-1.7b-hq/
+  #- name: "tutorial_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-qwen3-1.7b-hq/
+  #- name: "table_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-qwen3-1.7b-hq/
+  #- name: "math_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-qwen3-1.7b-hq/
+  #- name: "narrative_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/narrative-qwen3-1.7b-hq/
+  #- name: "explanation_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/explanation-qwen3-1.7b-hq/
+
+  # FW-EDU HQ Qwen2.5-1.5B
+  #- name: "tutorial_qwen2.5_1.5b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-qwen2.5-1.5b-hq/
+
+  # FW-EDU HQ Qwen2-1.5B
+  #- name: "tutorial_qwen2_1.5b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-qwen2-1.5b-hq/
+
+  # FW-EDU HQ Qwen1.5-1.8B
+  #- name: "tutorial_qwen1.5_1.8b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-qwen1.5-1.8b-hq/
+
+  # FW-EDU HQ SmolLM2-1.7B
+  #- name: "article_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-smollm2-1.7b-hq/
+  #- name: "discussion_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-smollm2-1.7b-hq/
+  #- name: "tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-smollm2-1.7b-hq/
+  #- name: "faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-smollm2-1.7b-hq/
+  #- name: "table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-smollm2-1.7b-hq/
+  #- name: "math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-smollm2-1.7b-hq/
+  #- name: "narrative_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/narrative-smollm2-1.7b-hq/
+  #- name: "explanation_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/explanation-smollm2-1.7b-hq/
+
+  # FW-EDU HQ SmolLM2-360M
+  #- name: "tutorial_smollm2_360m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-smollm2-360m-hq/
+
+  # FW-EDU HQ SmolLM2-135M
+  #- name: "tutorial_smollm2_135m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-smollm2-135m-hq/
+
+  # FW-EDU HQ Llama-3.2-1B
+  #- name: "article_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-llama3.2-1b-hq/
+  #- name: "discussion_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-llama3.2-1b-hq/
+  #- name: "tutorial_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-llama3.2-1b-hq/
+  #- name: "faq_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-llama3.2-1b-hq/
+  #- name: "table_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-llama3.2-1b-hq/
+  #- name: "math_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-llama3.2-1b-hq/
+  #- name: "narrative_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/narrative-llama3.2-1b-hq/
+  #- name: "explanation_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/explanation-llama3.2-1b-hq/
+
+  # FW-EDU HQ Falcon-3-1B
+  #- name: "article_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-falcon3-1b-hq/
+  #- name: "discussion_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-falcon3-1b-hq/
+  #- name: "tutorial_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-falcon3-1b-hq/
+  #- name: "faq_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-falcon3-1b-hq/
+  #- name: "table_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-falcon3-1b-hq/
+  #- name: "math_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-falcon3-1b-hq/
+  #- name: "narrative_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/narrative-falcon3-1b-hq/
+  #- name: "explanation_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/explanation-falcon3-1b-hq/
+
+  # FW-EDU HQ Granite-3.1-1B
+  #- name: "article_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-granite3-1b-hq/
+  #- name: "discussion_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-granite3-1b-hq/
+  #- name: "tutorial_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-granite3-1b-hq/
+  #- name: "faq_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-granite3-1b-hq/
+  #- name: "table_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-granite3-1b-hq/
+  #- name: "math_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-granite3-1b-hq/
+  #- name: "narrative_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/narrative-granite3-1b-hq/
+  #- name: "explanation_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/explanation-granite3-1b-hq/
+
+  # FW-EDU HQ
+  #- name: "article_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-12b-hq/
+  #- name: "article_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-1b-hq/
+  #- name: "commentary_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/commentary-12b-hq/
+  #- name: "commentary_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/commentary-1b-hq/
+  #- name: "discussion_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-12b-hq/
+  #- name: "discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-1b-hq/
+  #- name: "faq_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-12b-hq/
+  #- name: "faq_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-1b-hq/
+  #- name: "tutorial_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-270m-hq/
+  #- name: "tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-1b-hq/
+  #- name: "tutorial_4b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-4b-hq/
+  #- name: "tutorial_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-12b-hq/
+  #- name: "tutorial_27b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-27b-hq/
+  #- name: "math_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-270m-hq/
+  #- name: "math_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-1b-hq/
+  #- name: "math_4b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-4b-hq/
+  #- name: "math_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-12b-hq/
+  #- name: "math_27b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/math-27b-hq/
+  #- name: "table_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-12b-hq/
+  #- name: "table_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/table-1b-hq/
+  #- name: "narrative_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/narrative-1b-hq/
+  #- name: "explanation_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/explanation-1b-hq/
+
+  # FW-EDU LQ
+  #- name: "article_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-12b-lq/
+  #- name: "article_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/article-1b-lq/
+  #- name: "commentary_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/commentary-12b-lq/
+  #- name: "commentary_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/commentary-1b-lq/
+  #- name: "discussion_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-12b-lq/
+  #- name: "discussion_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/discussion-1b-lq/
+  #- name: "faq_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-12b-lq/
+  #- name: "faq_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/faq-1b-lq/
+  #- name: "tutorial_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-12b-lq/
+  #- name: "tutorial_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/format/tutorial-1b-lq/
+
+  # --- Rephrase ---
+  # Unoptimized prompts
+  #- name: "rephrase_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rephrase-12b-lq/
+  #- name: "rephrase_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/rephrase-1b-lq/
+
+  # Optimized prompts
+  #- name: rephrase_12b_budget_10_lq
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-12b-it/budget-10-test/
+  #- name: rephrase_12b_budget_1_lq
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-12b-it/budget-1-test/
+  #- name: rephrase_4b_budget_10_lq
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-4b-it/budget-10-test/
+  #- name: rephrase_4b_budget_1_lq
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-4b-it/budget-1-test/
+  #- name: rephrase_1b_budget_10_lq 
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-1b-it/budget-10-test/
+  #- name: rephrase_1b_budget_1_lq
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-1b-it/budget-1-test/
+
+
+
+  # --- Continue ---
+  #- name: "continue_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/continue-12b-hq/
+  #- name: "continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/continue-12b-lq/
+  #- name: "continue_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/continue-1b-hq/
+  #- name: "continue_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/continue-1b-lq/
+
+  # --- Summarize ---
+  #- name: "summarize_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/summarize-12b-hq/
+  #- name: "summarize_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/summarize-12b-lq/
+  #- name: "summarize_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/summarize-1b-hq/
+  #- name: "summarize_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/summarize-1b-lq/
+  #- name: "summarize_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/summarize-270m-hq/
+  #- name: "summarize_270m_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/rephrased/beyondweb/summarize-270m-lq/
+

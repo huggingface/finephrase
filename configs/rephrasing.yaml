@@ -7,38 +7,51 @@ continue_on_failure: true
 # Fixed arguments for all runs
 fixed_args:
   # Data and output configuration
-  data-paths: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
   limit: -1
-  
-  # Processing configuration
-  enable-prefix-caching: true
-  enable-chunked-prefill: true
 
-  # Model configuration 
+  # Processing configuration
+  enable-prefix-caching: false # prefix caching is not compatible with sliding window attention
+  enable-chunked-prefill: false # This is apparently mainly useful for latency improvements
+
+  # Model configuration
   max-tokens: 4096
   model-max-context: 16384
 
-  temperature: 1
-  top-p: 0.95
-  top-k: 64
-  
+  tp: 1
+  gpu-memory-utilization: 0.88
+
   # Infrastructure configuration
   max-concurrent-requests: 500
   max-concurrent-tasks: 500
   server-type: "vllm"
-  
+
   # This seems to be a middle ground that works well across models and has a high draft acceptance rate of around 0.7
   # Decreasing the temperature could lead to a higher draft acceptance rate, but diversity could suffer
   speculative-config: '{"method": "ngram", "num_speculative_tokens": 7, "prompt_lookup_max": 6}'
-  
+
   # Debugging and checkpoints
   debug: false # Logs get very verbose when debug is true
-  
+
   # Slurm configuration
-  time: "3-00:00:00"
-  qos: "normal"
-  n-tasks: 1 # The input dataset has 10K chunks, so we cannot run more tasks (2M tokens per file)
-  n-workers: 16 # Only limit the number of workers if you are running in qos normal
+  time: "7-00:00:00"
+  qos: "low"
+  n-tasks: 100
+  #n-workers: 20 # Only need to limit the number of workers if you are running in qos normal
+  #override-unsafe: true # Overrides unsafe guard for large runs
+
+# When to know when we have enough data for decay experiments?
+# We need roughly 2B tokens plus some margin for error => 2.5B tokens
+# Each output file is between 1.5MB and 3MB on AWS
+# Count number of files: aws s3 ls s3://finephrase/experiments/rephrased/beyondweb/continue-12b-hq/ | wc -l => 20649
+# continue-12b-hq: 9984459378 / 20649 = ~483'532 tokens per file
+# continue-12b-lq: 12249206538 / 33358 = ~367'204 tokens per file
+# summarize-1b-hq: 2138609303 / 20649 = ~103'570 tokens per file
+# summarize-1b-lq: 2882279171 / 33358 = ~86'404 tokens per file
+# => it seems the files are not a useful proxy for the number of tokens in the output, 
+#    probably because each file is a number of examples and the examples can vary drastically in length
+# ===> I probably just have to tokenize and see
+
 
 # There is usually more input tokens than output tokens
 # 27B (tp4): ~4.5M output tokens per hour 
@@ -49,54 +62,707 @@ fixed_args:
 
 # Variable arguments - creates different experiment runs
 runs:
-  #- name: "test-speculative"
+  # --- Nemotron ---
+  #- name: "1b-hq"
   #  args:
-  #    prompt: "dspy/rephrase/gemma-3-27b-it/budget-1.md"
-  #    model-name-or-path: "google/gemma-3-27b-it"
-  #    tp: 4
-  #    gpu-memory-utilization: 0.86
-  - name: "test-speculative"
-    args:
-      prompt: "dspy/rephrase/gemma-3-27b-it/budget-10.md"
-      model-name-or-path: "google/gemma-3-27b-it"
-      tp: 4
-      gpu-memory-utilization: 0.86
+  #    prompt: "nemotron/distill.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "nemotron/diverse_qa_pairs.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "nemotron/extract_knowledge.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "nemotron/knowledge_list.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "nemotron/wikipedia_style_rephrasing.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
 
-  #- name: "test-speculative"
+  # --- REWIRE ---
+  #- name: "270m-hq"
   #  args:
-  #    prompt: "dspy/rephrase/gemma-3-12b-it/budget-1.md"
+  #    prompt: "rewire/guided_rewrite_original.md"
+  #    model-name-or-path: "google/gemma-3-270m-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "rewire/guided_rewrite_original.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "4b-hq"
+  #  args:
+  #    prompt: "rewire/guided_rewrite_original.md"
+  #    model-name-or-path: "google/gemma-3-4b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "rewire/guided_rewrite_original.md"
   #    model-name-or-path: "google/gemma-3-12b-it"
   #    tp: 2
-  #    gpu-memory-utilization: 0.9
-  #- name: "test-speculative"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "27b-hq"
+  #  args:
+  #    prompt: "rewire/guided_rewrite_original.md"
+  #    model-name-or-path: "google/gemma-3-27b-it"
+  #    gpu-memory-utilization: 0.82
+  #    tp: 4
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "rewire/guided_rewrite_improved.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "rewire/guided_rewrite_improved.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # --- Format ---
+  # DCLM
+  # DCLM just one local shard out of one global shard: 100 x ~400M tokens = 40B tokens
+  # hf://datasets/mlfoundations/dclm-baseline-1.0-parquet/filtered/OH_eli5_vs_rw_v2_bigram_200k_train/fasttext_openhermes_reddit_eli5_vs_rw_v2_bigram_200k_train/processed_data/global-shard_01_of_10/local-shard_0_of_10
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/commentary.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+  #- name: "1b-dclm"
+  #  args:
+  #    prompt: "format/narrative.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/dclm-37BT/"
+
+  # --- Cosmopedia ---
+  #- name: "1b-cosmopedia"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/cosmopedia-25BT"
+  #- name: "1b-cosmopedia"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/cosmopedia-25BT"
+
+  # FW-EDU HQ Qwen1.5-1.8B
+  #- name: "qwen1.5-1.8b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "Qwen/Qwen1.5-1.8B-Chat"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ Qwen2-1.5B
+  #- name: "qwen2-1.5b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "Qwen/Qwen2-1.5B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ Qwen2.5-1.5B
+  #- name: "qwen2.5-1.5b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "Qwen/Qwen2.5-1.5B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ Qwen3
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/commentary.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "qwen3-1.7b-hq"
+  #  args:
+  #    prompt: "format/narrative.md"
+  #    model-name-or-path: "Qwen/Qwen3-1.7B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  # name: "qwen3-1.7b-hq"
+  # args:
+  #   prompt: "format/explanation.md"
+  #   model-name-or-path: "Qwen/Qwen3-1.7B"
+  #   data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ SmolLM2-1.7B
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/narrative.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm2-1.7b-hq"
+  #  args:
+  #    prompt: "format/explanation.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ HuggingFaceTB/SmolLM2-360M-Instruct
+  #- name: "smollm2-360m-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-360M-Instruct"
+  #    model-max-context: 8192
+  #    speculative-config: ""
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  
+  # FW-EDU HQ HuggingFaceTB/SmolLM2-135M-Instruct
+  #- name: "smollm2-135m-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM2-135M-Instruct"
+  #    model-max-context: 8192
+  #    speculative-config: ""
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ Llama-3.2-1B
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/narrative.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "llama3.2-1b-hq"
+  #  args:
+  #    prompt: "format/explanation.md"
+  #    model-name-or-path: "meta-llama/Llama-3.2-1B-Instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ Falcon-3-1B
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/narrative.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "falcon3-1b-hq"
+  #  args:
+  #    prompt: "format/explanation.md"
+  #    model-name-or-path: "tiiuae/Falcon3-1B-Instruct"
+  #    model-max-context: 8192
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ Granite-3.1-1B
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/narrative.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "granite3-1b-hq"
+  #  args:
+  #    prompt: "format/explanation.md"
+  #    model-name-or-path: "ibm-granite/granite-3.1-1b-a400m-instruct"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ LFM2-1.2B: For some reason this model just produces garbage output
+  # FW-EDU HQ BitCPM4-1B: probably needs newer transformers/vllm version
+  # DOES NOT WORK YET WITH THE CURRENT VERSION OF VLLM
+  #- name: "smollm3-3b-hq" 
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM3-3B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "smollm3-3b-hq" 
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "HuggingFaceTB/SmolLM3-3B"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU HQ GPT-OSS TODO: try again with newer vllm version
+  #- name: "gpt-oss-20b-hq" # TODO to run
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "openai/gpt-oss-20b"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "gpt-oss-120b-hq" # TODO to run
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "openai/gpt-oss-120b"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+
+  # FW-EDU HQ
+  #- name: "12b-hq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/commentary.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/commentary.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "27b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-27b-it"
+  #    tp: 4
+  #    gpu-memory-utilization: 0.82
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "4b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-4b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "270m-hq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-270m-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "27b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "google/gemma-3-27b-it"
+  #    tp: 4
+  #    gpu-memory-utilization: 0.82
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "4b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "google/gemma-3-4b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "270m-hq"
+  #  args:
+  #    prompt: "format/math.md"
+  #    model-name-or-path: "google/gemma-3-270m-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/table.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/narrative.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "format/explanation.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+
+  # FW-EDU LQ
+  #- name: "12b-lq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "1b-lq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/article.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "12b-lq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/commentary.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "1b-lq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/commentary.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "12b-lq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "1b-lq" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
+  #  args:
+  #    prompt: "format/discussion.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "12b-lq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "1b-lq"
+  #  args:
+  #    prompt: "format/tutorial.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "12b-lq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+  #- name: "1b-lq"
+  #  args:
+  #    prompt: "format/faq.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT"
+
+  # --- Rephrase ---
+  # Unoptimized prompts
+  #- name: "12b-lq"
+  #  args:
+  #    prompt: "rephrase.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #- name: "1b-lq"
+  #  args:
+  #    prompt: "rephrase.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+
+  # Optimized prompts
+  #- name: "test"
   #  args:
   #    prompt: "dspy/rephrase/gemma-3-12b-it/budget-10.md"
   #    model-name-or-path: "google/gemma-3-12b-it"
   #    tp: 2
-  #    gpu-memory-utilization: 0.9
-
-  #- name: "test-speculative"
+  #    n-tasks: 1000
+  #- name: "test" # NOT COMPLETE BUT PROBABLY ENOUGH FOR DECAY EXP
   #  args:
-  #    prompt: "dspy/rephrase/gemma-3-4b-it/budget-1.md"
-  #    model-name-or-path: "google/gemma-3-4b-it"
-  #    tp: 1
-  #    gpu-memory-utilization: 0.94
-  #- name: "test-speculative"
+  #    prompt: "dspy/rephrase/gemma-3-12b-it/budget-1.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    n-tasks: 1000
+  #- name: "test"
   #  args:
   #    prompt: "dspy/rephrase/gemma-3-4b-it/budget-10.md"
   #    model-name-or-path: "google/gemma-3-4b-it"
-  #    tp: 1
-  #    gpu-memory-utilization: 0.94
-
-  #- name: "test-speculative"
+  #- name: "test"
   #  args:
-  #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-1.md"
-  #    model-name-or-path: "google/gemma-3-1b-it"
-  #    tp: 1
-  #    gpu-memory-utilization: 0.98
-  #- name: "test-speculative"
+  #    prompt: "dspy/rephrase/gemma-3-4b-it/budget-1.md"
+  #    model-name-or-path: "google/gemma-3-4b-it"
+  #    n-tasks: 1000
+  #- name: "test"
   #  args:
   #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-10.md"
   #    model-name-or-path: "google/gemma-3-1b-it"
-  #    tp: 1
-  #    gpu-memory-utilization: 0.98
+  #    gpu-memory-utilization: 0.82
+  #    n-tasks: 1000
+  #- name: "test"
+  #  args:
+  #    prompt: "dspy/rephrase/gemma-3-1b-it/budget-1.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    gpu-memory-utilization: 0.82
+  #    n-tasks: 1000
+
+  # --- Continue ---
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "beyondweb/continue.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #    n-tasks: 1000
+  #- name: "12b-lq"
+  #  args:
+  #    prompt: "beyondweb/continue.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    n-tasks: 1000
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "beyondweb/continue.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #    n-tasks: 1000
+  #- name: "1b-lq"
+  #  args:
+  #    prompt: "beyondweb/continue.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    n-tasks: 1000
+
+  # --- Summarize ---
+  #- name: "12b-hq"
+  #  args:
+  #    prompt: "beyondweb/summarize.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #    n-tasks: 1000
+  #- name: "12b-lq"
+  #  args:
+  #    prompt: "beyondweb/summarize.md"
+  #    model-name-or-path: "google/gemma-3-12b-it"
+  #    tp: 2
+  #    n-tasks: 1000
+  #- name: "1b-hq"
+  #  args:
+  #    prompt: "beyondweb/summarize.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    data: "s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT"
+  #    n-tasks: 1000
+  #- name: "1b-lq"
+  #  args:
+  #    prompt: "beyondweb/summarize.md"
+  #    model-name-or-path: "google/gemma-3-1b-it"
+  #    n-tasks: 1000
+
+

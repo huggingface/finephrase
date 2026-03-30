@@ -1,0 +1,1130 @@
+# Tokenization experiment configuration
+script: "train"
+continue_on_failure: true
+
+# Fixed arguments for all runs
+fixed_args:
+  nodes: 8
+  qos: "low"
+  decay-exp: false
+
+# Variable arguments - creates different experiment runs
+runs:
+  # --- Variance Checks ---
+  #- name: "fw_edu_lq-decay-fw_edu_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+  #    decay-exp: true
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_hq/
+  #    decay-exp: true
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_1b_hq/
+  #    decay-exp: true
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+
+  # --- Baselines ---
+  #- name: "fw_edu_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/
+  #- name: "fw_edu_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+  #- name: "finepdfs_edu"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/finepdfs_edu/
+  #- name: "dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/
+  #- name: "ultra-fineweb"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/ultra_fineweb/
+  #- name: "cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/cosmopedia/
+  #- name: "nemotron_hq_synth"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/
+  #- name: "rewire"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/rewire/
+  #- name: "synth_query_reasoning_answer"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/synth_query_reasoning_answer/
+  #- name: "mix-fw_edu_hq-finepdfs_edu"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/finepdfs_edu/
+  #- name: "mix-fw_edu_hq-dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/dclm/
+  #- name: "mix-fw_edu_hq-ultra_fineweb"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/ultra_fineweb/
+  #- name: "mix-fw_edu_hq-cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/cosmopedia/
+  #- name: "mix-fw_edu_hq-nemotron_hq_synth"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/
+  #- name: "mix-fw_edu_hq-rewire"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rewire/
+  #- name: "mix-fw_edu_hq-synth_query_reasoning_answer"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/synth_query_reasoning_answer/
+
+  # Best?
+  #- name: "mix-fw_edu_hq-dclm-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-dclm-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+
+  # Longer training: ~100B tokens
+  #- name: "mix-fw_edu_hq-dclm-table_smollm2_1.7b_hq-math_smollm2_1.7b_hq-tutorial_smollm2_1.7b_hq-faq_smollm2_1.7b_hq"
+  #  args:
+  #    train-steps: 50000
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+
+  #- name: "fw_edu_lq-decay-fw_edu_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/cosmopedia/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-nemotron_hq_synth"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron-hq-synthetic/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-synth_answers"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/synth_answers/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-synth_reasoning"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/synth_reasoning/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-synth_query_reasoning_answer"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/synth_query_reasoning_answer/
+  #    decay-exp: true
+
+  # --- Nemotron ---
+  #- name: "mix-fw_edu_hq-distill_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/distill_1b_hq/
+  #- name: "mix-fw_edu_hq-diverse_qa_pairs_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/diverse_qa_pairs_1b_hq/
+  #- name: "mix-fw_edu_hq-extract_knowledge_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/extract_knowledge_1b_hq/
+  #- name: "mix-fw_edu_hq-knowledge_list_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/knowledge_list_1b_hq/
+  #- name: "mix-fw_edu_hq-wikipedia_style_rephrasing_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/wikipedia_style_rephrasing_1b_hq/
+
+  # --- REWIRE ---
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_270m_hq/
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_1b_hq/
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_4b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_4b_hq/
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_12b_hq/
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_27b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_27b_hq/
+  #- name: "mix-fw_edu_hq-guided_rewrite_improved_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_improved_1b_hq/
+  #- name: "mix-fw_edu_hq-guided_rewrite_improved_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_improved_12b_hq/
+
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_270m_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_270m_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_1b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_1b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_4b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_4b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_12b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_12b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_27b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_27b_hq/
+  #    model-size: "0.5b"
+
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_270m_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_270m_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_1b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_1b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_4b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_4b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_12b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_12b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_27b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_27b_hq/
+  #    model-size: "2.9b"
+
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_270m_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_270m_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_1b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_1b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_4b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_4b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_12b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_12b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-guided_rewrite_original_27b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/guided_rewrite_original_27b_hq/
+  #    model-size: "6.2b"
+
+  # --- Verify that decay is a reliable setup ---
+  # Nemotron HQ Synth mixed in
+  #- name: "mix-nemotron_hq_synth-continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/,s3://finephrase/experiments/tokenized_merged/continue_12b_lq/
+  #- name: "mix-nemotron_hq_synth-rephrase_12b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_budget_10_lq/
+  #- name: "mix-nemotron_hq_synth-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+  
+  # DCLM mixed in
+  #- name: "mix-dclm-article_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/article_1b_hq/
+  #- name: "mix-dclm-commentary_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/commentary_1b_hq/
+  #- name: "mix-dclm-discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/discussion_1b_hq/
+  #- name: "mix-dclm-faq_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/faq_1b_hq/
+  #- name: "mix-dclm-tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #- name: "mix-dclm-table_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/table_1b_hq/
+  #- name: "mix-dclm-math_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+
+
+  # DCLM rephrased and mixed in
+  #- name: "mix-dclm-article_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/article_1b_dclm/
+  #- name: "mix-dclm-commentary_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/commentary_1b_dclm/
+  #- name: "mix-dclm-discussion_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/discussion_1b_dclm/
+  #- name: "mix-dclm-faq_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/faq_1b_dclm/
+  #- name: "mix-dclm-tutorial_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_dclm/
+  #- name: "mix-dclm-table_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/table_1b_dclm/
+  #- name: "mix-dclm-math_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/math_1b_dclm/
+
+  # Cosmopedia rephrased
+  #- name: "mix-cosmopedia-faq_1b_cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/cosmopedia/,s3://finephrase/experiments/tokenized_merged/faq_1b_cosmopedia/
+  #- name: "mix-cosmopedia-tutorial_1b_cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/cosmopedia/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_cosmopedia/
+
+  # FW-EDU HQ Qwen3-1.7B
+  #- name: "mix-fw_edu_hq-article_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-commentary_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/commentary_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-discussion_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-faq_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-table_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-math_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-narrative_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/narrative_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-explanation_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/explanation_qwen3_1.7b_hq/
+
+  # FW-EDU HQ Qwen2.5-1.5B
+  #- name: "mix-fw_edu_hq-tutorial_qwen2.5_1.5b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen2.5_1.5b_hq/
+  
+  # FW-EDU HQ Qwen2-1.5B
+  #- name: "mix-fw_edu_hq-tutorial_qwen2_1.5b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen2_1.5b_hq/
+  
+  # FW-EDU HQ Qwen1.5-1.8B
+  #- name: "mix-fw_edu_hq-tutorial_qwen1.5_1.8b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen1.5_1.8b_hq/
+
+  # Qwen version mixes
+  #- name: "mix-fw_edu_hq-tutorial_qwen1.5_1.8b_hq-tutorial_qwen2_1.5b_hq-tutorial_qwen2.5_1.5b_hq-tutorial_qwen3_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen1.5_1.8b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen2_1.5b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen2.5_1.5b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen3_1.7b_hq/
+
+
+  # FW-EDU HQ SmolLM2-1.7B
+  #- name: "mix-fw_edu_hq-article_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-discussion_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-narrative_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/narrative_smollm2_1.7b_hq/
+  #- name: "mix-fw_edu_hq-explanation_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/explanation_smollm2_1.7b_hq/
+
+
+  # FW-EDU HQ SmolLM2-360M
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_360m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_360m_hq/
+
+  # FW-EDU HQ SmolLM2-135M
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_135m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_135m_hq/
+
+  # FW-EDU HQ Llama-3.2-1B
+  #- name: "mix-fw_edu_hq-article_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-discussion_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-faq_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-table_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-math_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-narrative_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/narrative_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-explanation_llama3.2_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/explanation_llama3.2_1b_hq/
+
+  # FW-EDU HQ Falcon-3-1B
+  #- name: "mix-fw_edu_hq-article_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-discussion_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-faq_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-table_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-math_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-narrative_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/narrative_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-explanation_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/explanation_falcon3_1b_hq/
+
+  # FW-EDU HQ Granite-3.1-1B
+  #s- name: "mix-fw_edu_hq-article_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-discussion_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-faq_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-table_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-math_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-narrative_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/narrative_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-explanation_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/explanation_granite3_1b_hq/
+
+  # FW-EDU HQ LFM2-1.2B
+  #- name: "mix-fw_edu_hq-tutorial_lfm2_1.2b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_lfm2_1.2b_hq/
+
+  # Different model mixes (TODO maybe try more different combinations)
+  #- name: "mix-fw_edu_hq-tutorial_qwen3_1.7b_hq-tutorial_smollm2_1.7b_hq-tutorial_llama3.2_1b_hq-tutorial_falcon3_1b_hq-tutorial_granite3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen3_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_llama3.2_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_falcon3_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_granite3_1b_hq/ 
+
+  # Fw Edu HQ mixed in
+  # Format
+  #- name: "mix-fw_edu_hq-article_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_1b_hq/
+  #- name: "mix-fw_edu_hq-commentary_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/commentary_1b_hq/
+  #- name: "mix-fw_edu_hq-discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_1b_hq/
+  #- name: "mix-fw_edu_hq-faq_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_1b_hq/
+  #- name: "mix-fw_edu_hq-faq_12b_hq"
+  #  args:
+  #     data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_12b_hq/
+  #- name: "mix-fw_edu_hq-math_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_270m_hq/
+  #- name: "mix-fw_edu_hq-math_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+  #- name: "mix-fw_edu_hq-math_4b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_4b_hq/
+  #- name: "mix-fw_edu_hq-math_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_12b_hq/
+  #- name: "mix-fw_edu_hq-math_27b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_27b_hq/
+  #- name: "mix-fw_edu_hq-table_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_1b_hq/
+  #- name: "mix-fw_edu_hq-table_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_12b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_270m_hq/
+  #- name: "mix-fw_edu_hq-tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_4b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_4b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_27b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_27b_hq/
+  #- name: "mix-fw_edu_hq-narrative_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/narrative_1b_hq/
+  #- name: "mix-fw_edu_hq-explanation_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/explanation_1b_hq/
+
+  #- name: "mix-fw_edu_hq-math_270m_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_270m_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-math_1b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-math_4b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_4b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-math_12b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_12b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-math_27b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_27b_hq/
+  #    model-size: "0.5b"
+
+  #- name: "mix-fw_edu_hq-math_270m_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_270m_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-math_1b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-math_4b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_4b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-math_12b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_12b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-math_27b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_27b_hq/
+  #    model-size: "2.9b"
+
+  #- name: "mix-fw_edu_hq-math_270m_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_270m_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-math_1b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-math_4b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_4b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-math_12b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_12b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-math_27b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_27b_hq/
+  #    model-size: "6.2b"
+
+  #- name: "mix-fw_edu_hq-tutorial_270m_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_270m_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-tutorial_1b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-tutorial_4b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_4b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-tutorial_12b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_hq/
+  #    model-size: "0.5b"
+  #- name: "mix-fw_edu_hq-tutorial_27b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_27b_hq/
+  #    model-size: "0.5b"
+
+  #- name: "mix-fw_edu_hq-tutorial_270m_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_270m_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-tutorial_1b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-tutorial_4b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_4b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-tutorial_12b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_hq/
+  #    model-size: "2.9b"
+  #- name: "mix-fw_edu_hq-tutorial_27b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_27b_hq/
+  #    model-size: "2.9b"
+
+  #- name: "mix-fw_edu_hq-tutorial_270m_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_270m_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-tutorial_1b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-tutorial_4b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_4b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-tutorial_12b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_hq/
+  #    model-size: "6.2b"
+  #- name: "mix-fw_edu_hq-tutorial_27b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_27b_hq/
+  #    model-size: "6.2b"
+
+  # Continue LQ vs HQ
+  #- name: "mix-fw_edu_hq-continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_12b_lq/
+  #- name: "mix-fw_edu_hq-continue_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_12b_hq/
+  #- name: "mix-fw_edu_hq-continue_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_1b_lq/
+  #- name: "mix-fw_edu_hq-continue_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_1b_hq/
+
+  # Summarize LQ vs HQ
+  #- name: "mix-fw_edu_hq-summarize_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_12b_lq/
+  #- name: "mix-fw_edu_hq-summarize_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_12b_hq/
+  #- name: "mix-fw_edu_hq-summarize_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_1b_lq/
+  #- name: "mix-fw_edu_hq-summarize_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_1b_hq/
+
+  # Tutorial LQ TODO: Check if all of these are used in the blog
+  #- name: "mix-fw_edu_hq-tutorial_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_lq/
+  #- name: "mix-fw_edu_hq-tutorial_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_lq/
+  #- name: "mix-fw_edu_lq-tutorial_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_lq/
+  #- name: "mix-fw_edu_lq-tutorial_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_lq/
+
+  # Faq LQ TODO: Check if all of these are used in the blog
+  #- name: "mix-fw_edu_hq-faq_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_12b_lq/
+  #- name: "mix-fw_edu_hq-faq_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_1b_lq/
+  #- name: "mix-fw_edu_lq-faq_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/faq_12b_lq/
+  #- name: "mix-fw_edu_lq-faq_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/faq_1b_lq/
+
+  # Source datasets
+  #- name: "mix-fw_edu_hq-faq_1b_cosmopedia" 
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_1b_cosmopedia/
+  #- name: "mix-fw_edu_hq-faq_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_1b_dclm/
+  #- name: "mix-fw_edu_hq-tutorial_1b_cosmopedia"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_cosmopedia/
+  #- name: "mix-fw_edu_hq-tutorial_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_dclm/
+
+  # Mix-in datasets
+  #- name: "mix-fw_edu_lq-tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #- name: "mix-cosmopedia-tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/cosmopedia/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #- name: "mix-dclm-tutorial_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_lq/
+  #- name: "mix-cosmopedia-tutorial_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/cosmopedia/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_lq/
+
+  # Rephrasing
+  #- name: "mix-fw_edu_hq-rephrase_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_lq/
+  #- name: "mix-fw_edu_hq-rephrase_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_1b_lq/
+  #- name: "mix-fw_edu_hq-rephrase_12b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_budget_10_lq/
+  #- name: "mix-fw_edu_hq-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+  #- name: "mix-fw_edu_hq-rephrase_4b_budget_1_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_1_lq/
+  #- name: "mix-fw_edu_hq-rephrase_1b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_1b_budget_10_lq/
+  #- name: "mix-fw_edu_hq-rephrase_1b_budget_1_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_1b_budget_1_lq/
+
+  # Combinations
+  # Mix models
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_1.7b_hq-tutorial_falcon3_1b_hq-tutorial_qwen3_1.7b_hq" # Three strong
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_falcon3_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen3_1.7b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_1.7b_hq-tutorial_falcon3_1b_hq" # Two strong
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_llama3.2_1b_hq-tutorial_granite3_1b_hq-tutorial_1b_hq" # Three weak
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_llama3.2_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_granite3_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_llama3.2_1b_hq-tutorial_granite3_1b_hq" # Two weak
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_llama3.2_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_granite3_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_1.7b_hq-tutorial_llama3.2_1b_hq" # Strong and weak
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_llama3.2_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_1.7b_hq-tutorial_falcon3_1b_hq-tutorial_qwen3_1.7b_hq-tutorial_1b_hq-tutorial_granite3_1b_hq-tutorial_llama3.2_1b_hq" # All of them
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_falcon3_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen3_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_granite3_1b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_llama3.2_1b_hq/
+
+  # Mix datasets and models
+  #- name: "mix-fw_edu_hq-faq_smollm2_1.7b_hq-tutorial_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-tutorial_smollm2_1.7b_hq-faq_falcon3_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/,s3://finephrase/experiments/tokenized_merged/faq_falcon3_1b_hq/
+  #- name: "mix-fw_edu_hq-continue_12b_hq-tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_12b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #- name: "mix-fw_edu_hq-continue_12b_hq-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_12b_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+  #- name: "mix-fw_edu_hq-tutorial_1b_hq-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+  #- name: "mix-fw_edu_hq-continue_12b_hq-tutorial_1b_hq-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_12b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+
+  # --- Cleaning ---
+  #- name: "fw_edu_lq-decay-essentialweb_clean"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/essentialweb_clean/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-essentialweb_raw"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/essentialweb_raw/
+  #    decay-exp: true
+  #- name: "essentialweb_clean"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/essentialweb_clean/
+  #- name: "essentialweb_raw"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/essentialweb_raw/
+
+  # --- Format ---
+  # Do we need to rephrase hq data?
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-article_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-article_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-commentary_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/commentary_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-commentary_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/commentary_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-discussion_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-faq_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-faq_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-math_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-math_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-table_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-table_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_1b_hq/
+  #    decay-exp: true
+
+  # Multiple datasets mixed together
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_1b_hq-article_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/article_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_1b_hq-commentary_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/commentary_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_1b_hq-discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/discussion_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_1b_hq-article_1b_hq-commentary_1b_hq-discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/article_1b_hq/,s3://finephrase/experiments/tokenized_merged/commentary_1b_hq/,s3://finephrase/experiments/tokenized_merged/discussion_1b_hq/
+  #    decay-exp: true
+
+  #- name: "mix-fw_edu_hq-tutorial_1b_hq-faq_1b_hq-table_1b_hq-math_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/faq_1b_hq/,s3://finephrase/experiments/tokenized_merged/table_1b_hq/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+  #- name: "mix-tutorial_1b_hq-faq_1b_hq-table_1b_hq-math_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/,s3://finephrase/experiments/tokenized_merged/faq_1b_hq/,s3://finephrase/experiments/tokenized_merged/table_1b_hq/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+
+  # Is mixing in lq data enough?
+  #- name: "fw_edu_lq-decay-mix-fw_edu_lq-article_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/article_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_lq-commentary_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/commentary_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_lq-discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/discussion_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_lq-faq_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/faq_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_lq-tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_lq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #    decay-exp: true
+
+  # Is lq data enough?
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-article_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-article_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/article_1b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-commentary_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/commentary_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-commentary_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/commentary_1b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-discussion_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-discussion_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/discussion_1b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_1b_lq/
+  #    decay-exp: true
+
+  # --- Continue ---
+  #- name: "fw_edu_lq-decay-mix-dclm-continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/continue_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-nemotron_hq_synth-continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/,s3://finephrase/experiments/tokenized_merged/continue_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-continue_12b_hq" 
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_1b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/continue_1b_hq/
+  #    decay-exp: true
+
+  # --- Summarize hq vs lq ---
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-summarize_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-summarize_12b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_12b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-summarize_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_1b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-summarize_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_1b_hq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-summarize_270m_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_270m_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-summarize_270m_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/summarize_270m_hq/
+  #    decay-exp: true
+
+  # --- Rephrase ---
+  # Unoptimized prompts
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_1b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_1b_lq/
+  #    decay-exp: true
+
+  # Optimized prompts
+  #- name: "fw_edu_lq-decay-mix-dclm-rephrase_12b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_budget_10_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-dclm-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-nemotron_hq_synth-rephrase_12b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_budget_10_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-nemotron_hq_synth-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/nemotron_hq_synth/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_12b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_budget_10_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_12b_budget_1_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_12b_budget_1_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_4b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_4b_budget_1_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_1_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_1b_budget_10_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_1b_budget_10_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_1b_budget_1_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_1b_budget_1_lq/
+  #    decay-exp: true
+
+  # --- Rephrase and Summarize ---
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_4b_budget_10_lq-summarize_270m_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/,s3://finephrase/experiments/tokenized_merged/summarize_270m_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-rephrase_4b_budget_10_lq-summarize_270m_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/,s3://finephrase/experiments/tokenized_merged/summarize_270m_lq/
+  #    decay-exp: true
+
+  # --- Rephrase and Continue ---
+  #- name: "fw_edu_lq-decay-mix-fw_edu_hq-rephrase_4b_budget_10_lq-continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/,s3://finephrase/experiments/tokenized_merged/continue_12b_lq/
+  #    decay-exp: true
+  #- name: "fw_edu_lq-decay-mix-rephrase_4b_budget_10_lq-continue_12b_lq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/rephrase_4b_budget_10_lq/,s3://finephrase/experiments/tokenized_merged/continue_12b_lq/
+  #    decay-exp: true
+
+  # --- Is synthetic data enough? --- TODO integrate these into synthetic only experiments
+  #- name: "article_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/article_1b_dclm/
+  #- name: "commentary_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/commentary_1b_dclm/
+  #- name: "discussion_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/discussion_1b_dclm/
+  #- name: "faq_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/faq_1b_dclm/
+  #- name: "tutorial_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/tutorial_1b_dclm/
+  #- name: "table_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/table_1b_dclm/
+  #- name: "math_1b_dclm"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/math_1b_dclm/
+
+  #- name: "article_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/article_1b_hq/
+  #- name: "commentary_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/commentary_1b_hq/
+  #- name: "discussion_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/discussion_1b_hq/
+  #- name: "faq_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/faq_1b_hq/
+  #- name: "tutorial_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/tutorial_1b_hq/
+  #- name: "table_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/table_1b_hq/
+  #- name: "math_1b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+

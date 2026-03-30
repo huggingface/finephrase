@@ -6,16 +6,28 @@ continue_on_failure: true
 fixed_args:
   task: "rephrase"
 
+  qos: "high"
+  time: "7-00:00:00"
+  
   train-size: 500
-  val-size: 100
-  test-size: 100
+  val-size: 250
+  test-size: 500
 
 # Variable arguments - creates different experiment runs
 runs:
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-27b-it"
+  #    budget: 10
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-27b-it"
+  #    val-size: 200
+  #    budget: 20
   #- name: "test"
   #  args:
   #    generation-model: "huggingface/google/gemma-3-27b-it"
-  #    budget: 1      
+  #    budget: 1
   #- name: "test"
   #  args:
   #    generation-model: "huggingface/google/gemma-3-27b-it"
@@ -25,6 +37,22 @@ runs:
   #    generation-model: "huggingface/google/gemma-3-27b-it"
   #    budget: 20
 
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-12b-it"
+  #    budget: 1
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-12b-it"
+  #    budget: 10
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-12b-it"
+  #    budget: 20
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-12b-it"
+  #    budget: 50
   #- name: "test"
   #  args:
   #    generation-model: "huggingface/google/gemma-3-12b-it"
@@ -38,27 +66,55 @@ runs:
   #    generation-model: "huggingface/google/gemma-3-12b-it"
   #    budget: 20
 
-  - name: "test"
-    args:
-      generation-model: "huggingface/google/gemma-3-4b-it"
-      budget: 1
-  - name: "test"
-    args:
-      generation-model: "huggingface/google/gemma-3-4b-it"
-      budget: 10
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-4b-it"
+  #    budget: 1
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-4b-it"
+  #    budget: 10
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-4b-it"
+  #    budget: 20
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-4b-it"
+  #    budget: 50
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-4b-it"
+  #    budget: 1
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-4b-it"
+  #    budget: 10
   #- name: "test"
   #  args:
   #    generation-model: "huggingface/google/gemma-3-4b-it"
   #    budget: 20
 
-  - name: "test"
-    args:
-      generation-model: "huggingface/google/gemma-3-1b-it"
-      budget: 1
-  - name: "test"
-    args:
-      generation-model: "huggingface/google/gemma-3-1b-it"
-      budget: 10
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-1b-it"
+  #    budget: 1
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-1b-it"
+  #    budget: 10
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-1b-it"
+  #    budget: 20
+  #- name: "new-score-clipped-feedback"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-1b-it"
+  #    budget: 50
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-1b-it"
+  #    budget: 1
   #- name: "test"
   #  args:
   #    generation-model: "huggingface/google/gemma-3-1b-it"
@@ -72,7 +128,7 @@ runs:
   #  args:
   #    generation-model: "huggingface/google/gemma-3-270m-it"
   #    budget: 10
-  - name: "test"
-    args:
-      generation-model: "huggingface/google/gemma-3-270m-it"
-      budget: 20
+  #- name: "test"
+  #  args:
+  #    generation-model: "huggingface/google/gemma-3-270m-it"
+  #    budget: 20

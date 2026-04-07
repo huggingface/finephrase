@@ -1,6 +1,12 @@
 # FinePhrase
 Synthetic pretraining data by rephrasing the web
 
+[Blog post](https://huggingface.co/spaces/HuggingFaceFW/finephrase)
+
+![Training Progression](assets/training_progression.png)
+
+We ran 90 experiments, generated over 1 trillion tokens, and spent 12.7 GPU years to find the best recipe for synthetic pretraining data. The result is FinePhrase, a 486B token dataset that clearly outperforms all existing synthetic data baselines. It's [available on the Hub](https://huggingface.co/datasets/HuggingFaceFW/finephrase), and this post walks you through everything we learned along the way.
+
 ## Setup
 
 ### Install uv and setup a venv
@@ -213,5 +219,15 @@ launch-experiments configs/rephrase_benchmark.yaml --dry-run
 
 # Submit only specific experiments
 launch-experiments configs/rephrase_benchmark.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
+```
+
+## Citation
+
+```bibtex
+@misc{niklaus2026_the_synthetic_data_playbook_generating_trillions_of_the_finest_tokens,
+  title={The Synthetic Data Playbook: Generating Trillions of the Finest Tokens},
+  author={Joel Niklaus and Guilherme Penedo and Hynek Kydlicek and Elie Bakouch and Lewis Tunstall and Ed Beeching and Thibaud Frere and Colin Raffel and Leandro von Werra and Thomas Wolf},
+  year={2026},
+}
 ```
 

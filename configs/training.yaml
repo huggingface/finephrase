@@ -1,4 +1,4 @@
-# Tokenization experiment configuration
+# Training experiment configuration
 script: "train"
 continue_on_failure: true
 

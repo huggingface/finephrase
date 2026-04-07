@@ -1,4 +1,4 @@
-# Rephrasing benchmark experiment configuration
+# Rephrasing experiment configuration
 script: "rephrase"
 continue_on_failure: true
 

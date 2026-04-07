@@ -9,37 +9,27 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv --python 3.10
 ```
 
-### Clone the core repos from correct branch
+### Clone repos, apply patches, and install
+
+FinePhrase depends on custom branches of nanotron, lighteval, and datatrove. Each needs a small patch on top:
+
+| Patch                                              | Why                                                                              |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `datatrove-folder-dataset-repeat.patch`            | Wraps sample indices with modulo so nanotron blending doesn't `IndexError`        |
+| `nanotron-recursive-dataloader.patch`              | Sets `recursive=True` so `build_dataset` discovers `.ds` files in subdirectories |
+| `lighteval-trust-remote-code.patch`                | Removes `trust_remote_code` arg dropped in newer HF libraries                    |
+
+From the FinePhrase repo root, on a GPU node (`srun --gpus=1 --qos=high --time="01:59:00" --pty bash && module load cuda/12.4`):
+
 ```bash
 git clone -b nanotron-working-branch git@github.com:huggingface/nanotron.git
-git clone -b lighteval-experiment-setup  git@github.com:huggingface/lighteval.git
+git clone -b lighteval-experiment-setup git@github.com:huggingface/lighteval.git
 git clone -b fix-nanotron git@github.com:joelniklaus/datatrove.git
-```
 
-### Patch datatrove (folder dataset index wrap)
+patch -p1 -d datatrove  < patches/datatrove-folder-dataset-repeat.patch
+patch -p1 -d nanotron   < patches/nanotron-recursive-dataloader.patch
+patch -p1 -d lighteval  < patches/lighteval-trust-remote-code.patch
 
-Nanotron blending can request sample indices beyond the number of sequences on disk. Apply this patch so `DatatroveFolderDataset.__getitem__` wraps with modulo (see `patches/datatrove-folder-dataset-repeat.patch`). From the FinePhrase repository root:
-
-```bash
-patch -p1 -d datatrove < patches/datatrove-folder-dataset-repeat.patch
-```
-
-Skip this step only if `datatrove` is already patched (for example your tree already contains `item = item % total` in `DatatroveFolderDataset.__getitem__`). Apply again after resetting `datatrove` to a clean remote branch.
-
-### Enable training with recursive dataloaders
-In `nanotron/src/nanotron/data/tokenized_bytes.py`, update lines 414 and 430 to set `recursive=True`.
-
-### Enter a GPU node for installation
-```bash
-srun --gpus=1 --qos=high --time="01:59:00" --pty bash
-module load cuda/12.4
-```
-
-### Install dependencies (order is important)
-
-Ensure the [datatrove patch](#patch-datatrove-folder-dataset-index-wrap) is applied **before** `uv pip install -e "datatrove[...]"` when you rely on a fresh clone of `joelniklaus/datatrove`.
-
-```bash
 uv pip install setuptools
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torch/ "torch==2.6.0+cu124"
 uv pip install --find-links https://download.pytorch.org/whl/cu124/torchvision/ "torchvision==0.21.0+cu124"
@@ -224,16 +214,4 @@ launch-experiments configs/rephrase_benchmark.yaml --dry-run
 # Submit only specific experiments
 launch-experiments configs/rephrase_benchmark.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
 ```
-
-## Analysis & Visualization
-
-### Visualizing Rephrasing Statistics
-Generate bar charts comparing educational score improvements across rephrasing experiments:
-
-```bash
-python /fsx/joel_niklaus/projects/finephrase/plot_rephrasing_stats.py
-```
-
-This writes a high-DPI PNG to `plots/rephrasing_edu_score_difference_means.png`.
-
 

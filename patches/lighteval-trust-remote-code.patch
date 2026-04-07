@@ -1,0 +1,25 @@
+diff --git a/src/lighteval/tasks/registry.py b/src/lighteval/tasks/registry.py
+index 4fb8d923..3438d6a1 100644
+--- a/src/lighteval/tasks/registry.py
++++ b/src/lighteval/tasks/registry.py
+@@ -256,7 +256,7 @@ def create_custom_tasks_module(custom_tasks: Union[str, Path, ModuleType]) -> Mo
+     if isinstance(custom_tasks, ModuleType):
+         return custom_tasks
+     if isinstance(custom_tasks, (str, Path)) and os.path.exists(custom_tasks):
+-        dataset_module = dataset_module_factory(str(custom_tasks), trust_remote_code=True)
++        dataset_module = dataset_module_factory(str(custom_tasks))
+         return importlib.import_module(dataset_module.module_path)
+     if isinstance(custom_tasks, (str, Path)):
+         return importlib.import_module(str(custom_tasks))
+diff --git a/src/lighteval/utils/utils.py b/src/lighteval/utils/utils.py
+index c4f2956e..a74b85b8 100644
+--- a/src/lighteval/utils/utils.py
++++ b/src/lighteval/utils/utils.py
+@@ -216,7 +216,6 @@ def download_dataset_worker(
+         data_dir=None,
+         cache_dir=None,
+         download_mode=None,
+-        trust_remote_code=trust_dataset,
+         revision=revision,
+     )
+ 

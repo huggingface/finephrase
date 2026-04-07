@@ -1,0 +1,22 @@
+diff --git a/src/nanotron/data/tokenized_bytes.py b/src/nanotron/data/tokenized_bytes.py
+index f0c927b5..032213b0 100644
+--- a/src/nanotron/data/tokenized_bytes.py
++++ b/src/nanotron/data/tokenized_bytes.py
+@@ -411,7 +411,7 @@ def build_dataset(
+             data_folder=dataset_folder,
+             filename_pattern="*.ds",
+             seq_len=seq_length,
+-            recursive=False,
++            recursive=True,
+             token_size=token_size,
+             shuffle=False,
+             return_positions=return_positions,
+@@ -427,7 +427,7 @@ def build_dataset(
+         folder_path=dataset_folder,
+         filename_pattern="*.ds",
+         seq_len=seq_length,
+-        recursive=False,
++        recursive=True,
+         token_size=token_size,
+         shuffle=shuffle,
+         return_positions=return_positions,  # if set to True, the position ids are directly read from datatrove

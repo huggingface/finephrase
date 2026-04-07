@@ -60,9 +60,6 @@ After installation, you can use these console commands for different aspects of 
 - `train`                 - Train models (train_model.py)
 - `evaluate`              - Evaluate checkpoints (evaluate_checkpoints.py)
 - `launch-experiments`    - Launch multiple Slurm experiments from YAML configs (launch_experiments.py)
-- `benchmark-vllm`        - Submit vLLM serving benchmarks to Slurm (benchmark_vllm.py)
-- `analyze-benchmarking` - Analyze benchmark results and export CSV (analyze_benchmarking.py)
-
 All commands support `--help` to see available options.
 
 ## Data Processing
@@ -161,13 +158,7 @@ Run all missing evaluations:
 evaluate --all
 ```
 
-## Prompt Optimization
-
-Optimize prompts for text generation tasks using DSPy GEPA:
-
-```bash
-optimize-prompt --budget 10
-```
+## Prompt Iteration
 
 Iterate on prompts manually:
 ```bash
@@ -212,13 +203,13 @@ Submit multiple Slurm experiments with different configurations using YAML files
 
 ```bash
 # Submit all Slurm jobs in a configuration
-launch-experiments configs/rephrase_benchmark.yaml
+launch-experiments configs/rephrasing.yaml
 
 # Test configuration without submitting jobs (dry run)
-launch-experiments configs/rephrase_benchmark.yaml --dry-run
+launch-experiments configs/rephrasing.yaml --dry-run
 
 # Submit only specific experiments
-launch-experiments configs/rephrase_benchmark.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
+launch-experiments configs/rephrasing.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
 ```
 
 ## Citation

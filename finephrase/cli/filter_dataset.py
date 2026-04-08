@@ -1,6 +1,6 @@
 import argparse
 
-from finephrase.utils import ENV_COMMAND, LOG_BASE_PATH, S3_BASE_PATH, build_reader
+from finephrase.utils import ENV_COMMAND, LOG_BASE_PATH, MAIL_USER, S3_BASE_PATH, build_reader
 
 
 def score_predicate_lq(doc):
@@ -102,7 +102,7 @@ def main():
         mem_per_cpu_gb=2,
         qos=args.qos,
         env_command=ENV_COMMAND,
-        mail_user="joel@hf.co",
+        mail_user=MAIL_USER,
         depends_job_id=args.dep_job_id
     )
     filter_executor.run()

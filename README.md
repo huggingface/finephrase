@@ -82,11 +82,11 @@ After installation, you can use these console commands for different aspects of 
 - `launch-experiments`    - Launch multiple Slurm experiments from YAML configs
 - `collect-metadata`      - Collect rephrasing run metadata into a JSON file
 
-All commands support `--help` to see available options.
+All commands support `--help` to see available options. Below, we walk through them in the order of a typical workflow: first understand your data, then prepare, rephrase, train, and evaluate.
 
 ### `report-tokens`
 
-Get comprehensive token statistics for any dataset:
+Before doing anything, you need to know how many tokens you are working with:
 
 ```bash
 report-tokens --data s3://path/to/dataset1,hf://datasets/owner/dataset2
@@ -94,7 +94,7 @@ report-tokens --data s3://path/to/dataset1,hf://datasets/owner/dataset2
 
 ### `filter`
 
-Use `filter` to filter datasets using predefined filter functions. Supported filters include:
+Once you know token counts, carve out the subset you want to rephrase. Supported filters include:
 - `fineweb_edu_hq` (FineWeb-Edu HQ: rounded int_score 4,5)
 - `fineweb_edu_lq` (FineWeb-Edu LQ: rounded int_score 0,1)
 - `noop` (no filtering, copy all data)
@@ -141,7 +141,7 @@ Note: Token counting is handled separately via `report-tokens`.
 
 ### `iterate-prompt`
 
-Iterate on prompts manually:
+Before launching a large rephrasing run, refine your prompt on a handful of documents first:
 
 ```bash
 iterate-prompt --prompt format/faq.md --model-size 1b --data-path hf://datasets/HuggingFaceFW/fineweb-edu
@@ -149,7 +149,7 @@ iterate-prompt --prompt format/faq.md --model-size 1b --data-path hf://datasets/
 
 ### `rephrase`
 
-Generate synthetic training data by rephrasing existing content:
+With a tuned prompt and a filtered dataset, launch the rephrasing pipeline at scale:
 
 ```bash
 rephrase --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase/gemma-3-1b-it/budget-10.md --name dspy-rephrase-budget-10 --debug
@@ -171,7 +171,7 @@ Available prompts for data quality improvement:
 
 ### `inspect-data`
 
-Quickly inspect data:
+Spot-check the rephrased output before committing to tokenization:
 
 ```bash
 inspect-data --data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
@@ -179,7 +179,7 @@ inspect-data --data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-
 
 ### `tokenize`
 
-Prepare datasets for training by tokenizing them:
+When the rephrased data looks good, tokenize it into the binary format nanotron expects:
 
 ```bash
 tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fw_edu_hq
@@ -188,7 +188,7 @@ tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name 
 
 ### `train`
 
-Train Qwen-size models (`0.5b`, `1.7b`, `2.9b`, `6.2b`) on your tokenized datasets.
+Now kick off pretraining on the tokenized data. This submits a Slurm job that trains Qwen-size models (`0.5b`, `1.7b`, `2.9b`, `6.2b`) on your tokenized datasets.
 The launcher prints the exact parameter count for the selected preset before submitting training.
 Tensor parallelism and recomputation are configured per model preset in `finephrase/cli/train_model.py`.
 Lighteval batch size in the generated Nanotron config scales with model size (`eval_batch_size` in `QWEN_SIZE_PRESETS`: e.g. `1.7b` → 8, `6.2b` → 2) to reduce eval OOM on larger models. Run names use a trailing `-0.5b` / `-1.7b` / `-2.9b` / `-6.2b` suffix; if missing, the `1.7b` preset is used.
@@ -206,7 +206,7 @@ train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq_2.
 
 ### `evaluate`
 
-Run evaluations manually if automatic ones fail during training:
+Training runs lighteval automatically at checkpoints, but if some evaluations fail you can re-run them manually:
 
 ```bash
 evaluate --name fw_edu_hq,fw_edu_lq
@@ -221,7 +221,7 @@ evaluate --all
 
 ### `launch-experiments`
 
-Submit multiple Slurm experiments with different configurations using YAML files:
+To sweep over many configurations at once (e.g. different prompts, model sizes, datasets), define them in a YAML file and submit them all in one shot:
 
 ```bash
 # Submit all Slurm jobs in a configuration
@@ -236,7 +236,7 @@ launch-experiments configs/rephrasing.yaml --run-names "qwen3-1.7b-hq,smollm2-1.
 
 ### `collect-metadata`
 
-Collect rephrasing run metadata (token counts, quality scores, GPU time, benchmark results) into a JSON file:
+After experiments finish, aggregate all run metadata (token counts, quality scores, GPU time, benchmark results) into a single JSON file for analysis:
 
 ```bash
 collect-metadata

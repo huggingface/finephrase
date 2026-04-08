@@ -13,6 +13,7 @@ CHECKPOINTS_PATH = f"{BASE_PATH}/checkpoints/{PROJECT_NAME}"
 LOG_BASE_PATH = f"{BASE_PATH}/logs/{PROJECT_NAME}/experiments"
 S3_BASE_PATH = f"s3://{PROJECT_NAME}/experiments"
 LOCAL_TMP_PATH_ON_NODE = f"/scratch/{USER}/tmp/{PROJECT_NAME}"
+MAIL_USER = "joel@hf.co"
 
 FAULTY_NODES = [
     "ip-26-0-160-40",

@@ -2,7 +2,7 @@
 script: "rephrase"
 continue_on_failure: true
 
-# IMPORTANT: This is a large run, make sure to inform people in #science-cluster-planning beforehand.
+# IMPORTANT: This is a large run, make sure to inform team members beforehand.
 
 # Fixed arguments for all runs
 fixed_args:

@@ -52,22 +52,6 @@ dependencies = [
     # "torchvision==0.21.0+cu124"
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "pytest-cov",
-    "black",
-    "isort",
-    "flake8",
-    "mypy",
-]
-
-cuda = [
-    # These should be installed with specific CUDA versions using --find-links
-    # torch==2.6.0+cu124
-    # torchvision==0.21.0+cu124
-]
-
 [project.urls]
 Homepage = "https://github.com/huggingface/finephrase"
 Repository = "https://github.com/huggingface/finephrase"

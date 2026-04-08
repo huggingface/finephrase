@@ -4,7 +4,7 @@ from datatrove.data import DocumentsPipeline
 
 import argparse
 
-from finephrase.utils import ENV_COMMAND, LOG_BASE_PATH, build_reader, human_readable
+from finephrase.utils import ENV_COMMAND, LOG_BASE_PATH, MAIL_USER, build_reader, human_readable
 
 
 class ReportTokens(PipelineStep):
@@ -89,7 +89,7 @@ def main():
             qos="normal", 
             cpus_per_task=4,
             env_command=ENV_COMMAND,
-            logging_dir=logs_path, job_name=f"report-tokens-{args.data}", mail_user="joel@hf.co",
+            logging_dir=logs_path, job_name=f"report-tokens-{args.data}", mail_user=MAIL_USER,
         )
     executor.run()
 

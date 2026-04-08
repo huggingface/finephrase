@@ -206,7 +206,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-plots/
 .litellm_cache/
-benchmarking_results.csv
+rephrasing_metadata.json
 tmp/

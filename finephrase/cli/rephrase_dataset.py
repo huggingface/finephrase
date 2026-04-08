@@ -23,6 +23,7 @@ from finephrase.utils import (
     ENV_COMMAND,
     FAULTY_NODES,
     LOG_BASE_PATH,
+    MAIL_USER,
     S3_BASE_PATH,
     build_reader,
     print_debug_output,
@@ -474,7 +475,7 @@ def main():
             print("\nThen run this script again.")
             exit(1)
     else:
-        print("⚠️ Please inform people in #science-cluster-planning about large runs.")
+        print("⚠️ Please inform team members about large runs before submitting.")
         # Safety guard: Abort submission for unsafe configurations (skip in debug/local)
         if args.qos.lower() in {"normal", "high"} \
             and (args.limit == -1 or args.limit > 10000) \
@@ -596,7 +597,7 @@ def main():
             qos=args.qos,
             # Add the HF_HUB_OFFLINE=1 command to prevent continuous Hub requests from workers (they should use cached models only)
             env_command=ENV_COMMAND + " && export HF_HUB_OFFLINE=1",
-            mail_user="joel@hf.co",
+            mail_user=MAIL_USER,
             depends_job_id=args.dep_job_id,
             sbatch_args={
                 "gres": f"gpu:{args.tp}",

@@ -5,9 +5,6 @@ filters to runs with >= 90 completions, loads or aggregates stats, and extracts
 token counts, quality scores, GPU time, model, source dataset, prompt info,
 and downstream benchmark evaluation results from S3.
 
-Usage:
-    python analysis/collect_rephrasing_metadata.py
-
 Output is written to rephrasing_metadata.json in the project root.
 """
 
@@ -21,9 +18,11 @@ from tqdm import tqdm
 
 from datatrove.utils.stats import PipelineStats
 
+from finephrase.utils import LOG_BASE_PATH
+
 logger = logging.getLogger(__name__)
 
-BASE_PATH = Path("/fsx/joel_niklaus/logs/finephrase/experiments/rephrasing")
+BASE_PATH = Path(LOG_BASE_PATH) / "rephrasing"
 CATEGORIES = ["beyondweb", "format", "nemotron", "rewire"]
 MIN_COMPLETIONS = 90
 S3_EVALS_PATH = "s3://finephrase/experiments/evals-test/results"

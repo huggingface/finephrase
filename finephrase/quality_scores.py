@@ -4,7 +4,7 @@ import urllib.request
 from pathlib import Path
 from datatrove.pipeline.base import PipelineStep
 
-from utils import CACHE_PATH
+from finephrase.utils import CACHE_PATH
 
 # -----------------------------
 # Fineweb EDU score utilities (lazy HF load, like DCLM)

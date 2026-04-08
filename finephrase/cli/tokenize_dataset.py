@@ -3,7 +3,7 @@ import argparse
 from datatrove.io import get_datafolder
 from datatrove.pipeline.base import PipelineStep
 
-from utils import ENV_COMMAND, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
+from finephrase.utils import ENV_COMMAND, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 
 class DocumentSplitter(PipelineStep):

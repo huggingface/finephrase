@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from utils import BASE_PATH, FAULTY_NODES, LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
+from finephrase.utils import BASE_PATH, FAULTY_NODES, LOG_BASE_PATH, PROJECT_NAME, PROJECT_PATH, S3_BASE_PATH, LOCAL_TMP_PATH_ON_NODE
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
 TRAINING_RUNS_PATH = f"{LOG_BASE_PATH}/training"
@@ -20,8 +20,8 @@ S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 S3_CHECKPOINTS_PREFIX = f"{S3_BASE_PATH}/checkpoints"
 EVALS_OUTPUT_PATH = f"{S3_BASE_PATH}/evals-test"
 
-TASKS_PATH = f"{PROJECT_PATH}/tasks.txt"
-TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
+TASKS_PATH = f"{PROJECT_PATH}/finephrase/tasks.txt"
+TASK_LIST_PATH = f"{PROJECT_PATH}/finephrase/task_list.py"
 
 NUM_GPUS = 8
 NUM_CPUS_IN_NODE = 88

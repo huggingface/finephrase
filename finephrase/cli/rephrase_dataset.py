@@ -18,7 +18,7 @@ from datatrove.pipeline.inference.run_inference import InferenceConfig, Inferenc
 from transformers import GenerationConfig
 
 
-from utils import (
+from finephrase.utils import (
     CHECKPOINTS_PATH,
     ENV_COMMAND,
     FAULTY_NODES,
@@ -27,7 +27,7 @@ from utils import (
     build_reader,
     print_debug_output,
 )
-from quality_scores import (
+from finephrase.quality_scores import (
     QualityScoreStatsLogger,
     calculate_edu_score,
     calculate_dclm_score,
@@ -44,9 +44,9 @@ def load_prompt_template(template_path: str) -> str:
         Template content as a string
     """
      
-    # Get the base directory of this script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    full_path = os.path.join(script_dir, "prompts", template_path)
+    # Resolve prompts/ relative to the project root (two levels up from this file)
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    full_path = os.path.join(project_root, "prompts", template_path)
     
     if not template_path or not os.path.exists(full_path):
         raise FileNotFoundError(f"Prompt template not found: {full_path}")

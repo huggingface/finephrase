@@ -1,6 +1,6 @@
 import argparse
 
-from utils import ENV_COMMAND, LOG_BASE_PATH, S3_BASE_PATH, build_reader
+from finephrase.utils import ENV_COMMAND, LOG_BASE_PATH, S3_BASE_PATH, build_reader
 
 
 def score_predicate_lq(doc):

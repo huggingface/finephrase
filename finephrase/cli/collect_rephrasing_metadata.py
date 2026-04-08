@@ -6,9 +6,9 @@ token counts, quality scores, GPU time, model, source dataset, prompt info,
 and downstream benchmark evaluation results from S3.
 
 Usage:
-    python analyses/collect_rephrasing_metadata.py
+    python analysis/collect_rephrasing_metadata.py
 
-Output is written to analyses/rephrasing_metadata.json.
+Output is written to rephrasing_metadata.json in the project root.
 """
 
 import json
@@ -415,7 +415,7 @@ def main() -> None:
         and "dclm_score_difference" in r
     ]
 
-    output_path = Path(__file__).parent / "rephrasing_metadata.json"
+    output_path = Path(__file__).parent.parent.parent / "rephrasing_metadata.json"
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
 

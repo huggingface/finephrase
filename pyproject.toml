@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "Joel Niklaus", email = "your.email@example.com"},
+    {name = "Joel Niklaus", email = "joel@hf.co"},
 ]
 keywords = ["nlp", "pretraining", "data-generation", "rephrasing", "synthetic-data"]
 classifiers = [
@@ -74,18 +74,19 @@ Repository = "https://github.com/huggingface/finephrase"
 Issues = "https://github.com/huggingface/finephrase/issues"
 
 [project.scripts]
-report-tokens = "report_tokens:main"
-filter = "filter_dataset:main"
-rephrase = "rephrase_dataset:main"
-tokenize = "tokenize_dataset:main"
-train = "train_model:main"
-evaluate = "evaluate_checkpoints:main"
-launch-experiments = "launch_experiments:main"
-inspect-data = "inspect_data:main"
-iterate-prompt = "iterate_prompt:main"
+report-tokens = "finephrase.cli.report_tokens:main"
+filter = "finephrase.cli.filter_dataset:main"
+rephrase = "finephrase.cli.rephrase_dataset:main"
+tokenize = "finephrase.cli.tokenize_dataset:main"
+train = "finephrase.cli.train_model:main"
+evaluate = "finephrase.cli.evaluate_checkpoints:main"
+launch-experiments = "finephrase.cli.launch_experiments:main"
+inspect-data = "finephrase.cli.inspect_data:main"
+iterate-prompt = "finephrase.cli.iterate_prompt:main"
+collect-metadata = "finephrase.cli.collect_rephrasing_metadata:main"
 
-[tool.setuptools]
-py-modules = ["report_tokens", "filter_dataset", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "inspect_data", "iterate_prompt", "utils", "quality_scores"]
+[tool.setuptools.packages.find]
+include = ["finephrase*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]
@@ -117,21 +118,6 @@ profile = "black"
 line_length = 100
 skip_gitignore = true
 extend_skip_glob = ["nanotron/*", "lighteval/*", "datatrove/*"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "--verbose",
-    "--tb=short",
-    "--strict-markers",
-]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "gpu: marks tests that require GPU",
-]
 
 [tool.mypy]
 python_version = "3.10"

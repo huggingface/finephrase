@@ -26,8 +26,8 @@ from transformers import (
 
 torch.set_float32_matmul_precision('high')
 
-from utils import print_debug_output
-from quality_scores import calculate_edu_score, calculate_dclm_score
+from finephrase.utils import print_debug_output
+from finephrase.quality_scores import calculate_edu_score, calculate_dclm_score
 from datatrove.data import Document
 
 # Load environment variables
@@ -118,8 +118,8 @@ def load_prompt_template(template_path: str) -> str:
     if not template_path:
         return None
     
-    script_dir = Path(__file__).parent
-    full_path = script_dir / "prompts" / template_path
+    project_root = Path(__file__).parent.parent.parent
+    full_path = project_root / "prompts" / template_path
     
     if not full_path.exists():
         raise FileNotFoundError(f"Prompt template not found: {full_path}")

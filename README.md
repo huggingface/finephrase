@@ -49,32 +49,51 @@ uv pip install -e .
 python -c "import nanotron"
 ```
 
+## Project Structure
+
+```
+finephrase/                Python package
+├── cli/                   CLI entry points (report_tokens, filter_dataset, ...)
+├── utils.py               Shared paths, reader utilities, formatting helpers
+├── quality_scores.py      FineWeb-Edu and DCLM quality classifiers
+├── task_list.py           Lighteval custom task definitions
+└── tasks.txt              Lighteval task list for evaluation
+configs/                   YAML experiment matrices (rephrasing, training, tokenization)
+prompts/                   Markdown prompt templates for rephrasing
+patches/                   Patches for vendored dependencies
+assets/                    Images for documentation
+nanotron/                  Vendored training library
+lighteval/                 Vendored evaluation harness
+datatrove/                 Vendored data processing library
+```
+
 ## Available Commands
 
 After installation, you can use these console commands for different aspects of the data pipeline:
 
-- `report-tokens`         - Report token statistics for datasets (report_tokens.py)
-- `filter`                - Filter datasets with selectable filters (filter_dataset.py)
-- `rephrase`              - Rephrase datasets using LLM inference (rephrase_dataset.py)
-- `tokenize`              - Tokenize datasets for training (tokenize_dataset.py)
-- `train`                 - Train models via Slurm (train_model.py)
-- `evaluate`              - Evaluate checkpoints via Slurm (evaluate_checkpoints.py)
-- `launch-experiments`    - Launch multiple Slurm experiments from YAML configs (launch_experiments.py)
-- `inspect-data`          - Pretty-print a few documents from a dataset (inspect_data.py)
-- `iterate-prompt`        - Interactive prompt iteration with LLM feedback (iterate_prompt.py)
+- `report-tokens`         - Report token statistics for datasets
+- `filter`                - Filter datasets with selectable filters
+- `iterate-prompt`        - Interactive prompt iteration with LLM feedback
+- `rephrase`              - Rephrase datasets using LLM inference
+- `inspect-data`          - Pretty-print a few documents from a dataset
+- `tokenize`              - Tokenize datasets for training
+- `train`                 - Train models via Slurm
+- `evaluate`              - Evaluate checkpoints via Slurm
+- `launch-experiments`    - Launch multiple Slurm experiments from YAML configs
+- `collect-metadata`      - Collect rephrasing run metadata into a JSON file
 
 All commands support `--help` to see available options.
 
-## Data Processing
+### `report-tokens`
 
-### Token Statistics
 Get comprehensive token statistics for any dataset:
 
 ```bash
 report-tokens --data s3://path/to/dataset1,hf://datasets/owner/dataset2
 ```
 
-### Filtering Data
+### `filter`
+
 Use `filter` to filter datasets using predefined filter functions. Supported filters include:
 - `fineweb_edu_hq` (FineWeb-Edu HQ: rounded int_score 4,5)
 - `fineweb_edu_lq` (FineWeb-Edu LQ: rounded int_score 0,1)
@@ -120,72 +139,23 @@ filter \
 
 Note: Token counting is handled separately via `report-tokens`.
 
-### Tokenizing Datasets
-Prepare datasets for training by tokenizing them:
-
-```bash
-tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fw_edu_hq
-tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fw_edu_lq
-```
-
-## Model Training & Evaluation
-
-### Training Models
-Train Qwen-size models (`0.5b`, `1.7b`, `2.9b`, `6.2b`) on your tokenized datasets.
-The launcher prints the exact parameter count for the selected preset before submitting training.
-Tensor parallelism and recomputation are configured per model preset in `train_model.py`.
-Lighteval batch size in the generated Nanotron config scales with model size (`eval_batch_size` in `QWEN_SIZE_PRESETS`: e.g. `1.7b` → 8, `6.2b` → 2) to reduce eval OOM on larger models. Run names use a trailing `-0.5b` / `-1.7b` / `-2.9b` / `-6.2b` suffix; if missing, the `1.7b` preset is used.
-All presets keep depth/head topology fixed and only scale `hidden_size` + `intermediate_size`.
-
-Slurm jobs use `--qos low` by default, `--requeue`, and a script that picks the **latest** checkpoint under `s3://finephrase/experiments/checkpoints/<run>/` before each run. If that step is already `>= train_steps`, training is **skipped** (clean exit) so finished runs do not reload step-`train_steps` checkpoints and crash.
-
-**Repeating / blended data:** Nanotron’s blend builds sample indices up to `train_steps × global_batch_size` per dataset stream. With the [datatrove patch](#patch-datatrove-folder-dataset-index-wrap), `DatatroveFolderDataset` maps any global index with `index % len(dataset)` before resolving the `.ds` file, so a smaller corpus is cycled instead of raising `IndexError` (same idea as `OldTokenizedBytesFolderDataset` in nanotron). Empty folders still fail with a clear `IndexError`.
-
-```bash
-train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq
-train --data s3://finephrase/experiments/tokenized/fw_edu_lq --name fw_edu_lq
-train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq_2.9b --model-size 2.9b
-```
-
-### Evaluating Checkpoints
-Run evaluations manually if automatic ones fail during training:
-
-```bash
-evaluate --name fw_edu_hq,fw_edu_lq
-```
-
-`evaluate_checkpoints.py` infers the same preset from the run folder name (suffix like `-6.2b`). Override the batch size if needed: `evaluate --batch-size 1`.
-
-Run all missing evaluations:
-```bash
-evaluate --all
-```
-
-## Prompt Iteration
+### `iterate-prompt`
 
 Iterate on prompts manually:
+
 ```bash
 iterate-prompt --prompt format/faq.md --model-size 1b --data-path hf://datasets/HuggingFaceFW/fineweb-edu
 ```
 
-## Data Generation
+### `rephrase`
 
-### Rephrasing Datasets
 Generate synthetic training data by rephrasing existing content:
 
 ```bash
 rephrase --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --prompt dspy/rephrase/gemma-3-1b-it/budget-10.md --name dspy-rephrase-budget-10 --debug
 ```
 
-## Data Inspection
-
-Quickly inspect data
-
-```bash
-inspect-data --data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
-```
-
-**Available prompts for data quality improvement:**
+Available prompts for data quality improvement:
 
 *For LQ data:*
 - `prompts/rewire/guided_rewrite_corrected.md` - Guided rewriting with expert reasoning
@@ -199,9 +169,58 @@ inspect-data --data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-
 - `prompts/nemotron/knowledge_list.md` - Factual information extraction
 - `prompts/nemotron/wikipedia_style_rephrasing.md` - Wikipedia-style paraphrasing
 
-## Experiment Management
+### `inspect-data`
 
-### Experiment Launcher
+Quickly inspect data:
+
+```bash
+inspect-data --data s3://finephrase/experiments/rephrased/dspy/rephrase/gemma-3-27b-it/ --limit 5
+```
+
+### `tokenize`
+
+Prepare datasets for training by tokenizing them:
+
+```bash
+tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-hq-20BT --name fw_edu_hq
+tokenize --data s3://finephrase/experiments/filtered/fineweb-edu-lq-20BT --name fw_edu_lq
+```
+
+### `train`
+
+Train Qwen-size models (`0.5b`, `1.7b`, `2.9b`, `6.2b`) on your tokenized datasets.
+The launcher prints the exact parameter count for the selected preset before submitting training.
+Tensor parallelism and recomputation are configured per model preset in `finephrase/cli/train_model.py`.
+Lighteval batch size in the generated Nanotron config scales with model size (`eval_batch_size` in `QWEN_SIZE_PRESETS`: e.g. `1.7b` → 8, `6.2b` → 2) to reduce eval OOM on larger models. Run names use a trailing `-0.5b` / `-1.7b` / `-2.9b` / `-6.2b` suffix; if missing, the `1.7b` preset is used.
+All presets keep depth/head topology fixed and only scale `hidden_size` + `intermediate_size`.
+
+Slurm jobs use `--qos low` by default, `--requeue`, and a script that picks the **latest** checkpoint under `s3://finephrase/experiments/checkpoints/<run>/` before each run. If that step is already `>= train_steps`, training is **skipped** (clean exit) so finished runs do not reload step-`train_steps` checkpoints and crash.
+
+**Repeating / blended data:** Nanotron's blend builds sample indices up to `train_steps × global_batch_size` per dataset stream. With the `datatrove-folder-dataset-repeat.patch`, `DatatroveFolderDataset` maps any global index with `index % len(dataset)` before resolving the `.ds` file, so a smaller corpus is cycled instead of raising `IndexError` (same idea as `OldTokenizedBytesFolderDataset` in nanotron). Empty folders still fail with a clear `IndexError`.
+
+```bash
+train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq
+train --data s3://finephrase/experiments/tokenized/fw_edu_lq --name fw_edu_lq
+train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq_2.9b --model-size 2.9b
+```
+
+### `evaluate`
+
+Run evaluations manually if automatic ones fail during training:
+
+```bash
+evaluate --name fw_edu_hq,fw_edu_lq
+```
+
+`evaluate` infers the same preset from the run folder name (suffix like `-6.2b`). Override the batch size if needed: `evaluate --batch-size 1`.
+
+Run all missing evaluations:
+```bash
+evaluate --all
+```
+
+### `launch-experiments`
+
 Submit multiple Slurm experiments with different configurations using YAML files:
 
 ```bash
@@ -212,8 +231,18 @@ launch-experiments configs/rephrasing.yaml
 launch-experiments configs/rephrasing.yaml --dry-run
 
 # Submit only specific experiments
-launch-experiments configs/rephrasing.yaml --run-names "qwen_0.6b_thinking,qwen_1.7b_thinking"
+launch-experiments configs/rephrasing.yaml --run-names "qwen3-1.7b-hq,smollm2-1.7b-hq"
 ```
+
+### `collect-metadata`
+
+Collect rephrasing run metadata (token counts, quality scores, GPU time, benchmark results) into a JSON file:
+
+```bash
+collect-metadata
+```
+
+Output is written to `rephrasing_metadata.json` in the project root.
 
 ## Citation
 
@@ -224,4 +253,3 @@ launch-experiments configs/rephrasing.yaml --run-names "qwen_0.6b_thinking,qwen_
   year={2026},
 }
 ```
-

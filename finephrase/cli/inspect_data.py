@@ -5,7 +5,7 @@ from datatrove.data import Document
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.pipeline.base import PipelineStep
 
-from utils import build_reader, LOG_BASE_PATH, print_debug_output
+from finephrase.utils import build_reader, LOG_BASE_PATH, print_debug_output
 
 
 class FormatterStep(PipelineStep):

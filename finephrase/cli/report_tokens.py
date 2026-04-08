@@ -4,7 +4,7 @@ from datatrove.data import DocumentsPipeline
 
 import argparse
 
-from utils import ENV_COMMAND, LOG_BASE_PATH, build_reader, human_readable
+from finephrase.utils import ENV_COMMAND, LOG_BASE_PATH, build_reader, human_readable
 
 
 class ReportTokens(PipelineStep):

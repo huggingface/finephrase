@@ -18,16 +18,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from utils import FAULTY_NODES, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
-from train_model import DEFAULT_MODEL_SIZE, QWEN_SIZE_PRESETS
+from finephrase.utils import FAULTY_NODES, LOCAL_TMP_PATH_ON_NODE, LOG_BASE_PATH, PROJECT_PATH, S3_BASE_PATH
+from finephrase.cli.train_model import DEFAULT_MODEL_SIZE, QWEN_SIZE_PRESETS
 
 EVAL_LOGS_PATH = f"{LOG_BASE_PATH}/evals"
 S3_EVALS_RESULTS_PREFIX = f"{S3_BASE_PATH}/evals-test"
 NANOTRON_PATH = f"{PROJECT_PATH}/nanotron"
 S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 
-TASKS_PATH = f"{PROJECT_PATH}/tasks.txt"
-TASK_LIST_PATH = f"{PROJECT_PATH}/task_list.py"
+TASKS_PATH = f"{PROJECT_PATH}/finephrase/tasks.txt"
+TASK_LIST_PATH = f"{PROJECT_PATH}/finephrase/task_list.py"
 
 # Run names from train_model use a trailing `-<preset>b` token (e.g. `...-6.2b`, `...-2.9b`).
 _MODEL_SIZE_SUFFIX_RE = re.compile(

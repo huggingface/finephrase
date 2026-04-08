@@ -81,12 +81,11 @@ tokenize = "tokenize_dataset:main"
 train = "train_model:main"
 evaluate = "evaluate_checkpoints:main"
 launch-experiments = "launch_experiments:main"
-optimize-prompt = "optimize_prompt:main"
 inspect-data = "inspect_data:main"
 iterate-prompt = "iterate_prompt:main"
 
 [tool.setuptools]
-py-modules = ["report_tokens", "filter_dataset", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "optimize_prompt", "inspect_data", "iterate_prompt", "utils", "quality_scores"]
+py-modules = ["report_tokens", "filter_dataset", "rephrase_dataset", "tokenize_dataset", "train_model", "evaluate_checkpoints", "launch_experiments", "inspect_data", "iterate_prompt", "utils", "quality_scores"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt", "*.yaml", "*.yml"]

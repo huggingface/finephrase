@@ -53,13 +53,16 @@ python -c "import nanotron"
 
 After installation, you can use these console commands for different aspects of the data pipeline:
 
-- `report-tokens`         - Report tokens (report_tokens.py)
+- `report-tokens`         - Report token statistics for datasets (report_tokens.py)
 - `filter`                - Filter datasets with selectable filters (filter_dataset.py)
-- `rephrase`              - Rephrase datasets (rephrase_dataset.py)
-- `tokenize`              - Tokenize datasets (tokenize_dataset.py)
-- `train`                 - Train models (train_model.py)
-- `evaluate`              - Evaluate checkpoints (evaluate_checkpoints.py)
+- `rephrase`              - Rephrase datasets using LLM inference (rephrase_dataset.py)
+- `tokenize`              - Tokenize datasets for training (tokenize_dataset.py)
+- `train`                 - Train models via Slurm (train_model.py)
+- `evaluate`              - Evaluate checkpoints via Slurm (evaluate_checkpoints.py)
 - `launch-experiments`    - Launch multiple Slurm experiments from YAML configs (launch_experiments.py)
+- `inspect-data`          - Pretty-print a few documents from a dataset (inspect_data.py)
+- `iterate-prompt`        - Interactive prompt iteration with LLM feedback (iterate_prompt.py)
+
 All commands support `--help` to see available options.
 
 ## Data Processing

@@ -40,26 +40,6 @@ fixed_args:
   #n-workers: 20 # Only need to limit the number of workers if you are running in qos normal
   #override-unsafe: true # Overrides unsafe guard for large runs
 
-# When to know when we have enough data for decay experiments?
-# We need roughly 2B tokens plus some margin for error => 2.5B tokens
-# Each output file is between 1.5MB and 3MB on AWS
-# Count number of files: aws s3 ls s3://finephrase/experiments/rephrased/beyondweb/continue-12b-hq/ | wc -l => 20649
-# continue-12b-hq: 9984459378 / 20649 = ~483'532 tokens per file
-# continue-12b-lq: 12249206538 / 33358 = ~367'204 tokens per file
-# summarize-1b-hq: 2138609303 / 20649 = ~103'570 tokens per file
-# summarize-1b-lq: 2882279171 / 33358 = ~86'404 tokens per file
-# => it seems the files are not a useful proxy for the number of tokens in the output, 
-#    probably because each file is a number of examples and the examples can vary drastically in length
-# ===> I probably just have to tokenize and see
-
-
-# There is usually more input tokens than output tokens
-# 27B (tp4): ~4.5M output tokens per hour 
-# 12B (tp2): ~3.6M output tokens per hour 
-# 4B (tp1): ~7.2M output tokens per hour
-# 1B (tp1): ~33.2M output tokens per hour 
-# 270M (tp1): ~62.4M output tokens per hour
-
 # Variable arguments - creates different experiment runs
 runs:
   # --- Nemotron ---
@@ -764,5 +744,3 @@ runs:
   #    prompt: "beyondweb/summarize.md"
   #    model-name-or-path: "google/gemma-3-1b-it"
   #    n-tasks: 1000
-
-

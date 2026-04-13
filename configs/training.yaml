@@ -261,7 +261,6 @@ runs:
   #  args:
   #    data: s3://finephrase/experiments/tokenized_merged/dclm/,s3://finephrase/experiments/tokenized_merged/math_1b_hq/
 
-
   # DCLM rephrased and mixed in
   #- name: "mix-dclm-article_1b_dclm"
   #  args:
@@ -342,7 +341,6 @@ runs:
   #  args:
   #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen1.5_1.8b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen2_1.5b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen2.5_1.5b_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_qwen3_1.7b_hq/
 
-
   # FW-EDU HQ SmolLM2-1.7B
   #- name: "mix-fw_edu_hq-article_smollm2_1.7b_hq"
   #  args:
@@ -368,7 +366,6 @@ runs:
   #- name: "mix-fw_edu_hq-explanation_smollm2_1.7b_hq"
   #  args:
   #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/explanation_smollm2_1.7b_hq/
-
 
   # FW-EDU HQ SmolLM2-360M
   #- name: "mix-fw_edu_hq-tutorial_smollm2_360m_hq"
@@ -1127,4 +1124,3 @@ runs:
   #- name: "math_1b_hq"
   #  args:
   #    data: s3://finephrase/experiments/tokenized_merged/math_1b_hq/
-

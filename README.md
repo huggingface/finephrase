@@ -81,6 +81,7 @@ After installation, you can use these console commands for different aspects of 
 - `evaluate`              - Evaluate checkpoints via Slurm
 - `launch-experiments`    - Launch multiple Slurm experiments from YAML configs
 - `collect-metadata`      - Collect rephrasing run metadata into a JSON file
+- `audit-contamination`   - N-gram overlap audit between training data and eval benchmarks
 
 All commands support `--help` to see available options. Below, we walk through them in the order of a typical workflow: first understand your data, then prepare, rephrase, train, and evaluate.
 
@@ -243,6 +244,43 @@ collect-metadata
 ```
 
 Output is written to `rephrasing_metadata.json` in the project root.
+
+### `audit-contamination`
+
+Quantify n-gram overlap between training corpora and the eval suite defined in
+`finephrase/task_list.py`. Builds a hash index from every benchmark's questions,
+answers, and query/label overlap n-grams, then for each dataset reports the
+fraction of documents that contain at least one matching n-gram against each
+benchmark.
+
+```bash
+# Step 1+2: build the n-gram index (once) and submit one slurm audit job per
+# dataset. --sample-rates lets you equalise token budgets across datasets so
+# rates are comparable (each row will scan ~5B tokens here).
+audit-contamination \
+  --audit-name n10-5BT \
+  --n-grams 10 \
+  --n-tasks 200 \
+  --data "s3://.../table-smollm2-1.7b-hq/,s3://.../math-smollm2-1.7b-hq/,s3://.../tutorial-smollm2-1.7b-hq/,s3://.../faq-smollm2-1.7b-hq/,s3://.../dclm-37BT/,s3://.../fineweb-edu-hq-20BT/,s3://.../fineweb-edu-lq-20BT/,s3://.../cosmopedia-25BT/" \
+  --names "table_smollm2,math_smollm2,tutorial_smollm2,faq_smollm2,dclm,fw_edu_hq,fw_edu_lq,cosmopedia" \
+  --sample-rates "0.9847,0.9630,0.7243,0.6833,0.1589,0.2619,0.2698,0.2728"
+
+# Step 3: once all audit slurm jobs have finished, aggregate the per-dataset
+# stats.json files. The canonical JSON report is written to
+# contamination_audit_report.json in the project root.
+audit-contamination --audit-name n10-5BT --report-only
+```
+
+Defaults: `n_grams=10` (DCLM convention), `find_query_ngrams=False`,
+`find_overlap_ngrams=True`. Query-only ngrams are off by default because
+lighteval queries embed prompt-template boilerplate (e.g. `Question: ...
+Answer:`) that creates a flood of spurious matches across unrelated tasks.
+On the training side we additionally skip degenerate n-grams (single token
+covers more than 60% of the window) to suppress artifacts from datatrove's
+`simplify_text` collapsing digit runs to `0 0 0 ...`. Enable query ngrams with
+`--find-query-ngrams` if you specifically want to catch question-text
+contamination and accept that noise. Use `--skip-index` on follow-up runs to
+reuse the existing `index_n<N>/` directory.
 
 ## Citation
 

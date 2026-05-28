@@ -68,6 +68,7 @@ launch-experiments = "finephrase.cli.launch_experiments:main"
 inspect-data = "finephrase.cli.inspect_data:main"
 iterate-prompt = "finephrase.cli.iterate_prompt:main"
 collect-metadata = "finephrase.cli.collect_rephrasing_metadata:main"
+audit-contamination = "finephrase.cli.audit_contamination:main"
 
 [tool.setuptools.packages.find]
 include = ["finephrase*"]

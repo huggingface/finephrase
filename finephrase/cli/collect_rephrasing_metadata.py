@@ -11,6 +11,7 @@ Output is written to rephrasing_metadata.json in the project root.
 import json
 import logging
 import re
+from functools import cache
 from pathlib import Path
 
 from fsspec.core import url_to_fs
@@ -18,11 +19,12 @@ from tqdm import tqdm
 
 from datatrove.utils.stats import PipelineStats
 
-from finephrase.utils import LOG_BASE_PATH
+from finephrase.utils import LOG_BASE_PATH, PROJECT_PATH
 
 logger = logging.getLogger(__name__)
 
 BASE_PATH = Path(LOG_BASE_PATH) / "rephrasing"
+PROMPTS_DIR = Path(PROJECT_PATH) / "prompts"
 CATEGORIES = ["beyondweb", "format", "nemotron", "rewire"]
 MIN_COMPLETIONS = 90
 S3_EVALS_PATH = "s3://finephrase/experiments/evals-test/results"
@@ -63,21 +65,6 @@ BENCHMARK_CATEGORIES: dict[str, list[str]] = {
     "MATH": ["gsm8k"],
     "TABLE": ["wikitablequestions", "treb_qa"],
 }
-
-# Known prompt names per category, sorted longest-first to avoid prefix collisions
-KNOWN_PROMPTS: dict[str, list[str]] = {
-    "beyondweb": ["continue", "summarize"],
-    "format": ["article", "commentary", "discussion", "faq", "tutorial", "table", "math"],
-    "nemotron": [
-        "diverse_qa_pairs",
-        "extract_knowledge",
-        "knowledge_list",
-        "wikipedia_style_rephrasing",
-        "distill",
-    ],
-    "rewire": ["guided_rewrite_original", "guided_rewrite_improved"],
-}
-
 
 def has_enough_completions(run_dir: Path) -> bool:
     """Check whether the run has at least MIN_COMPLETIONS completion files."""
@@ -148,14 +135,24 @@ def extract_model_and_dataset(run_dir: Path) -> tuple[str, str]:
     return model, source_dataset
 
 
-def derive_prompt(category: str, run_name: str) -> str:
-    """Derive the prompt file path from category and run folder name.
+@cache
+def _prompts_for_category(category: str) -> list[str]:
+    """Return prompt names for a category, sorted longest-first to avoid prefix collisions."""
+    return sorted(
+        (p.stem for p in (PROMPTS_DIR / category).glob("*.md")),
+        key=len,
+        reverse=True,
+    )
 
-    Uses longest-prefix matching against known prompt names so that e.g.
+
+def derive_prompt(category: str, run_name: str) -> str:
+    """Derive the prompt file path from the category and run folder name.
+
+    Matches the run name against the actual prompt files on disk so new prompts
+    are picked up automatically. Longest-first ordering ensures e.g.
     'guided_rewrite_original' matches before 'guided_rewrite_improved'.
     """
-    prompts = sorted(KNOWN_PROMPTS[category], key=len, reverse=True)
-    for prompt in prompts:
+    for prompt in _prompts_for_category(category):
         if run_name.startswith(prompt + "-") or run_name == prompt:
             return f"{category}/{prompt}.md"
     logger.warning(f"Could not derive prompt for {category}/{run_name}, using folder name")

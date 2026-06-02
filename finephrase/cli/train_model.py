@@ -147,6 +147,15 @@ def launch_slurm_job(launch_file_contents, job_id, nodes, background, name, time
 
 parser = argparse.ArgumentParser(description="Launch training job with updated configuration")
 parser.add_argument("--data", help="Dataset folder paths (can be S3 path)", type=str, required=True)
+parser.add_argument(
+    "--data-weights",
+    help=(
+        "Comma-separated blending weights, one per --data path. "
+        "Defaults to uniform (1/N per dataset). Weight 0 disables a dataset."
+    ),
+    type=str,
+    default=None,
+)
 parser.add_argument("--name", help="Run name", type=str, required=True)
 parser.add_argument("--tokenizer", help="Tokenizer name or path", type=str, default="hynky/Llama-3.2-1B-no-bos")
 parser.add_argument("--seed", help="Seed", type=int, default=DEFAULT_SEED_VALUE)
@@ -204,7 +213,22 @@ def main():
       checkpoint_step = int(resume_checkpoint_path.rstrip('/').split('/')[-1])
       assert args.lr_schedule == "wsd", "LR schedule must be wsd for decay experiments"
 
-    
+    # Parse multiple comma-separated data paths and their blending weights.
+    # Defaults to uniform (1/N) when --data-weights is not given. Weight 0 disables
+    # a dataset, which is useful for endpoints of a synthetic-fraction sweep.
+    data_paths = [path.strip() for path in args.data.split(",")]
+    if args.data_weights is not None:
+        dataset_weights = [float(w.strip()) for w in args.data_weights.split(",")]
+        if len(dataset_weights) != len(data_paths):
+            raise ValueError(
+                f"--data-weights has {len(dataset_weights)} values but --data has "
+                f"{len(data_paths)} paths; they must match."
+            )
+        if sum(dataset_weights) <= 0:
+            raise ValueError("--data-weights must sum to a positive value.")
+    else:
+        dataset_weights = [1.0 / len(data_paths)] * len(data_paths)
+
     # batch size == batch_accumulation_per_replica * micro_batch_size * dp
     per_accum_batch = micro_batch_size * dp_size
     batch_accumulation_per_replica, remainder = divmod(GLOBAL_BATCH_SIZE, per_accum_batch)
@@ -218,6 +242,9 @@ def main():
         f"tp={tp_size}, dp={dp_size}, micro batch size {micro_batch_size}, "
         f"and {batch_accumulation_per_replica} batch accumulation per replica"
     )
+    print(f"Data sources ({len(data_paths)}):")
+    for path, weight in zip(data_paths, dataset_weights):
+        print(f"  weight={weight:.4f}  {path}")
     batch_size = batch_accumulation_per_replica * per_accum_batch
     assert batch_size == GLOBAL_BATCH_SIZE, f"Batch size {batch_size} is not equal to global batch size {GLOBAL_BATCH_SIZE}"
     tokens_per_step = SEQUENCE_LENGTH * batch_size # sequence length * batch size: 4096 * 512 = 2097152
@@ -229,10 +256,7 @@ def main():
     name = args.name.replace(" ", "_") 
     if args.data_seed != DEFAULT_SEED_VALUE and args.seed != DEFAULT_SEED_VALUE: # Only add them if they are not the default values
       name += f"-seed-{(args.data_seed * 100) + args.seed}"
-    
-    # Parse multiple comma-separated data paths
-    data_paths = [path.strip() for path in args.data.split(",")]
-    
+
     # Calculate local dataset paths if using S3
     local_dataset_paths = []
     dataset_folders = []
@@ -260,11 +284,13 @@ def main():
 
     # Build data_stages configuration
     # Helper function to create a stage config
-    def make_stage(name, start_step, folders):
-        num_folders = len(folders)
-        weights = [1.0 / num_folders] * num_folders
+    def make_stage(name, start_step, folders, weights):
+        if len(folders) != len(weights):
+            raise ValueError(
+                f"folders ({len(folders)}) and weights ({len(weights)}) must have the same length"
+            )
         folders_str = ", ".join(folders)
-        weights_str = ", ".join([str(w) for w in weights])
+        weights_str = ", ".join(str(w) for w in weights)
         return f"""- data:
     dataset:
       dataset_folder: [{folders_str}]
@@ -279,17 +305,17 @@ def main():
     seed: {args.data_seed}
   name: {name}
   start_training_step: {start_step}"""
-    
+
     # For decay experiments, we need TWO stages:
     # 1. First stage at step 1 (satisfies nanotron's requirement, won't be used since we resume from step 9000)
     # 2. Second stage at checkpoint_step + 1 (the new dataset for decay phase)
     # Note: Both stages point to the same dataset since the first stage is never actually used
     if args.decay_exp:
-        dummy_stage = make_stage("warmup_stable_phase", 1, dataset_folders)
-        decay_stage = make_stage("decay_phase", checkpoint_step + 1, dataset_folders)
+        dummy_stage = make_stage("warmup_stable_phase", 1, dataset_folders, dataset_weights)
+        decay_stage = make_stage("decay_phase", checkpoint_step + 1, dataset_folders, dataset_weights)
         data_stages_config = f"{dummy_stage}\n{decay_stage}"
     else:
-        data_stages_config = make_stage("stable", 1, dataset_folders)
+        data_stages_config = make_stage("stable", 1, dataset_folders, dataset_weights)
 
     MODEL_CONFIG = f"""
 checkpoints:

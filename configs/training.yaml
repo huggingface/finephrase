@@ -1124,3 +1124,159 @@ runs:
   #- name: "math_1b_hq"
   #  args:
   #    data: s3://finephrase/experiments/tokenized_merged/math_1b_hq/
+
+  # Rebuttal: how does the synthetic fraction affect quality? Weights are
+  # written into the run name to keep the mix explicit. 100% synthetic is
+  # omitted because the math-only baseline is already covered elsewhere.
+  
+  # --- Synthetic-fraction sweep on fw_edu_hq + math_smollm2_1.7b_hq ---
+  #- name: "mix-0.9-fw_edu_hq-0.1-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.9,0.1"
+  #- name: "mix-0.8-fw_edu_hq-0.2-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.8,0.2"
+  #- name: "mix-0.7-fw_edu_hq-0.3-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.7,0.3"
+  #- name: "mix-0.6-fw_edu_hq-0.4-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.6,0.4"
+  #- name: "mix-0.5-fw_edu_hq-0.5-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.5,0.5"
+  #- name: "mix-0.4-fw_edu_hq-0.6-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.4,0.6"
+  #- name: "mix-0.3-fw_edu_hq-0.7-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.3,0.7"
+  #- name: "mix-0.2-fw_edu_hq-0.8-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.2,0.8"
+  #- name: "mix-0.1-fw_edu_hq-0.9-math_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/math_smollm2_1.7b_hq/
+  #    data-weights: "0.1,0.9"
+
+  # --- Synthetic-fraction sweep on fw_edu_hq + table_smollm2_1.7b_hq ---
+  #- name: "mix-0.9-fw_edu_hq-0.1-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.9,0.1"
+  #- name: "mix-0.8-fw_edu_hq-0.2-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.8,0.2"
+  #- name: "mix-0.7-fw_edu_hq-0.3-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.7,0.3"
+  #- name: "mix-0.6-fw_edu_hq-0.4-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.6,0.4"
+  #- name: "mix-0.5-fw_edu_hq-0.5-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.5,0.5"
+  #- name: "mix-0.4-fw_edu_hq-0.6-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.4,0.6"
+  #- name: "mix-0.3-fw_edu_hq-0.7-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.3,0.7"
+  #- name: "mix-0.2-fw_edu_hq-0.8-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.2,0.8"
+  #- name: "mix-0.1-fw_edu_hq-0.9-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-weights: "0.1,0.9"
+
+  # --- Synthetic-fraction sweep on fw_edu_hq + faq_smollm2_1.7b_hq ---
+  #- name: "mix-0.9-fw_edu_hq-0.1-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.9,0.1"
+  #- name: "mix-0.8-fw_edu_hq-0.2-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.8,0.2"
+  #- name: "mix-0.7-fw_edu_hq-0.3-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.7,0.3"
+  #- name: "mix-0.6-fw_edu_hq-0.4-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.6,0.4"
+  #- name: "mix-0.5-fw_edu_hq-0.5-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.5,0.5"
+  #- name: "mix-0.4-fw_edu_hq-0.6-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.4,0.6"
+  #- name: "mix-0.3-fw_edu_hq-0.7-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.3,0.7"
+  #- name: "mix-0.2-fw_edu_hq-0.8-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.2,0.8"
+  #- name: "mix-0.1-fw_edu_hq-0.9-faq_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/faq_smollm2_1.7b_hq/
+  #    data-weights: "0.1,0.9"
+
+  # --- Synthetic-fraction sweep on fw_edu_hq + tutorial_smollm2_1.7b_hq ---
+  #- name: "mix-0.9-fw_edu_hq-0.1-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.9,0.1"
+  #- name: "mix-0.8-fw_edu_hq-0.2-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.8,0.2"
+  #- name: "mix-0.7-fw_edu_hq-0.3-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.7,0.3"
+  #- name: "mix-0.6-fw_edu_hq-0.4-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.6,0.4"
+  #- name: "mix-0.5-fw_edu_hq-0.5-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.5,0.5"
+  #- name: "mix-0.4-fw_edu_hq-0.6-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.4,0.6"
+  #- name: "mix-0.3-fw_edu_hq-0.7-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.3,0.7"
+  #- name: "mix-0.2-fw_edu_hq-0.8-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.2,0.8"
+  #- name: "mix-0.1-fw_edu_hq-0.9-tutorial_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/tutorial_smollm2_1.7b_hq/
+  #    data-weights: "0.1,0.9"

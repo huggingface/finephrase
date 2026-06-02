@@ -205,6 +205,17 @@ train --data s3://finephrase/experiments/tokenized/fw_edu_lq --name fw_edu_lq
 train --data s3://finephrase/experiments/tokenized/fw_edu_hq --name fw_edu_hq_2.9b --model-size 2.9b
 ```
 
+**Custom blending weights:** By default, multi-dataset runs blend uniformly (`1/N` per dataset). Pass `--data-weights` to override this with comma-separated weights matching the order of `--data`. Weight `0` disables a dataset, which makes it easy to sweep over a synthetic fraction with a fixed `--data` argument. Nanotron normalizes the weights internally; only the ratios matter.
+
+```bash
+train \
+  --data s3://.../fw_edu_hq/,s3://.../math_smollm2_1.7b_hq/ \
+  --data-weights "0.3,0.7" \
+  --name mix-0.3-fw_edu_hq-0.7-math_smollm2_1.7b_hq
+```
+
+A 9-run synthetic-fraction sweep (10% → 90%) for the pair `fw_edu_hq + math_smollm2_1.7b_hq` is at the top of `configs/training.yaml`. Launch it with `launch-experiments configs/training.yaml`.
+
 ### `evaluate`
 
 Training runs lighteval automatically at checkpoints, but if some evaluations fail you can re-run them manually:

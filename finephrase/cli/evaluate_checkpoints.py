@@ -29,17 +29,21 @@ S5CMD_PATH = f"{PROJECT_PATH}/.venv/bin/s5cmd"
 TASKS_PATH = f"{PROJECT_PATH}/finephrase/tasks.txt"
 TASK_LIST_PATH = f"{PROJECT_PATH}/finephrase/task_list.py"
 
-# Run names from train_model use a trailing `-<preset>b` token (e.g. `...-6.2b`, `...-2.9b`).
+# Run names from train_model carry a `-<preset>b` token (e.g. `...-6.2b`, `...-2.9b`).
+# It may sit at the end or before a seed suffix (e.g. `...-2.9b--data-seed=1-seed=1-seed-101`),
+# so we match it as a complete token (preceded by `-`, followed by `-` or end of name).
+# Rephraser sizes in dataset names are underscore-joined (`_1.7b_hq`), so they never match.
 _MODEL_SIZE_SUFFIX_RE = re.compile(
-    r"-(0\.5|1\.7|2\.9|6\.2)b$",
+    r"-(0\.5|1\.7|2\.9|6\.2)b(?=-|$)",
 )
 
 
 def infer_model_size_from_run_name(run_name: str) -> str:
     """Map a checkpoint run folder name to a `QWEN_SIZE_PRESETS` key.
 
-    Matches a trailing ``-0.5b`` / ``-1.7b`` / ``-2.9b`` / ``-6.2b`` suffix (training convention).
-    If absent, returns ``DEFAULT_MODEL_SIZE`` (1.7b).
+    Matches a ``-0.5b`` / ``-1.7b`` / ``-2.9b`` / ``-6.2b`` token (training convention),
+    whether it is the final token or followed by a seed suffix. Returns
+    ``DEFAULT_MODEL_SIZE`` (1.7b) if absent.
     """
     m = _MODEL_SIZE_SUFFIX_RE.search(run_name)
     if m:

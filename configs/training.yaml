@@ -10,7 +10,7 @@ fixed_args:
 
 # Variable arguments - creates different experiment runs
 runs:
-  # --- Variance Checks ---
+  # --- Variance Checks (decay) ---
   #- name: "fw_edu_lq-decay-fw_edu_hq"
   #  args:
   #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
@@ -29,6 +29,60 @@ runs:
   #    decay-exp: true
   #    data-seed: [1, 2, 3]
   #    seed: [1, 2, 3]
+
+  # --- Variance Checks (full training) ---
+  # 3x3 seed x data-seed grid; trains from scratch so --seed also varies model
+  # init (the dominant variance source the shared decay checkpoint cannot expose).
+  # table_mix + fw_edu_hq baseline are DONE (9 runs each); kept for reference.
+  #- name: "mix-fw_edu_hq-table_smollm2_1.7b_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  #- name: "fw_edu_hq"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  # Size ablation: same table_mix + baseline grids across model scale; model-size
+  # sets the trained model and the -<size> name suffix keeps checkpoints/evals
+  # separate. 0.5b + 1.7b + 2.9b are DONE (kept for reference); 6.2b is active below.
+  #- name: "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    model-size: "0.5b"
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  #- name: "fw_edu_hq-0.5b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+  #    model-size: "0.5b"
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  #- name: "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    model-size: "2.9b"
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  #- name: "fw_edu_hq-2.9b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+  #    model-size: "2.9b"
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  - name: "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b"
+    args:
+      data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+      model-size: "6.2b"
+      data-seed: [1, 2, 3]
+      seed: [1, 2, 3]
+  - name: "fw_edu_hq-6.2b"
+    args:
+      data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+      model-size: "6.2b"
+      data-seed: [1, 2, 3]
+      seed: [1, 2, 3]
 
   # --- Baselines ---
   #- name: "fw_edu_lq"

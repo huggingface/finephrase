@@ -17,13 +17,17 @@ MAIL_USER = "joel@hf.co"
 
 FAULTY_NODES = [
     "ip-26-0-160-40",
+    "ip-26-0-160-100",  # broken NVLink/P2P: NCCL init failures (2026-06-02)
     "ip-26-0-160-192",
     "ip-26-0-161-78",
     "ip-26-0-161-103",
+    "ip-26-0-161-142",  # broken NVLink/P2P: NCCL init failures (2026-06-02)
     "ip-26-0-162-46",
     "ip-26-0-162-79",
     "ip-26-0-164-18",
     "ip-26-0-167-111",
+    "ip-26-0-169-139",  # broken NVLink/P2P: NCCL init failures (2026-06-01)
+    "ip-26-0-169-207",  # broken NVLink/P2P: NCCL init failures (2026-06-01)
     "ip-26-0-170-143",
     "ip-26-0-171-62",
     "ip-26-0-171-88",

@@ -82,6 +82,7 @@ After installation, you can use these console commands for different aspects of 
 - `launch-experiments`    - Launch multiple Slurm experiments from YAML configs
 - `collect-rephrasing-metadata` - Collect rephrasing run metadata into a JSON file
 - `collect-training-metadata`   - Collect training-only run metadata (proportion sweep / variance grids) into a JSON file
+- `export-benchmark-csv`        - Export all S3 lighteval evals into a single wide benchmark CSV
 - `audit-contamination`   - N-gram overlap audit between training data and eval benchmarks
 
 All commands support `--help` to see available options. Below, we walk through them in the order of a typical workflow: first understand your data, then prepare, rephrase, train, and evaluate.
@@ -266,6 +267,21 @@ collect-training-metadata
 ```
 
 To add a new experiment family, append a `(regex, family)` entry to `EXPERIMENT_FAMILIES` in `finephrase/cli/collect_training_metadata.py`. Shared benchmark constants and the S3 result fetcher live in `finephrase/benchmark.py`.
+
+### `export-benchmark-csv`
+
+Download **all** benchmark results into a single wide CSV. Every run and step under `S3_EVALS_PATH` is discovered and fetched directly from S3.
+
+Each row is one `(runname, seed, step)`: the twelve English lighteval tasks (`prob_norm_token`), `agg_score_micro`, the six task-type category aggregates, and `agg_score_macro`. Seeds are parsed from the run name (`...-seed-<N>` runs are split into `runname` + seed `<N>`; all others default to seed `42`), missing tasks count as `0`, and within a step the newest `results_*.json` wins per task. Decay-resumed runs (those with `-decay-` in the name) are excluded by default.
+
+```bash
+# Export all S3 runs (minus decay runs) to benchmark-results.csv in the project root
+export-benchmark-csv
+
+# Keep decay runs, restrict to a subset, or change the output path
+export-benchmark-csv --include-decay
+export-benchmark-csv --runs-regex 'mix-0\.[1-9]-.*' --output /tmp/sweep.csv
+```
 
 ### `audit-contamination`
 

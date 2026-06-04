@@ -5,7 +5,7 @@ continue_on_failure: true
 # Fixed arguments for all runs
 fixed_args:
   nodes: 8
-  qos: "low"
+  qos: "normal"
   decay-exp: false
 
 # Variable arguments - creates different experiment runs
@@ -71,18 +71,18 @@ runs:
   #    model-size: "2.9b"
   #    data-seed: [1, 2, 3]
   #    seed: [1, 2, 3]
-  - name: "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b"
-    args:
-      data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
-      model-size: "6.2b"
-      data-seed: [1, 2, 3]
-      seed: [1, 2, 3]
-  - name: "fw_edu_hq-6.2b"
-    args:
-      data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
-      model-size: "6.2b"
-      data-seed: [1, 2, 3]
-      seed: [1, 2, 3]
+  #- name: "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/,s3://finephrase/experiments/tokenized_merged/table_smollm2_1.7b_hq/
+  #    model-size: "6.2b"
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
+  #- name: "fw_edu_hq-6.2b"
+  #  args:
+  #    data: s3://finephrase/experiments/tokenized_merged/fw_edu_hq/
+  #    model-size: "6.2b"
+  #    data-seed: [1, 2, 3]
+  #    seed: [1, 2, 3]
 
   # --- Baselines ---
   #- name: "fw_edu_lq"

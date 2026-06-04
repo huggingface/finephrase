@@ -42,9 +42,23 @@ BENCHMARK_CATEGORIES: dict[str, list[str]] = {
 }
 
 
-def _short_task_name(task_key: str) -> str:
+def short_task_name(task_key: str) -> str:
     """Strip 'lighteval|' prefix and '|3' suffix from a task key."""
     return task_key.removeprefix("lighteval|").removesuffix("|3")
+
+
+def parse_run_name_seed(run_folder: str) -> tuple[str, int]:
+    """Split an S3 run folder into ``(runname, seed)`` like the joel-board dashboard.
+
+    Seed-sweep runs carry a trailing ``-seed-<N>`` (e.g.
+    ``fw_edu_hq--data-seed=1-seed=1-seed-101``): everything before it is the run
+    name and ``<N>`` is the seed. Runs without that suffix default to seed ``42``
+    (the dashboard's convention for single-seed runs).
+    """
+    if "-seed-" not in run_folder:
+        return run_folder, 42
+    name, _, seed = run_folder.rpartition("-seed-")
+    return name, int(seed)
 
 
 def fetch_benchmark_results(training_run: str, fs: object) -> dict[str, float] | None:
@@ -72,7 +86,7 @@ def fetch_benchmark_results(training_run: str, fs: object) -> dict[str, float] |
     scores: dict[str, float] = {}
     for task_key in BENCHMARK_TASKS:
         if task_key in raw_results and BENCHMARK_METRIC in raw_results[task_key]:
-            scores[_short_task_name(task_key)] = raw_results[task_key][BENCHMARK_METRIC]
+            scores[short_task_name(task_key)] = raw_results[task_key][BENCHMARK_METRIC]
 
     if not scores:
         return None

@@ -69,6 +69,7 @@ inspect-data = "finephrase.cli.inspect_data:main"
 iterate-prompt = "finephrase.cli.iterate_prompt:main"
 collect-rephrasing-metadata = "finephrase.cli.collect_rephrasing_metadata:main"
 collect-training-metadata = "finephrase.cli.collect_training_metadata:main"
+export-benchmark-csv = "finephrase.cli.export_benchmark_csv:main"
 audit-contamination = "finephrase.cli.audit_contamination:main"
 
 [tool.setuptools.packages.find]

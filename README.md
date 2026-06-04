@@ -80,7 +80,8 @@ After installation, you can use these console commands for different aspects of 
 - `train`                 - Train models via Slurm
 - `evaluate`              - Evaluate checkpoints via Slurm
 - `launch-experiments`    - Launch multiple Slurm experiments from YAML configs
-- `collect-metadata`      - Collect rephrasing run metadata into a JSON file
+- `collect-rephrasing-metadata` - Collect rephrasing run metadata into a JSON file
+- `collect-training-metadata`   - Collect training-only run metadata (proportion sweep / variance grids) into a JSON file
 - `audit-contamination`   - N-gram overlap audit between training data and eval benchmarks
 
 All commands support `--help` to see available options. Below, we walk through them in the order of a typical workflow: first understand your data, then prepare, rephrase, train, and evaluate.
@@ -246,15 +247,25 @@ launch-experiments configs/rephrasing.yaml --dry-run
 launch-experiments configs/rephrasing.yaml --run-names "qwen3-1.7b-hq,smollm2-1.7b-hq"
 ```
 
-### `collect-metadata`
+### `collect-rephrasing-metadata`
 
 After experiments finish, aggregate all run metadata (token counts, quality scores, GPU time, benchmark results) into a single JSON file for analysis:
 
 ```bash
-collect-metadata
+collect-rephrasing-metadata
 ```
 
 Output is written to `rephrasing_metadata.json` in the project root.
+
+### `collect-training-metadata`
+
+For training-only experiments (proportion sweep, variance check grids) that don't have a rephrasing folder, this writes a sibling `training_metadata.json` with the training-relevant fields (`datasets`, `data_weights`, `seed`, `data_seed`, `model_size`, `train_steps`, `tokens_consumed_b`) plus the same `results` schema as the rephrasing collector. Source of truth is each run's local `config.yaml`; benchmark results are fetched from S3.
+
+```bash
+collect-training-metadata
+```
+
+To add a new experiment family, append a `(regex, family)` entry to `EXPERIMENT_FAMILIES` in `finephrase/cli/collect_training_metadata.py`. Shared benchmark constants and the S3 result fetcher live in `finephrase/benchmark.py`.
 
 ### `audit-contamination`
 

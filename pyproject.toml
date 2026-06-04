@@ -67,7 +67,8 @@ evaluate = "finephrase.cli.evaluate_checkpoints:main"
 launch-experiments = "finephrase.cli.launch_experiments:main"
 inspect-data = "finephrase.cli.inspect_data:main"
 iterate-prompt = "finephrase.cli.iterate_prompt:main"
-collect-metadata = "finephrase.cli.collect_rephrasing_metadata:main"
+collect-rephrasing-metadata = "finephrase.cli.collect_rephrasing_metadata:main"
+collect-training-metadata = "finephrase.cli.collect_training_metadata:main"
 audit-contamination = "finephrase.cli.audit_contamination:main"
 
 [tool.setuptools.packages.find]

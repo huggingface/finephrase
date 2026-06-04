@@ -1,0 +1,5156 @@
+[
+  {
+    "run": "mix-0.1-fw_edu_hq-0.9-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.1,
+      0.9
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6289128582459182,
+      "arc_cf:easy": 0.23224628861513866,
+      "hellaswag_cf": 0.07525474460352932,
+      "mmlu_redux_cf:_average": 0.15591707945581462,
+      "gsm8k": 0.10936845284337086,
+      "drop": 0.1472342910216167,
+      "wikitablequestions": 0.2068590723442806,
+      "treb_qa": 0.13811658771242133,
+      "winogrande_cf": 0.026038280953253185,
+      "piqa_cf": 0.06253618688889413,
+      "openbookqa_cf": 0.035113030610493166,
+      "xcsqa_cf": 0.05228765466573538,
+      "agg_score_GK": 0.19408168403547665,
+      "agg_score_RC": 0.38807357463376746,
+      "agg_score_RES": 0.04997895738837422,
+      "agg_score_NLU": 0.05064651277839125,
+      "agg_score_MATH": 0.10936845284337086,
+      "agg_score_TABLE": 0.17248783002835097,
+      "agg_score_macro": 0.1607728352846219,
+      "agg_score_micro": 0.15582371066337217
+    }
+  },
+  {
+    "run": "mix-0.1-fw_edu_hq-0.9-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.1,
+      0.9
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6202445810720872,
+      "arc_cf:easy": 0.22391319975018417,
+      "hellaswag_cf": 0.07531260100842681,
+      "mmlu_redux_cf:_average": 0.15695385543681423,
+      "gsm8k": 0.1380723284686468,
+      "drop": 0.19347493658784926,
+      "wikitablequestions": 0.22345712536924936,
+      "treb_qa": 0.17427423070517495,
+      "winogrande_cf": 0.039414354840289746,
+      "piqa_cf": 0.06376197663784822,
+      "openbookqa_cf": 0.033698624313011794,
+      "xcsqa_cf": 0.04767533805584138,
+      "agg_score_GK": 0.19043352759349919,
+      "agg_score_RC": 0.4068597588299683,
+      "agg_score_RES": 0.04837864633556713,
+      "agg_score_NLU": 0.05736347792435828,
+      "agg_score_MATH": 0.1380723284686468,
+      "agg_score_TABLE": 0.19886567803721217,
+      "agg_score_macro": 0.17332890286487532,
+      "agg_score_micro": 0.16585442935378533
+    }
+  },
+  {
+    "run": "mix-0.1-fw_edu_hq-0.9-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.1,
+      0.9
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6236582709487513,
+      "arc_cf:easy": 0.22715523163136578,
+      "hellaswag_cf": 0.07246555958430197,
+      "mmlu_redux_cf:_average": 0.15651429489043958,
+      "gsm8k": 0.11539247652724036,
+      "drop": 0.2144306137630094,
+      "wikitablequestions": 0.24127123036795117,
+      "treb_qa": 0.2031189197675707,
+      "winogrande_cf": 0.03553159382248788,
+      "piqa_cf": 0.060821208079352186,
+      "openbookqa_cf": 0.03478928580618036,
+      "xcsqa_cf": 0.05257533329501935,
+      "agg_score_GK": 0.19183476326090268,
+      "agg_score_RC": 0.41904444235588034,
+      "agg_score_RES": 0.04939527572685063,
+      "agg_score_NLU": 0.05399857670339492,
+      "agg_score_MATH": 0.11539247652724036,
+      "agg_score_TABLE": 0.22219507506776093,
+      "agg_score_macro": 0.17531010160700497,
+      "agg_score_micro": 0.16981033487363917
+    }
+  },
+  {
+    "run": "mix-0.1-fw_edu_hq-0.9-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.1,
+      0.9
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5994030896534175,
+      "arc_cf:easy": 0.22868085433878757,
+      "hellaswag_cf": 0.07875077949181053,
+      "mmlu_redux_cf:_average": 0.15143854129566925,
+      "gsm8k": 0.10788110385990068,
+      "drop": 0.15692585528692415,
+      "wikitablequestions": 0.2055671662824271,
+      "treb_qa": 0.13905417087032088,
+      "winogrande_cf": 0.03867660944031954,
+      "piqa_cf": 0.06968387861749639,
+      "openbookqa_cf": 0.03342024741658421,
+      "xcsqa_cf": 0.04978128487455892,
+      "agg_score_GK": 0.19005969781722842,
+      "agg_score_RC": 0.3781644724701708,
+      "agg_score_RES": 0.05096180363621317,
+      "agg_score_NLU": 0.05871369446606503,
+      "agg_score_MATH": 0.10788110385990068,
+      "agg_score_TABLE": 0.172310668576374,
+      "agg_score_macro": 0.15968190680432534,
+      "agg_score_micro": 0.15493863178568473
+    }
+  },
+  {
+    "run": "mix-0.2-fw_edu_hq-0.8-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.2,
+      0.8
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6006171017766161,
+      "arc_cf:easy": 0.22867187637164713,
+      "hellaswag_cf": 0.07676346463417094,
+      "mmlu_redux_cf:_average": 0.15455537044253606,
+      "gsm8k": 0.11246802453100362,
+      "drop": 0.18000421440190292,
+      "wikitablequestions": 0.1966407907286585,
+      "treb_qa": 0.15191397516456184,
+      "winogrande_cf": 0.035119702117269086,
+      "piqa_cf": 0.06382214597034877,
+      "openbookqa_cf": 0.03596690340405341,
+      "xcsqa_cf": 0.055111514225213695,
+      "agg_score_GK": 0.1916136234070916,
+      "agg_score_RC": 0.3903106580892595,
+      "agg_score_RES": 0.05163352119987196,
+      "agg_score_NLU": 0.055941583375720014,
+      "agg_score_MATH": 0.11246802453100362,
+      "agg_score_TABLE": 0.17427738294661016,
+      "agg_score_macro": 0.1627074655915928,
+      "agg_score_micro": 0.15763792364733184
+    }
+  },
+  {
+    "run": "mix-0.2-fw_edu_hq-0.8-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.2,
+      0.8
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.625355802050474,
+      "arc_cf:easy": 0.22397610425298006,
+      "hellaswag_cf": 0.07747353850496842,
+      "mmlu_redux_cf:_average": 0.15749563391947977,
+      "gsm8k": 0.14363642565254317,
+      "drop": 0.18924857243968513,
+      "wikitablequestions": 0.21944593556497644,
+      "treb_qa": 0.18267302197299926,
+      "winogrande_cf": 0.03766528620284456,
+      "piqa_cf": 0.06477506968163445,
+      "openbookqa_cf": 0.03241170173724753,
+      "xcsqa_cf": 0.04968376177867919,
+      "agg_score_GK": 0.19073586908622991,
+      "agg_score_RC": 0.4073021872450796,
+      "agg_score_RES": 0.04895684439918705,
+      "agg_score_NLU": 0.05756941235390649,
+      "agg_score_MATH": 0.14363642565254317,
+      "agg_score_TABLE": 0.20105947876898783,
+      "agg_score_macro": 0.17487670291765567,
+      "agg_score_micro": 0.16698673781320936
+    }
+  },
+  {
+    "run": "mix-0.2-fw_edu_hq-0.8-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.2,
+      0.8
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6288980632413784,
+      "arc_cf:easy": 0.22606425405469344,
+      "hellaswag_cf": 0.07399401421321697,
+      "mmlu_redux_cf:_average": 0.15610539864130557,
+      "gsm8k": 0.11235279616891322,
+      "drop": 0.1952180225558089,
+      "wikitablequestions": 0.23798933749702098,
+      "treb_qa": 0.20268383312764246,
+      "winogrande_cf": 0.03734027197629271,
+      "piqa_cf": 0.06132245621671349,
+      "openbookqa_cf": 0.03422857155122379,
+      "xcsqa_cf": 0.05274268851418979,
+      "agg_score_GK": 0.1910848263479995,
+      "agg_score_RC": 0.41205804289859366,
+      "agg_score_RES": 0.04943123876070902,
+      "agg_score_NLU": 0.05566714309475484,
+      "agg_score_MATH": 0.11235279616891322,
+      "agg_score_TABLE": 0.22033658531233172,
+      "agg_score_macro": 0.17348843876388367,
+      "agg_score_micro": 0.1682449756465333
+    }
+  },
+  {
+    "run": "mix-0.2-fw_edu_hq-0.8-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.2,
+      0.8
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5838078673872686,
+      "arc_cf:easy": 0.22875442347127706,
+      "hellaswag_cf": 0.08090613272226638,
+      "mmlu_redux_cf:_average": 0.1514132858942372,
+      "gsm8k": 0.10903919327964497,
+      "drop": 0.15032463058380127,
+      "wikitablequestions": 0.20434412001132213,
+      "treb_qa": 0.15241586625104514,
+      "winogrande_cf": 0.04160628353797387,
+      "piqa_cf": 0.0691152204992774,
+      "openbookqa_cf": 0.030480316968120123,
+      "xcsqa_cf": 0.050022923738111194,
+      "agg_score_GK": 0.19008385468275713,
+      "agg_score_RC": 0.36706624898553497,
+      "agg_score_RES": 0.049872820401836236,
+      "agg_score_NLU": 0.06125620813012012,
+      "agg_score_MATH": 0.10903919327964497,
+      "agg_score_TABLE": 0.17837999313118363,
+      "agg_score_macro": 0.15928305310184618,
+      "agg_score_micro": 0.15435252202869543
+    }
+  },
+  {
+    "run": "mix-0.3-fw_edu_hq-0.7-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.3,
+      0.7
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6157561915703986,
+      "arc_cf:easy": 0.22230722024729244,
+      "hellaswag_cf": 0.07813611209363125,
+      "mmlu_redux_cf:_average": 0.1554210857501023,
+      "gsm8k": 0.11493007342630455,
+      "drop": 0.14462371138539137,
+      "wikitablequestions": 0.20027435229794185,
+      "treb_qa": 0.1442827454473047,
+      "winogrande_cf": 0.026385755224059337,
+      "piqa_cf": 0.06466224397587629,
+      "openbookqa_cf": 0.035913974286179526,
+      "xcsqa_cf": 0.050228752225337285,
+      "agg_score_GK": 0.18886415299869735,
+      "agg_score_RC": 0.380189951477895,
+      "agg_score_RES": 0.050268323495797705,
+      "agg_score_NLU": 0.05226093365884529,
+      "agg_score_MATH": 0.11493007342630455,
+      "agg_score_TABLE": 0.17227854887262328,
+      "agg_score_macro": 0.15979866398836054,
+      "agg_score_micro": 0.154410184827485
+    }
+  },
+  {
+    "run": "mix-0.3-fw_edu_hq-0.7-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.3,
+      0.7
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6343054045599728,
+      "arc_cf:easy": 0.22451544688359698,
+      "hellaswag_cf": 0.07778766395048134,
+      "mmlu_redux_cf:_average": 0.15938380871239344,
+      "gsm8k": 0.13209239276524348,
+      "drop": 0.192861327469768,
+      "wikitablequestions": 0.22377291937892224,
+      "treb_qa": 0.1636013193367358,
+      "winogrande_cf": 0.0325635340799571,
+      "piqa_cf": 0.06341747376490353,
+      "openbookqa_cf": 0.03578751457570682,
+      "xcsqa_cf": 0.05125015552372644,
+      "agg_score_GK": 0.1919496277979952,
+      "agg_score_RC": 0.4135833660148704,
+      "agg_score_RES": 0.050151714621445596,
+      "agg_score_NLU": 0.05517559901521922,
+      "agg_score_MATH": 0.13209239276524348,
+      "agg_score_TABLE": 0.193687119357829,
+      "agg_score_macro": 0.17277330326210047,
+      "agg_score_micro": 0.165944913416784
+    }
+  },
+  {
+    "run": "mix-0.3-fw_edu_hq-0.7-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.3,
+      0.7
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6175305141411026,
+      "arc_cf:easy": 0.23268532033093986,
+      "hellaswag_cf": 0.07679577541350456,
+      "mmlu_redux_cf:_average": 0.15799703550423763,
+      "gsm8k": 0.11545435747927693,
+      "drop": 0.22913894430017717,
+      "wikitablequestions": 0.2341535397516944,
+      "treb_qa": 0.21112542203174897,
+      "winogrande_cf": 0.03479582713316383,
+      "piqa_cf": 0.06381599596223797,
+      "openbookqa_cf": 0.038166933291891185,
+      "xcsqa_cf": 0.05913532582025816,
+      "agg_score_GK": 0.19534117791758876,
+      "agg_score_RC": 0.42333472922063986,
+      "agg_score_RES": 0.05370608502479577,
+      "agg_score_NLU": 0.055795801273334195,
+      "agg_score_MATH": 0.11545435747927693,
+      "agg_score_TABLE": 0.2226394808917217,
+      "agg_score_macro": 0.1777119386345595,
+      "agg_score_micro": 0.17256624926335282
+    }
+  },
+  {
+    "run": "mix-0.3-fw_edu_hq-0.7-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.3,
+      0.7
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5627167788808654,
+      "arc_cf:easy": 0.23428846750516585,
+      "hellaswag_cf": 0.07992682698518416,
+      "mmlu_redux_cf:_average": 0.15245588019571074,
+      "gsm8k": 0.11439687627094249,
+      "drop": 0.1582961795732171,
+      "wikitablequestions": 0.2044528178050006,
+      "treb_qa": 0.14695274958040722,
+      "winogrande_cf": 0.03356340890151314,
+      "piqa_cf": 0.06913500036149042,
+      "openbookqa_cf": 0.03485059990466375,
+      "xcsqa_cf": 0.05269948958356706,
+      "agg_score_GK": 0.1933721738504383,
+      "agg_score_RC": 0.3605064792270412,
+      "agg_score_RES": 0.05222836328324041,
+      "agg_score_NLU": 0.05674511794334865,
+      "agg_score_MATH": 0.11439687627094249,
+      "agg_score_TABLE": 0.17570278369270392,
+      "agg_score_macro": 0.15882529904461917,
+      "agg_score_micro": 0.15364458962897734
+    }
+  },
+  {
+    "run": "mix-0.4-fw_edu_hq-0.6-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.4,
+      0.6
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6221470551226687,
+      "arc_cf:easy": 0.23429329407572844,
+      "hellaswag_cf": 0.07854472891948303,
+      "mmlu_redux_cf:_average": 0.15843970453867764,
+      "gsm8k": 0.10897118651271008,
+      "drop": 0.18495868743708999,
+      "wikitablequestions": 0.19855267232046003,
+      "treb_qa": 0.15655409102766749,
+      "winogrande_cf": 0.030767682918172952,
+      "piqa_cf": 0.06530633906790635,
+      "openbookqa_cf": 0.03680219480490313,
+      "xcsqa_cf": 0.054183623057460745,
+      "agg_score_GK": 0.19636649930720304,
+      "agg_score_RC": 0.4035528712798793,
+      "agg_score_RES": 0.0520973856434234,
+      "agg_score_NLU": 0.054656205918827985,
+      "agg_score_MATH": 0.10897118651271008,
+      "agg_score_TABLE": 0.17755338167406376,
+      "agg_score_macro": 0.1655329217226846,
+      "agg_score_micro": 0.1607934383169107
+    }
+  },
+  {
+    "run": "mix-0.4-fw_edu_hq-0.6-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.4,
+      0.6
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.581181935802075,
+      "arc_cf:easy": 0.22788420473207294,
+      "hellaswag_cf": 0.07918857615066008,
+      "mmlu_redux_cf:_average": 0.15738967344730426,
+      "gsm8k": 0.13464545959514407,
+      "drop": 0.21892120303833645,
+      "wikitablequestions": 0.19503173592899156,
+      "treb_qa": 0.16471888445597185,
+      "winogrande_cf": 0.04156959066481827,
+      "piqa_cf": 0.06404623352112013,
+      "openbookqa_cf": 0.03588002275478101,
+      "xcsqa_cf": 0.05150216928797656,
+      "agg_score_GK": 0.1926369390896886,
+      "agg_score_RC": 0.4000515694202057,
+      "agg_score_RES": 0.0504761418546259,
+      "agg_score_NLU": 0.060379083407739176,
+      "agg_score_MATH": 0.13464545959514407,
+      "agg_score_TABLE": 0.1798753101924817,
+      "agg_score_macro": 0.16967741725998087,
+      "agg_score_micro": 0.162663307448271
+    }
+  },
+  {
+    "run": "mix-0.4-fw_edu_hq-0.6-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.4,
+      0.6
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6347096977565371,
+      "arc_cf:easy": 0.22947143432098327,
+      "hellaswag_cf": 0.07678757178021922,
+      "mmlu_redux_cf:_average": 0.15965594611646522,
+      "gsm8k": 0.11250682244505035,
+      "drop": 0.18413071977833773,
+      "wikitablequestions": 0.2425663182269603,
+      "treb_qa": 0.21161237976748215,
+      "winogrande_cf": 0.03201047847654137,
+      "piqa_cf": 0.06418305505570737,
+      "openbookqa_cf": 0.03657366530929946,
+      "xcsqa_cf": 0.0564713009783347,
+      "agg_score_GK": 0.19456369021872424,
+      "agg_score_RC": 0.4094202087674374,
+      "agg_score_RES": 0.052409340447780506,
+      "agg_score_NLU": 0.054399025128380296,
+      "agg_score_MATH": 0.11250682244505035,
+      "agg_score_TABLE": 0.22708934899722122,
+      "agg_score_macro": 0.17506473933409902,
+      "agg_score_micro": 0.1700566158343265
+    }
+  },
+  {
+    "run": "mix-0.4-fw_edu_hq-0.6-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.4,
+      0.6
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5750120992830002,
+      "arc_cf:easy": 0.2264123729934939,
+      "hellaswag_cf": 0.08129267235075031,
+      "mmlu_redux_cf:_average": 0.15333131945369413,
+      "gsm8k": 0.11621103681829172,
+      "drop": 0.1633824994735376,
+      "wikitablequestions": 0.1976511049908845,
+      "treb_qa": 0.1562314373038358,
+      "winogrande_cf": 0.04063654642050375,
+      "piqa_cf": 0.06928138481147188,
+      "openbookqa_cf": 0.032317021792858384,
+      "xcsqa_cf": 0.04721008925481365,
+      "agg_score_GK": 0.18987184622359402,
+      "agg_score_RC": 0.36919729937826895,
+      "agg_score_RES": 0.04960283195304797,
+      "agg_score_NLU": 0.06096460938562703,
+      "agg_score_MATH": 0.11621103681829172,
+      "agg_score_TABLE": 0.17694127114736014,
+      "agg_score_macro": 0.16046481581769828,
+      "agg_score_micro": 0.154914132078928
+    }
+  },
+  {
+    "run": "mix-0.5-fw_edu_hq-0.5-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6016414965344169,
+      "arc_cf:easy": 0.22413277916775332,
+      "hellaswag_cf": 0.07796339014801032,
+      "mmlu_redux_cf:_average": 0.15402270682896493,
+      "gsm8k": 0.10813748339321218,
+      "drop": 0.18922847376579904,
+      "wikitablequestions": 0.179666735322036,
+      "treb_qa": 0.1513476909741147,
+      "winogrande_cf": 0.03679404764374053,
+      "piqa_cf": 0.06543023968894718,
+      "openbookqa_cf": 0.035418622153200754,
+      "xcsqa_cf": 0.053447799370395475,
+      "agg_score_GK": 0.1890777429983591,
+      "agg_score_RC": 0.395434985150108,
+      "agg_score_RES": 0.051432220404181134,
+      "agg_score_NLU": 0.057378718895875425,
+      "agg_score_MATH": 0.10813748339321218,
+      "agg_score_TABLE": 0.16550721314807537,
+      "agg_score_macro": 0.16116139399830187,
+      "agg_score_micro": 0.15643595541588262
+    }
+  },
+  {
+    "run": "mix-0.5-fw_edu_hq-0.5-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.605058903573899,
+      "arc_cf:easy": 0.22268377556292868,
+      "hellaswag_cf": 0.07833987019589013,
+      "mmlu_redux_cf:_average": 0.15837869458643478,
+      "gsm8k": 0.13554032759432907,
+      "drop": 0.19127397641203284,
+      "wikitablequestions": 0.20187067001675593,
+      "treb_qa": 0.16617119143749987,
+      "winogrande_cf": 0.0404712123077074,
+      "piqa_cf": 0.06406021805427406,
+      "openbookqa_cf": 0.03388818962504313,
+      "xcsqa_cf": 0.04493928402261508,
+      "agg_score_GK": 0.19053123507468173,
+      "agg_score_RC": 0.3981664399929659,
+      "agg_score_RES": 0.047629230567310755,
+      "agg_score_NLU": 0.05940554125179877,
+      "agg_score_MATH": 0.13554032759432907,
+      "agg_score_TABLE": 0.18402093072712788,
+      "agg_score_macro": 0.16921561753470235,
+      "agg_score_micro": 0.1618896927824508
+    }
+  },
+  {
+    "run": "mix-0.5-fw_edu_hq-0.5-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6202537942586324,
+      "arc_cf:easy": 0.2283049519973116,
+      "hellaswag_cf": 0.07712012965308776,
+      "mmlu_redux_cf:_average": 0.15693722463363216,
+      "gsm8k": 0.11095023864117971,
+      "drop": 0.16354683269637393,
+      "wikitablequestions": 0.23843765796128052,
+      "treb_qa": 0.20335518369196284,
+      "winogrande_cf": 0.04242740022855452,
+      "piqa_cf": 0.06265933035076032,
+      "openbookqa_cf": 0.03929822552043155,
+      "xcsqa_cf": 0.05128414066645662,
+      "agg_score_GK": 0.19262108831547187,
+      "agg_score_RC": 0.39190031347750315,
+      "agg_score_RES": 0.0510805655125495,
+      "agg_score_NLU": 0.059773764940821136,
+      "agg_score_MATH": 0.11095023864117971,
+      "agg_score_TABLE": 0.2208964208266217,
+      "agg_score_macro": 0.17120373195235783,
+      "agg_score_micro": 0.166214592524972
+    }
+  },
+  {
+    "run": "mix-0.5-fw_edu_hq-0.5-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5150102900311135,
+      "arc_cf:easy": 0.2253475274084631,
+      "hellaswag_cf": 0.07954959911892467,
+      "mmlu_redux_cf:_average": 0.15184113003924318,
+      "gsm8k": 0.11039834692295956,
+      "drop": 0.17705184620071032,
+      "wikitablequestions": 0.1886443309347179,
+      "treb_qa": 0.1437518206712462,
+      "winogrande_cf": 0.04056911767744124,
+      "piqa_cf": 0.06819826302382022,
+      "openbookqa_cf": 0.038097490872604056,
+      "xcsqa_cf": 0.04502131338897047,
+      "agg_score_GK": 0.18859432872385312,
+      "agg_score_RC": 0.34603106811591194,
+      "agg_score_RES": 0.05043902242846491,
+      "agg_score_NLU": 0.06005935839818295,
+      "agg_score_MATH": 0.11039834692295956,
+      "agg_score_TABLE": 0.16619807580298207,
+      "agg_score_macro": 0.15362003339872576,
+      "agg_score_micro": 0.14862342302418452
+    }
+  },
+  {
+    "run": "mix-0.6-fw_edu_hq-0.4-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.6,
+      0.4
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5785682306738431,
+      "arc_cf:easy": 0.22396886817432146,
+      "hellaswag_cf": 0.07805883736991934,
+      "mmlu_redux_cf:_average": 0.1547383212582798,
+      "gsm8k": 0.10733256839969124,
+      "drop": 0.1666301285276681,
+      "wikitablequestions": 0.18870675753350807,
+      "treb_qa": 0.14543358917879182,
+      "winogrande_cf": 0.034016497881402784,
+      "piqa_cf": 0.06387290977955969,
+      "openbookqa_cf": 0.0368908897140574,
+      "xcsqa_cf": 0.04899442955085182,
+      "agg_score_GK": 0.18935359471630064,
+      "agg_score_RC": 0.3725991796007556,
+      "agg_score_RES": 0.049919409681489633,
+      "agg_score_NLU": 0.056037667625661064,
+      "agg_score_MATH": 0.10733256839969124,
+      "agg_score_TABLE": 0.16707017335614993,
+      "agg_score_macro": 0.1570520988966747,
+      "agg_score_micro": 0.15226766900349123
+    }
+  },
+  {
+    "run": "mix-0.6-fw_edu_hq-0.4-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.6,
+      0.4
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5974174629934343,
+      "arc_cf:easy": 0.22463143051623954,
+      "hellaswag_cf": 0.07842911849036448,
+      "mmlu_redux_cf:_average": 0.15657570847249816,
+      "gsm8k": 0.13705651487250717,
+      "drop": 0.1778763558483905,
+      "wikitablequestions": 0.21094055319196098,
+      "treb_qa": 0.1653201985537379,
+      "winogrande_cf": 0.03095193443570526,
+      "piqa_cf": 0.06327748239128728,
+      "openbookqa_cf": 0.03611704878304695,
+      "xcsqa_cf": 0.04860415628484978,
+      "agg_score_GK": 0.19060356949436885,
+      "agg_score_RC": 0.3876469094209124,
+      "agg_score_RES": 0.049332895819727995,
+      "agg_score_NLU": 0.05469052646303487,
+      "agg_score_MATH": 0.13705651487250717,
+      "agg_score_TABLE": 0.18813037587284942,
+      "agg_score_macro": 0.16791013199056679,
+      "agg_score_micro": 0.16059983040283518
+    }
+  },
+  {
+    "run": "mix-0.6-fw_edu_hq-0.4-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.6,
+      0.4
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6023920025948449,
+      "arc_cf:easy": 0.22150847671702764,
+      "hellaswag_cf": 0.07692230658238042,
+      "mmlu_redux_cf:_average": 0.15225040588232394,
+      "gsm8k": 0.11113764219503888,
+      "drop": 0.15996786764298138,
+      "wikitablequestions": 0.23725796011571082,
+      "treb_qa": 0.19529536781097734,
+      "winogrande_cf": 0.03437847621061549,
+      "piqa_cf": 0.06376387164850907,
+      "openbookqa_cf": 0.0345849757065247,
+      "xcsqa_cf": 0.05287393546444558,
+      "agg_score_GK": 0.1868794412996758,
+      "agg_score_RC": 0.3811799351189131,
+      "agg_score_RES": 0.05040759427315978,
+      "agg_score_NLU": 0.05565039139649795,
+      "agg_score_MATH": 0.11113764219503888,
+      "agg_score_TABLE": 0.21627666396334408,
+      "agg_score_macro": 0.16692194470777158,
+      "agg_score_micro": 0.16186110738094836
+    }
+  },
+  {
+    "run": "mix-0.6-fw_edu_hq-0.4-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.6,
+      0.4
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5531956871270439,
+      "arc_cf:easy": 0.2285068736736253,
+      "hellaswag_cf": 0.07935869253286289,
+      "mmlu_redux_cf:_average": 0.1499519822793309,
+      "gsm8k": 0.10963269996009714,
+      "drop": 0.1837288225633156,
+      "wikitablequestions": 0.17949097698589872,
+      "treb_qa": 0.14902320717196624,
+      "winogrande_cf": 0.03268252698551521,
+      "piqa_cf": 0.06748460237185605,
+      "openbookqa_cf": 0.03288425808133584,
+      "xcsqa_cf": 0.04468846149462601,
+      "agg_score_GK": 0.1892294279764781,
+      "agg_score_RC": 0.36846225484517975,
+      "agg_score_RES": 0.04835244064927263,
+      "agg_score_NLU": 0.056020609759189044,
+      "agg_score_MATH": 0.10963269996009714,
+      "agg_score_TABLE": 0.16425709207893247,
+      "agg_score_macro": 0.1559924208781915,
+      "agg_score_micro": 0.15088573260228946
+    }
+  },
+  {
+    "run": "mix-0.7-fw_edu_hq-0.3-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.7,
+      0.3
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5542701354497582,
+      "arc_cf:easy": 0.22303191639084677,
+      "hellaswag_cf": 0.07739305548795253,
+      "mmlu_redux_cf:_average": 0.15296424331658434,
+      "gsm8k": 0.10780977867931299,
+      "drop": 0.1602162497739232,
+      "wikitablequestions": 0.19771895717722895,
+      "treb_qa": 0.1414261487314759,
+      "winogrande_cf": 0.03222308403680368,
+      "piqa_cf": 0.06339555839930203,
+      "openbookqa_cf": 0.03317746561284061,
+      "xcsqa_cf": 0.04502744193159254,
+      "agg_score_GK": 0.18799807985371556,
+      "agg_score_RC": 0.35724319261184073,
+      "agg_score_RES": 0.047200155314578385,
+      "agg_score_NLU": 0.054808069762378106,
+      "agg_score_MATH": 0.10780977867931299,
+      "agg_score_TABLE": 0.16957255295435242,
+      "agg_score_macro": 0.15410530486269636,
+      "agg_score_micro": 0.14905450291563513
+    }
+  },
+  {
+    "run": "mix-0.7-fw_edu_hq-0.3-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.7,
+      0.3
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5732530589713828,
+      "arc_cf:easy": 0.22193812233068147,
+      "hellaswag_cf": 0.0777582807604288,
+      "mmlu_redux_cf:_average": 0.1528307748628186,
+      "gsm8k": 0.12501528986076743,
+      "drop": 0.17552668850709785,
+      "wikitablequestions": 0.1969323329568863,
+      "treb_qa": 0.1470522539034661,
+      "winogrande_cf": 0.03317116828652692,
+      "piqa_cf": 0.06287548280920095,
+      "openbookqa_cf": 0.03627183178430645,
+      "xcsqa_cf": 0.04084683696851973,
+      "agg_score_GK": 0.18738444859675002,
+      "agg_score_RC": 0.3743898737392403,
+      "agg_score_RES": 0.04666471718734238,
+      "agg_score_NLU": 0.055464724523477865,
+      "agg_score_MATH": 0.12501528986076743,
+      "agg_score_TABLE": 0.1719922934301762,
+      "agg_score_macro": 0.160151891222959,
+      "agg_score_micro": 0.15362267683350697
+    }
+  },
+  {
+    "run": "mix-0.7-fw_edu_hq-0.3-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.7,
+      0.3
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6047678156690006,
+      "arc_cf:easy": 0.2186365507379299,
+      "hellaswag_cf": 0.07691652471247967,
+      "mmlu_redux_cf:_average": 0.1523382830529163,
+      "gsm8k": 0.10936613461046023,
+      "drop": 0.1834611556826727,
+      "wikitablequestions": 0.22675263799593157,
+      "treb_qa": 0.19411933727940323,
+      "winogrande_cf": 0.03410010054508622,
+      "piqa_cf": 0.0623612144369152,
+      "openbookqa_cf": 0.03230842847199077,
+      "xcsqa_cf": 0.048477690049140904,
+      "agg_score_GK": 0.18548741689542309,
+      "agg_score_RC": 0.3941144856758367,
+      "agg_score_RES": 0.04771577765268229,
+      "agg_score_NLU": 0.055508312628782946,
+      "agg_score_MATH": 0.10936613461046023,
+      "agg_score_TABLE": 0.2104359876376674,
+      "agg_score_macro": 0.16710468585014213,
+      "agg_score_micro": 0.1619671561036606
+    }
+  },
+  {
+    "run": "mix-0.7-fw_edu_hq-0.3-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.7,
+      0.3
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5528121357116752,
+      "arc_cf:easy": 0.21842153647294582,
+      "hellaswag_cf": 0.07868775344265927,
+      "mmlu_redux_cf:_average": 0.14772270492784964,
+      "gsm8k": 0.10947051846879573,
+      "drop": 0.14565465449267925,
+      "wikitablequestions": 0.1865496843278986,
+      "treb_qa": 0.1465517248927134,
+      "winogrande_cf": 0.034775601934123296,
+      "piqa_cf": 0.06679883886313803,
+      "openbookqa_cf": 0.033015533307101025,
+      "xcsqa_cf": 0.05106551396090758,
+      "agg_score_GK": 0.18307212070039774,
+      "agg_score_RC": 0.3492333951021772,
+      "agg_score_RES": 0.05029329537704888,
+      "agg_score_NLU": 0.05673167768839128,
+      "agg_score_MATH": 0.10947051846879573,
+      "agg_score_TABLE": 0.166550704610306,
+      "agg_score_macro": 0.15255861865785278,
+      "agg_score_micro": 0.14762718340020722
+    }
+  },
+  {
+    "run": "mix-0.8-fw_edu_hq-0.2-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.8,
+      0.2
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5430958065506454,
+      "arc_cf:easy": 0.22335546314168836,
+      "hellaswag_cf": 0.07762629970705599,
+      "mmlu_redux_cf:_average": 0.15061504296008565,
+      "gsm8k": 0.10600968576731643,
+      "drop": 0.16149031120533971,
+      "wikitablequestions": 0.18124981334974036,
+      "treb_qa": 0.13405029846949962,
+      "winogrande_cf": 0.03286185754096941,
+      "piqa_cf": 0.06388229290806553,
+      "openbookqa_cf": 0.03753703873224083,
+      "xcsqa_cf": 0.04850207882611424,
+      "agg_score_GK": 0.186985253050887,
+      "agg_score_RC": 0.35229305887799256,
+      "agg_score_RES": 0.04997380348880687,
+      "agg_score_NLU": 0.055244078624012705,
+      "agg_score_MATH": 0.10600968576731643,
+      "agg_score_TABLE": 0.15765005590962,
+      "agg_score_macro": 0.15135932261977258,
+      "agg_score_micro": 0.14668966576323014
+    }
+  },
+  {
+    "run": "mix-0.8-fw_edu_hq-0.2-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.8,
+      0.2
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5499424688480348,
+      "arc_cf:easy": 0.21807972439494078,
+      "hellaswag_cf": 0.07901780828438913,
+      "mmlu_redux_cf:_average": 0.15410850420895994,
+      "gsm8k": 0.12311680630943236,
+      "drop": 0.159612889724047,
+      "wikitablequestions": 0.19413119993409345,
+      "treb_qa": 0.15116566488676159,
+      "winogrande_cf": 0.03405873567440368,
+      "piqa_cf": 0.06299755118700284,
+      "openbookqa_cf": 0.03486395357542921,
+      "xcsqa_cf": 0.04409204125010035,
+      "agg_score_GK": 0.18609411430195036,
+      "agg_score_RC": 0.35477767928604087,
+      "agg_score_RES": 0.04731784867084413,
+      "agg_score_NLU": 0.056538271979396405,
+      "agg_score_MATH": 0.12311680630943236,
+      "agg_score_TABLE": 0.17264843241042752,
+      "agg_score_macro": 0.1567488588263486,
+      "agg_score_micro": 0.15043227902313291
+    }
+  },
+  {
+    "run": "mix-0.8-fw_edu_hq-0.2-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.8,
+      0.2
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5551358899995836,
+      "arc_cf:easy": 0.22027060988236224,
+      "hellaswag_cf": 0.07633688890455338,
+      "mmlu_redux_cf:_average": 0.14867537887193627,
+      "gsm8k": 0.10881533876746233,
+      "drop": 0.1700999993993592,
+      "wikitablequestions": 0.22544906176531299,
+      "treb_qa": 0.18828475474612538,
+      "winogrande_cf": 0.042743891966461715,
+      "piqa_cf": 0.06420973300888301,
+      "openbookqa_cf": 0.03289885787181805,
+      "xcsqa_cf": 0.04270478625729606,
+      "agg_score_GK": 0.18447299437714926,
+      "agg_score_RC": 0.3626179446994714,
+      "agg_score_RES": 0.046604459045999046,
+      "agg_score_NLU": 0.059540390435507545,
+      "agg_score_MATH": 0.10881533876746233,
+      "agg_score_TABLE": 0.20686690825571918,
+      "agg_score_macro": 0.16148633926355146,
+      "agg_score_micro": 0.1563020992867629
+    }
+  },
+  {
+    "run": "mix-0.8-fw_edu_hq-0.2-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.8,
+      0.2
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.47843963706022885,
+      "arc_cf:easy": 0.2165077003036628,
+      "hellaswag_cf": 0.07915078832486011,
+      "mmlu_redux_cf:_average": 0.14591836512980658,
+      "gsm8k": 0.11183063488153877,
+      "drop": 0.12821368446478082,
+      "wikitablequestions": 0.16677237420091204,
+      "treb_qa": 0.1187259545570394,
+      "winogrande_cf": 0.026311162102788152,
+      "piqa_cf": 0.06361372699700588,
+      "openbookqa_cf": 0.03335735601384931,
+      "xcsqa_cf": 0.04298183235751851,
+      "agg_score_GK": 0.18121303271673467,
+      "agg_score_RC": 0.3033266607625048,
+      "agg_score_RES": 0.0466509717894579,
+      "agg_score_NLU": 0.05273097521382413,
+      "agg_score_MATH": 0.11183063488153877,
+      "agg_score_TABLE": 0.14274916437897572,
+      "agg_score_macro": 0.13975023995717265,
+      "agg_score_micro": 0.1343186013661659
+    }
+  },
+  {
+    "run": "mix-0.9-fw_edu_hq-0.1-faq_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "faq_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.9,
+      0.1
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5388837134176299,
+      "arc_cf:easy": 0.21530350108948937,
+      "hellaswag_cf": 0.07629646373080891,
+      "mmlu_redux_cf:_average": 0.1482630151231003,
+      "gsm8k": 0.1098297633350931,
+      "drop": 0.17282375231120448,
+      "wikitablequestions": 0.18690846088743995,
+      "treb_qa": 0.1379411280976554,
+      "winogrande_cf": 0.03325205430606911,
+      "piqa_cf": 0.06384619707281697,
+      "openbookqa_cf": 0.036937886543886876,
+      "xcsqa_cf": 0.040425505207081956,
+      "agg_score_GK": 0.18178325810629484,
+      "agg_score_RC": 0.3558537328644172,
+      "agg_score_RES": 0.04706986294126194,
+      "agg_score_NLU": 0.054774259018439006,
+      "agg_score_MATH": 0.1098297633350931,
+      "agg_score_TABLE": 0.16242479449254768,
+      "agg_score_macro": 0.15195594512634228,
+      "agg_score_micro": 0.14672595342685635
+    }
+  },
+  {
+    "run": "mix-0.9-fw_edu_hq-0.1-math_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "math_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.9,
+      0.1
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5249746869887323,
+      "arc_cf:easy": 0.2080126791869377,
+      "hellaswag_cf": 0.07792661951178388,
+      "mmlu_redux_cf:_average": 0.1481991052466284,
+      "gsm8k": 0.12097818677543792,
+      "drop": 0.16617415150209697,
+      "wikitablequestions": 0.19266751466913984,
+      "treb_qa": 0.14430562529714838,
+      "winogrande_cf": 0.03456123863279315,
+      "piqa_cf": 0.06263708611210353,
+      "openbookqa_cf": 0.03221215790417718,
+      "xcsqa_cf": 0.0372181221519143,
+      "agg_score_GK": 0.17810589221678305,
+      "agg_score_RC": 0.34557441924541465,
+      "agg_score_RES": 0.044022455389398335,
+      "agg_score_NLU": 0.05624392907228852,
+      "agg_score_MATH": 0.12097818677543792,
+      "agg_score_TABLE": 0.1684865699831441,
+      "agg_score_macro": 0.15223524211374442,
+      "agg_score_micro": 0.14582226449824112
+    }
+  },
+  {
+    "run": "mix-0.9-fw_edu_hq-0.1-table_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.9,
+      0.1
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5450658569703455,
+      "arc_cf:easy": 0.22255552619555763,
+      "hellaswag_cf": 0.07716769760188956,
+      "mmlu_redux_cf:_average": 0.15269578377575,
+      "gsm8k": 0.11000802852706354,
+      "drop": 0.16897007088070107,
+      "wikitablequestions": 0.224704467783094,
+      "treb_qa": 0.17299147097211248,
+      "winogrande_cf": 0.03377923086091971,
+      "piqa_cf": 0.06302296352769712,
+      "openbookqa_cf": 0.03721728338316902,
+      "xcsqa_cf": 0.041758653204638035,
+      "agg_score_GK": 0.1876256549856538,
+      "agg_score_RC": 0.35701796392552326,
+      "agg_score_RES": 0.04733296670516806,
+      "agg_score_NLU": 0.05547346423140463,
+      "agg_score_MATH": 0.11000802852706354,
+      "agg_score_TABLE": 0.19884796937760324,
+      "agg_score_macro": 0.15938434129206944,
+      "agg_score_micro": 0.15416141947357817
+    }
+  },
+  {
+    "run": "mix-0.9-fw_edu_hq-0.1-tutorial_smollm2_1.7b_hq",
+    "experiment_family": "proportion_sweep",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.9,
+      0.1
+    ],
+    "seed": 6,
+    "data_seed": 6,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.47880649337397846,
+      "arc_cf:easy": 0.2156021926193639,
+      "hellaswag_cf": 0.07734723858085693,
+      "mmlu_redux_cf:_average": 0.1482652930119014,
+      "gsm8k": 0.10968288542143265,
+      "drop": 0.13747247387982203,
+      "wikitablequestions": 0.1808941832511905,
+      "treb_qa": 0.12414239861269305,
+      "winogrande_cf": 0.028256417165659565,
+      "piqa_cf": 0.06295882160975998,
+      "openbookqa_cf": 0.034503465097446125,
+      "xcsqa_cf": 0.04333870650647077,
+      "agg_score_GK": 0.18193374281563263,
+      "agg_score_RC": 0.30813948362690025,
+      "agg_score_RES": 0.04693366440455896,
+      "agg_score_NLU": 0.052801827873258246,
+      "agg_score_MATH": 0.10968288542143265,
+      "agg_score_TABLE": 0.15251829093194177,
+      "agg_score_macro": 0.1420016491789541,
+      "agg_score_micro": 0.13677254742754796
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3647389060406411,
+      "arc_cf:easy": 0.1638050222197476,
+      "hellaswag_cf": 0.07571948520922171,
+      "mmlu_redux_cf:_average": 0.1186495307868709,
+      "gsm8k": 0.10143759474778388,
+      "drop": 0.14517870403343347,
+      "wikitablequestions": 0.15831753888166308,
+      "treb_qa": 0.10792745816410965,
+      "winogrande_cf": 0.024753076648782738,
+      "piqa_cf": 0.05657338845071411,
+      "openbookqa_cf": 0.021613160111398487,
+      "xcsqa_cf": 0.020858952573743192,
+      "agg_score_GK": 0.14122727650330924,
+      "agg_score_RC": 0.2549588050370373,
+      "agg_score_RES": 0.03301516704528527,
+      "agg_score_NLU": 0.050236280929002224,
+      "agg_score_MATH": 0.10143759474778388,
+      "agg_score_TABLE": 0.13312249852288638,
+      "agg_score_macro": 0.11899960379755072,
+      "agg_score_micro": 0.11329773482234247
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3791339273772663,
+      "arc_cf:easy": 0.18258448744426484,
+      "hellaswag_cf": 0.07760765711435104,
+      "mmlu_redux_cf:_average": 0.13224453028148744,
+      "gsm8k": 0.10844390304444465,
+      "drop": 0.15056264944625258,
+      "wikitablequestions": 0.1622217227158951,
+      "treb_qa": 0.11538179588270388,
+      "winogrande_cf": 0.024340203509507212,
+      "piqa_cf": 0.05941295312274347,
+      "openbookqa_cf": 0.023965753495798842,
+      "xcsqa_cf": 0.023018852533627798,
+      "agg_score_GK": 0.15741450886287614,
+      "agg_score_RC": 0.26484828841175945,
+      "agg_score_RES": 0.03546585305072337,
+      "agg_score_NLU": 0.05097393031192912,
+      "agg_score_MATH": 0.10844390304444465,
+      "agg_score_TABLE": 0.1388017592992995,
+      "agg_score_macro": 0.12599137383017203,
+      "agg_score_micro": 0.11990986966402861
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3453718153249588,
+      "arc_cf:easy": 0.17243710576474722,
+      "hellaswag_cf": 0.07616649403567988,
+      "mmlu_redux_cf:_average": 0.1255091569472902,
+      "gsm8k": 0.10805481392106386,
+      "drop": 0.13187980058928386,
+      "wikitablequestions": 0.14996399468782723,
+      "treb_qa": 0.11193399801293118,
+      "winogrande_cf": 0.029145263423407015,
+      "piqa_cf": 0.05725263800891345,
+      "openbookqa_cf": 0.02878734709485482,
+      "xcsqa_cf": 0.027129903679260714,
+      "agg_score_GK": 0.1489731313560187,
+      "agg_score_RC": 0.23862580795712135,
+      "agg_score_RES": 0.03772329626100966,
+      "agg_score_NLU": 0.05265587872954344,
+      "agg_score_MATH": 0.10805481392106386,
+      "agg_score_TABLE": 0.1309489963503792,
+      "agg_score_macro": 0.11949698742918939,
+      "agg_score_micro": 0.11363602762418484
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.31683231733541006,
+      "arc_cf:easy": 0.17000852922907983,
+      "hellaswag_cf": 0.07473965534988566,
+      "mmlu_redux_cf:_average": 0.12360139752444929,
+      "gsm8k": 0.1050414569318969,
+      "drop": 0.13803056371193417,
+      "wikitablequestions": 0.15953288325154721,
+      "treb_qa": 0.12640731360385896,
+      "winogrande_cf": 0.024107366766360782,
+      "piqa_cf": 0.057573769217338325,
+      "openbookqa_cf": 0.0227164577366066,
+      "xcsqa_cf": 0.01975344580328578,
+      "agg_score_GK": 0.14680496337676457,
+      "agg_score_RC": 0.22743144052367212,
+      "agg_score_RES": 0.0333478909190769,
+      "agg_score_NLU": 0.049423511058123225,
+      "agg_score_MATH": 0.1050414569318969,
+      "agg_score_TABLE": 0.14297009842770309,
+      "agg_score_macro": 0.1175032268728728,
+      "agg_score_micro": 0.11152876303847115
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.368921323151541,
+      "arc_cf:easy": 0.1772465617840178,
+      "hellaswag_cf": 0.07650557192565009,
+      "mmlu_redux_cf:_average": 0.1258310289667345,
+      "gsm8k": 0.10571505409283352,
+      "drop": 0.12139243044929862,
+      "wikitablequestions": 0.16345106092631362,
+      "treb_qa": 0.11439122340593999,
+      "winogrande_cf": 0.02047054147426654,
+      "piqa_cf": 0.05361744209182403,
+      "openbookqa_cf": 0.024287173945721177,
+      "xcsqa_cf": 0.022824529220256382,
+      "agg_score_GK": 0.15153879537537615,
+      "agg_score_RC": 0.2451568768004198,
+      "agg_score_RES": 0.033576381752600526,
+      "agg_score_NLU": 0.048488056699958315,
+      "agg_score_MATH": 0.10571505409283352,
+      "agg_score_TABLE": 0.1389211421661268,
+      "agg_score_macro": 0.12056605114788586,
+      "agg_score_micro": 0.1145544951195331
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.39253431213307144,
+      "arc_cf:easy": 0.17369769307470642,
+      "hellaswag_cf": 0.07632036196417692,
+      "mmlu_redux_cf:_average": 0.12642235976804483,
+      "gsm8k": 0.10227522235970361,
+      "drop": 0.11931000512369795,
+      "wikitablequestions": 0.1628447211986889,
+      "treb_qa": 0.12120550461327828,
+      "winogrande_cf": 0.027496425691567135,
+      "piqa_cf": 0.05559622811438031,
+      "openbookqa_cf": 0.027787986354636404,
+      "xcsqa_cf": 0.025289982788394994,
+      "agg_score_GK": 0.15006002642137561,
+      "agg_score_RC": 0.2559221586283847,
+      "agg_score_RES": 0.036224732419137234,
+      "agg_score_NLU": 0.05190839382787203,
+      "agg_score_MATH": 0.10227522235970361,
+      "agg_score_TABLE": 0.14202511290598357,
+      "agg_score_macro": 0.12306927442707612,
+      "agg_score_micro": 0.11756506693202894
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3727517355711465,
+      "arc_cf:easy": 0.1868449739423952,
+      "hellaswag_cf": 0.07490478355283345,
+      "mmlu_redux_cf:_average": 0.1258458922304348,
+      "gsm8k": 0.10612939030726184,
+      "drop": 0.14170265358486944,
+      "wikitablequestions": 0.16290636734490443,
+      "treb_qa": 0.10976614756782431,
+      "winogrande_cf": 0.02116187174913671,
+      "piqa_cf": 0.055452205037207825,
+      "openbookqa_cf": 0.02469912069470765,
+      "xcsqa_cf": 0.01793679100077755,
+      "agg_score_GK": 0.156345433086415,
+      "agg_score_RC": 0.25722719457800797,
+      "agg_score_RES": 0.03269603891089767,
+      "agg_score_NLU": 0.04803332765098508,
+      "agg_score_MATH": 0.10612939030726184,
+      "agg_score_TABLE": 0.13633625745636438,
+      "agg_score_macro": 0.12279460699832197,
+      "agg_score_micro": 0.11667516104862496
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3630710911105179,
+      "arc_cf:easy": 0.17259209519414884,
+      "hellaswag_cf": 0.07602747556951243,
+      "mmlu_redux_cf:_average": 0.1251718985338023,
+      "gsm8k": 0.10496266452112264,
+      "drop": 0.11846858935166833,
+      "wikitablequestions": 0.1563192927096017,
+      "treb_qa": 0.1024686365599944,
+      "winogrande_cf": 0.02398191417809771,
+      "piqa_cf": 0.05861206620366375,
+      "openbookqa_cf": 0.02609557980500314,
+      "xcsqa_cf": 0.02397872457043171,
+      "agg_score_GK": 0.14888199686397557,
+      "agg_score_RC": 0.2407698402310931,
+      "agg_score_RES": 0.03622879019303287,
+      "agg_score_NLU": 0.05000469487380507,
+      "agg_score_MATH": 0.10496266452112264,
+      "agg_score_TABLE": 0.12939396463479805,
+      "agg_score_macro": 0.11837365855297122,
+      "agg_score_micro": 0.11264583569229708
+    }
+  },
+  {
+    "run": "fw_edu_hq--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.35089473835450075,
+      "arc_cf:easy": 0.18680964281047915,
+      "hellaswag_cf": 0.07428895169129308,
+      "mmlu_redux_cf:_average": 0.12787032324163244,
+      "gsm8k": 0.10725148210920465,
+      "drop": 0.1268517762367793,
+      "wikitablequestions": 0.15269911833372332,
+      "treb_qa": 0.12086488175758521,
+      "winogrande_cf": 0.027469304973975327,
+      "piqa_cf": 0.056355192524567645,
+      "openbookqa_cf": 0.026528142371997958,
+      "xcsqa_cf": 0.026072234837448215,
+      "agg_score_GK": 0.15733998302605579,
+      "agg_score_RC": 0.23887325729564002,
+      "agg_score_RES": 0.036318523244671275,
+      "agg_score_NLU": 0.05087912833263421,
+      "agg_score_MATH": 0.10725148210920465,
+      "agg_score_TABLE": 0.13678200004565427,
+      "agg_score_macro": 0.12124072900897671,
+      "agg_score_micro": 0.11532964910359893
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.23720186518686767,
+      "arc_cf:easy": 0.11761348484718702,
+      "hellaswag_cf": 0.06498485385123923,
+      "mmlu_redux_cf:_average": 0.09497592922168607,
+      "gsm8k": 0.10241014556668762,
+      "drop": 0.12632003127062635,
+      "wikitablequestions": 0.1277417882986503,
+      "treb_qa": 0.08784093922685729,
+      "winogrande_cf": 0.018383730695086507,
+      "piqa_cf": 0.04563876606776798,
+      "openbookqa_cf": 0.015336135661382104,
+      "xcsqa_cf": 0.008382926910290196,
+      "agg_score_GK": 0.10629470703443655,
+      "agg_score_RC": 0.181760948228747,
+      "agg_score_RES": 0.023119276213146762,
+      "agg_score_NLU": 0.041684292273162865,
+      "agg_score_MATH": 0.10241014556668762,
+      "agg_score_TABLE": 0.10779136376275379,
+      "agg_score_macro": 0.09384345551315576,
+      "agg_score_micro": 0.08723588306702736
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.23958490023924417,
+      "arc_cf:easy": 0.12227372891978504,
+      "hellaswag_cf": 0.06416795970468508,
+      "mmlu_redux_cf:_average": 0.09806986944759864,
+      "gsm8k": 0.0996087264234637,
+      "drop": 0.12206547229589045,
+      "wikitablequestions": 0.14442690851170178,
+      "treb_qa": 0.0906709025353813,
+      "winogrande_cf": 0.01806678066047077,
+      "piqa_cf": 0.047042176547987494,
+      "openbookqa_cf": 0.018622987154748118,
+      "xcsqa_cf": 0.010073956176164202,
+      "agg_score_GK": 0.11017179918369184,
+      "agg_score_RC": 0.1808251862675673,
+      "agg_score_RES": 0.02524637329296661,
+      "agg_score_NLU": 0.041117370182577925,
+      "agg_score_MATH": 0.0996087264234637,
+      "agg_score_TABLE": 0.11754890552354155,
+      "agg_score_macro": 0.09575306014563482,
+      "agg_score_micro": 0.08955619738476008
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.24606022809306297,
+      "arc_cf:easy": 0.12388845588009119,
+      "hellaswag_cf": 0.0649020958318589,
+      "mmlu_redux_cf:_average": 0.10130662942176515,
+      "gsm8k": 0.10105268364449989,
+      "drop": 0.0893817098002661,
+      "wikitablequestions": 0.1383535832736527,
+      "treb_qa": 0.09284823224144914,
+      "winogrande_cf": 0.019193911281441524,
+      "piqa_cf": 0.0475915643338295,
+      "openbookqa_cf": 0.01874187766897566,
+      "xcsqa_cf": 0.010659041685834716,
+      "agg_score_GK": 0.11259754265092817,
+      "agg_score_RC": 0.16772096894666452,
+      "agg_score_RES": 0.025664161229546626,
+      "agg_score_NLU": 0.04204800355665021,
+      "agg_score_MATH": 0.10105268364449989,
+      "agg_score_TABLE": 0.11560090775755093,
+      "agg_score_macro": 0.09411404463097339,
+      "agg_score_micro": 0.08783166776306063
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.22177064034259417,
+      "arc_cf:easy": 0.1191303866260162,
+      "hellaswag_cf": 0.06535933578035236,
+      "mmlu_redux_cf:_average": 0.09847259925954353,
+      "gsm8k": 0.09769606714359387,
+      "drop": 0.12384916616560965,
+      "wikitablequestions": 0.12890715336588765,
+      "treb_qa": 0.08785201664895756,
+      "winogrande_cf": 0.018339543863493554,
+      "piqa_cf": 0.04576515943699987,
+      "openbookqa_cf": 0.018538332319838303,
+      "xcsqa_cf": 0.01015660052104295,
+      "agg_score_GK": 0.10880149294277987,
+      "agg_score_RC": 0.1728099032541019,
+      "agg_score_RES": 0.024820030759293704,
+      "agg_score_NLU": 0.041849439821922955,
+      "agg_score_MATH": 0.09769606714359387,
+      "agg_score_TABLE": 0.1083795850074226,
+      "agg_score_macro": 0.09239275315485247,
+      "agg_score_micro": 0.08631975012282746
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2759110818928637,
+      "arc_cf:easy": 0.12667254307484585,
+      "hellaswag_cf": 0.064182930895363,
+      "mmlu_redux_cf:_average": 0.1000791185874771,
+      "gsm8k": 0.10000692735213934,
+      "drop": 0.11422297694955878,
+      "wikitablequestions": 0.13630937162292844,
+      "treb_qa": 0.08985962299197327,
+      "winogrande_cf": 0.023059478668481476,
+      "piqa_cf": 0.04662245355526441,
+      "openbookqa_cf": 0.01578418615572924,
+      "xcsqa_cf": 0.006632147514701137,
+      "agg_score_GK": 0.11337583083116148,
+      "agg_score_RC": 0.19506702942121124,
+      "agg_score_RES": 0.023012929075231597,
+      "agg_score_NLU": 0.04362120478192224,
+      "agg_score_MATH": 0.10000692735213934,
+      "agg_score_TABLE": 0.11308449730745085,
+      "agg_score_macro": 0.09802806979485279,
+      "agg_score_micro": 0.09161190327177714
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2938374936545004,
+      "arc_cf:easy": 0.13152200931391303,
+      "hellaswag_cf": 0.06485504718429858,
+      "mmlu_redux_cf:_average": 0.10566339558500552,
+      "gsm8k": 0.09912062721552564,
+      "drop": 0.12347795692344869,
+      "wikitablequestions": 0.13872812001065213,
+      "treb_qa": 0.10164537557147522,
+      "winogrande_cf": 0.019106604527648997,
+      "piqa_cf": 0.046739193130297396,
+      "openbookqa_cf": 0.01992536230087091,
+      "xcsqa_cf": 0.008621709372847093,
+      "agg_score_GK": 0.11859270244945927,
+      "agg_score_RC": 0.20865772528897455,
+      "agg_score_RES": 0.02509542160133847,
+      "agg_score_NLU": 0.041980825855973784,
+      "agg_score_MATH": 0.09912062721552564,
+      "agg_score_TABLE": 0.12018674779106367,
+      "agg_score_macro": 0.10227234170038924,
+      "agg_score_micro": 0.09610357456587361
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.22191716207617138,
+      "arc_cf:easy": 0.08361142666991353,
+      "hellaswag_cf": 0.06420673662997675,
+      "mmlu_redux_cf:_average": 0.08753878042863254,
+      "gsm8k": 0.09522908515549572,
+      "drop": 0.10302910708026757,
+      "wikitablequestions": 0.14460720275865352,
+      "treb_qa": 0.09572977297994997,
+      "winogrande_cf": 0.017888159245119127,
+      "piqa_cf": 0.044198459165707256,
+      "openbookqa_cf": 0.014683395585552593,
+      "xcsqa_cf": 0.005912402780275407,
+      "agg_score_GK": 0.08557510354927303,
+      "agg_score_RC": 0.16247313457821946,
+      "agg_score_RES": 0.021598085843845084,
+      "agg_score_NLU": 0.04104744793754794,
+      "agg_score_MATH": 0.09522908515549572,
+      "agg_score_TABLE": 0.12016848786930175,
+      "agg_score_macro": 0.0876818908222805,
+      "agg_score_micro": 0.08154597421297628
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2641522505179788,
+      "arc_cf:easy": 0.11996357693572432,
+      "hellaswag_cf": 0.06483584692876719,
+      "mmlu_redux_cf:_average": 0.10259419685251088,
+      "gsm8k": 0.10108691491584545,
+      "drop": 0.13697335683989462,
+      "wikitablequestions": 0.1379321865412821,
+      "treb_qa": 0.09348509198287742,
+      "winogrande_cf": 0.02209632283497756,
+      "piqa_cf": 0.04507290004304387,
+      "openbookqa_cf": 0.018954464773730223,
+      "xcsqa_cf": 0.0079330625682723,
+      "agg_score_GK": 0.1112788868941176,
+      "agg_score_RC": 0.2005628036789367,
+      "agg_score_RES": 0.023986809128348798,
+      "agg_score_NLU": 0.043466084881872376,
+      "agg_score_MATH": 0.10108691491584545,
+      "agg_score_TABLE": 0.11570863926207975,
+      "agg_score_macro": 0.09934835646020011,
+      "agg_score_micro": 0.0929233476445754
+    }
+  },
+  {
+    "run": "fw_edu_hq-0.5b--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2786199913706346,
+      "arc_cf:easy": 0.13080660844199168,
+      "hellaswag_cf": 0.06344324940909743,
+      "mmlu_redux_cf:_average": 0.10200452625966805,
+      "gsm8k": 0.10208905586597483,
+      "drop": 0.12388397455450174,
+      "wikitablequestions": 0.12236422965699943,
+      "treb_qa": 0.09830499438707789,
+      "winogrande_cf": 0.016478698511583283,
+      "piqa_cf": 0.045439765665038,
+      "openbookqa_cf": 0.02062628580354909,
+      "xcsqa_cf": 0.011402492882358355,
+      "agg_score_GK": 0.11640556735082987,
+      "agg_score_RC": 0.20125198296256816,
+      "agg_score_RES": 0.025822848116981812,
+      "agg_score_NLU": 0.03996097396034036,
+      "agg_score_MATH": 0.10208905586597483,
+      "agg_score_TABLE": 0.11033461202203866,
+      "agg_score_macro": 0.09931084004645563,
+      "agg_score_micro": 0.09295532273403954
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.37809856477861187,
+      "arc_cf:easy": 0.16504930570398704,
+      "hellaswag_cf": 0.0798845235724929,
+      "mmlu_redux_cf:_average": 0.12353985222064606,
+      "gsm8k": 0.10620694272625218,
+      "drop": 0.15242515617843336,
+      "wikitablequestions": 0.15026431679277358,
+      "treb_qa": 0.12420791892725865,
+      "winogrande_cf": 0.04095539297811867,
+      "piqa_cf": 0.0611350327077008,
+      "openbookqa_cf": 0.02319510348590814,
+      "xcsqa_cf": 0.020922841888015974,
+      "agg_score_GK": 0.14429457896231657,
+      "agg_score_RC": 0.2652618604785226,
+      "agg_score_RES": 0.035084326027208304,
+      "agg_score_NLU": 0.06041995827530579,
+      "agg_score_MATH": 0.10620694272625218,
+      "agg_score_TABLE": 0.1372361178600161,
+      "agg_score_macro": 0.1247506307216036,
+      "agg_score_micro": 0.11882374599668326
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.363098600720167,
+      "arc_cf:easy": 0.17714036396790528,
+      "hellaswag_cf": 0.07778002164257743,
+      "mmlu_redux_cf:_average": 0.12757921628772612,
+      "gsm8k": 0.10941198953491954,
+      "drop": 0.12000979661033154,
+      "wikitablequestions": 0.16652900717206348,
+      "treb_qa": 0.1242330076000695,
+      "winogrande_cf": 0.02460716250557465,
+      "piqa_cf": 0.06221553363721672,
+      "openbookqa_cf": 0.029546045737345195,
+      "xcsqa_cf": 0.036807417987128346,
+      "agg_score_GK": 0.1523597901278157,
+      "agg_score_RC": 0.24155419866524924,
+      "agg_score_RES": 0.04285633245389675,
+      "agg_score_NLU": 0.05119359207407604,
+      "agg_score_MATH": 0.10941198953491954,
+      "agg_score_TABLE": 0.1453810073860665,
+      "agg_score_macro": 0.12379281837367064,
+      "agg_score_micro": 0.11824651361691872
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3997942268571703,
+      "arc_cf:easy": 0.17122936770514224,
+      "hellaswag_cf": 0.07931626122248435,
+      "mmlu_redux_cf:_average": 0.13215063522073156,
+      "gsm8k": 0.10725759979247232,
+      "drop": 0.14276949700497857,
+      "wikitablequestions": 0.17388438725251,
+      "treb_qa": 0.12970728470671988,
+      "winogrande_cf": 0.027203775385138976,
+      "piqa_cf": 0.06242976910662722,
+      "openbookqa_cf": 0.02079251278745658,
+      "xcsqa_cf": 0.024439561804662314,
+      "agg_score_GK": 0.1516900014629369,
+      "agg_score_RC": 0.27128186193107445,
+      "agg_score_RES": 0.035887281232915375,
+      "agg_score_NLU": 0.05326001830381166,
+      "agg_score_MATH": 0.10725759979247232,
+      "agg_score_TABLE": 0.15179583597961493,
+      "agg_score_macro": 0.12852876645047095,
+      "agg_score_micro": 0.12258123990384118
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3582249894014146,
+      "arc_cf:easy": 0.17641642672910485,
+      "hellaswag_cf": 0.07983244653277337,
+      "mmlu_redux_cf:_average": 0.1270268296004115,
+      "gsm8k": 0.10963695373239538,
+      "drop": 0.13150186548205653,
+      "wikitablequestions": 0.16888989198810964,
+      "treb_qa": 0.1341947638961504,
+      "winogrande_cf": 0.028643393409836567,
+      "piqa_cf": 0.058310908765857455,
+      "openbookqa_cf": 0.021892969583927745,
+      "xcsqa_cf": 0.017562487865014496,
+      "agg_score_GK": 0.15172162816475818,
+      "agg_score_RC": 0.24486342744173556,
+      "agg_score_RES": 0.032588788738266566,
+      "agg_score_NLU": 0.05423791997130497,
+      "agg_score_MATH": 0.10963695373239538,
+      "agg_score_TABLE": 0.15154232794213002,
+      "agg_score_macro": 0.12409850766509845,
+      "agg_score_micro": 0.11767782724892106
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3960266459159519,
+      "arc_cf:easy": 0.1857257524221102,
+      "hellaswag_cf": 0.07926924082446615,
+      "mmlu_redux_cf:_average": 0.13539187143306555,
+      "gsm8k": 0.1064220502330525,
+      "drop": 0.14519527299923815,
+      "wikitablequestions": 0.16627420644474694,
+      "treb_qa": 0.13316388065462306,
+      "winogrande_cf": 0.029045562905882415,
+      "piqa_cf": 0.05930100134206005,
+      "openbookqa_cf": 0.02553396309357118,
+      "xcsqa_cf": 0.028857085457086575,
+      "agg_score_GK": 0.16055881192758786,
+      "agg_score_RC": 0.270610959457595,
+      "agg_score_RES": 0.03789734996423927,
+      "agg_score_NLU": 0.05415740186517429,
+      "agg_score_MATH": 0.1064220502330525,
+      "agg_score_TABLE": 0.14971904354968502,
+      "agg_score_macro": 0.12989426949955565,
+      "agg_score_micro": 0.1241838778104879
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3721263061595275,
+      "arc_cf:easy": 0.18861520987410096,
+      "hellaswag_cf": 0.078637453544968,
+      "mmlu_redux_cf:_average": 0.13275533029286168,
+      "gsm8k": 0.10837623385658406,
+      "drop": 0.15436599229694412,
+      "wikitablequestions": 0.15972609979085287,
+      "treb_qa": 0.11542744412657004,
+      "winogrande_cf": 0.025854091312966766,
+      "piqa_cf": 0.060199041719381896,
+      "openbookqa_cf": 0.02424669825303059,
+      "xcsqa_cf": 0.024143709898937465,
+      "agg_score_GK": 0.16068527008348132,
+      "agg_score_RC": 0.2632461492282358,
+      "agg_score_RES": 0.036196483290449985,
+      "agg_score_NLU": 0.052245772428967385,
+      "agg_score_MATH": 0.10837623385658406,
+      "agg_score_TABLE": 0.13757677195871146,
+      "agg_score_macro": 0.12638778014107166,
+      "agg_score_micro": 0.12037280092722714
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3542876697069477,
+      "arc_cf:easy": 0.19758267548470204,
+      "hellaswag_cf": 0.07880952945972713,
+      "mmlu_redux_cf:_average": 0.1349227615801454,
+      "gsm8k": 0.10791041911346892,
+      "drop": 0.13406403970249497,
+      "wikitablequestions": 0.1728190213034758,
+      "treb_qa": 0.12218580273289595,
+      "winogrande_cf": 0.026178282882126206,
+      "piqa_cf": 0.060701511897372454,
+      "openbookqa_cf": 0.027068812233100998,
+      "xcsqa_cf": 0.02839449802705618,
+      "agg_score_GK": 0.16625271853242374,
+      "agg_score_RC": 0.24417585470472133,
+      "agg_score_RES": 0.03872160738584321,
+      "agg_score_NLU": 0.05249390617092667,
+      "agg_score_MATH": 0.10791041911346892,
+      "agg_score_TABLE": 0.14750241201818587,
+      "agg_score_macro": 0.12617615298759496,
+      "agg_score_micro": 0.12041041867695945
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3893720006705764,
+      "arc_cf:easy": 0.18758993527803483,
+      "hellaswag_cf": 0.0793069638378595,
+      "mmlu_redux_cf:_average": 0.12987509741492825,
+      "gsm8k": 0.10750125218224514,
+      "drop": 0.1425613042793729,
+      "wikitablequestions": 0.1674893106810825,
+      "treb_qa": 0.12748971772628,
+      "winogrande_cf": 0.026881858558698124,
+      "piqa_cf": 0.06101006209439194,
+      "openbookqa_cf": 0.029913165182837317,
+      "xcsqa_cf": 0.02131862386974288,
+      "agg_score_GK": 0.15873251634648156,
+      "agg_score_RC": 0.26596665247497464,
+      "agg_score_RES": 0.03741395038232405,
+      "agg_score_NLU": 0.05309441119827881,
+      "agg_score_MATH": 0.10750125218224514,
+      "agg_score_TABLE": 0.14748951420368125,
+      "agg_score_macro": 0.12836638279799759,
+      "agg_score_micro": 0.12252577431467081
+    }
+  },
+  {
+    "run": "fw_edu_hq-2.9b--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.3982987578174923,
+      "arc_cf:easy": 0.1938710100906082,
+      "hellaswag_cf": 0.07792419325234456,
+      "mmlu_redux_cf:_average": 0.13320629989720703,
+      "gsm8k": 0.1082793638090422,
+      "drop": 0.14286723490277614,
+      "wikitablequestions": 0.15062364247355947,
+      "treb_qa": 0.12383385701020085,
+      "winogrande_cf": 0.021385784881789924,
+      "piqa_cf": 0.06241916079330537,
+      "openbookqa_cf": 0.023177957252635096,
+      "xcsqa_cf": 0.028051269060338696,
+      "agg_score_GK": 0.16353865499390763,
+      "agg_score_RC": 0.2705829963601342,
+      "agg_score_RES": 0.037882795702093054,
+      "agg_score_NLU": 0.049654989067067244,
+      "agg_score_MATH": 0.1082793638090422,
+      "agg_score_TABLE": 0.13722874974188015,
+      "agg_score_macro": 0.12786125827902076,
+      "agg_score_micro": 0.12199487760344167
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.44333721905576384,
+      "arc_cf:easy": 0.20235188210248112,
+      "hellaswag_cf": 0.08114124217759719,
+      "mmlu_redux_cf:_average": 0.1406103427465122,
+      "gsm8k": 0.11000591525445134,
+      "drop": 0.15752235716659982,
+      "wikitablequestions": 0.16906052091728044,
+      "treb_qa": 0.14765300512110124,
+      "winogrande_cf": 0.0405411443499343,
+      "piqa_cf": 0.06265073983463483,
+      "openbookqa_cf": 0.028126765051741998,
+      "xcsqa_cf": 0.03182809163568357,
+      "agg_score_GK": 0.17148111242449665,
+      "agg_score_RC": 0.3004297881111818,
+      "agg_score_RES": 0.04086853217402014,
+      "agg_score_NLU": 0.06084119326376575,
+      "agg_score_MATH": 0.11000591525445134,
+      "agg_score_TABLE": 0.15835676301919083,
+      "agg_score_macro": 0.14033055070785108,
+      "agg_score_micro": 0.13456910211781517
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.34161728160585003,
+      "arc_cf:easy": 0.21289032298298263,
+      "hellaswag_cf": 0.0805947104715786,
+      "mmlu_redux_cf:_average": 0.13922904371259118,
+      "gsm8k": 0.10686011250676714,
+      "drop": 0.16506855097872558,
+      "wikitablequestions": 0.16005425648583477,
+      "treb_qa": 0.14278732716829928,
+      "winogrande_cf": 0.03700061483078838,
+      "piqa_cf": 0.06222832162463904,
+      "openbookqa_cf": 0.024289985450267285,
+      "xcsqa_cf": 0.03093983900497254,
+      "agg_score_GK": 0.1760596833477869,
+      "agg_score_RC": 0.2533429162922878,
+      "agg_score_RES": 0.03915271535995962,
+      "agg_score_NLU": 0.05879766265118348,
+      "agg_score_MATH": 0.10686011250676714,
+      "agg_score_TABLE": 0.15142079182706703,
+      "agg_score_macro": 0.130938980330842,
+      "agg_score_micro": 0.1252966972352747
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.38548461582427834,
+      "arc_cf:easy": 0.20236512707234144,
+      "hellaswag_cf": 0.08173692881451682,
+      "mmlu_redux_cf:_average": 0.13432905578352974,
+      "gsm8k": 0.11234496838935973,
+      "drop": 0.13460614003108498,
+      "wikitablequestions": 0.17039855889411984,
+      "treb_qa": 0.120926504705767,
+      "winogrande_cf": 0.03423006047436848,
+      "piqa_cf": 0.060952747295114434,
+      "openbookqa_cf": 0.026122055220498038,
+      "xcsqa_cf": 0.034192632253830325,
+      "agg_score_GK": 0.16834709142793558,
+      "agg_score_RC": 0.2600453779276817,
+      "agg_score_RES": 0.04042247825648093,
+      "agg_score_NLU": 0.05798349464444265,
+      "agg_score_MATH": 0.11234496838935973,
+      "agg_score_TABLE": 0.14566253179994343,
+      "agg_score_macro": 0.13080099040764068,
+      "agg_score_micro": 0.12480744956323409
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4168403857050879,
+      "arc_cf:easy": 0.21832645284161567,
+      "hellaswag_cf": 0.08124437138109963,
+      "mmlu_redux_cf:_average": 0.14038306413393542,
+      "gsm8k": 0.1117446769513194,
+      "drop": 0.14577883880063047,
+      "wikitablequestions": 0.17151020246353874,
+      "treb_qa": 0.1391715962552874,
+      "winogrande_cf": 0.03014977809745419,
+      "piqa_cf": 0.06191153153656292,
+      "openbookqa_cf": 0.03024961595194724,
+      "xcsqa_cf": 0.037337193704786206,
+      "agg_score_GK": 0.17935475848777555,
+      "agg_score_RC": 0.2813096122528592,
+      "agg_score_RES": 0.04316611373109879,
+      "agg_score_NLU": 0.05569707473927691,
+      "agg_score_MATH": 0.1117446769513194,
+      "agg_score_TABLE": 0.1553408993594131,
+      "agg_score_macro": 0.13776885592029048,
+      "agg_score_micro": 0.13205397565193874
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.34743016545654326,
+      "arc_cf:easy": 0.19582685847777628,
+      "hellaswag_cf": 0.08132692953256186,
+      "mmlu_redux_cf:_average": 0.12358993270173298,
+      "gsm8k": 0.10211528617666038,
+      "drop": 0.13099024358006348,
+      "wikitablequestions": 0.1672271189779107,
+      "treb_qa": 0.13312069456314826,
+      "winogrande_cf": 0.0319093924492312,
+      "piqa_cf": 0.06090825682302456,
+      "openbookqa_cf": 0.022484618592534245,
+      "xcsqa_cf": 0.019717324383603376,
+      "agg_score_GK": 0.15970839558975464,
+      "agg_score_RC": 0.23921020451830338,
+      "agg_score_RES": 0.03437006659972073,
+      "agg_score_NLU": 0.05661816099089653,
+      "agg_score_MATH": 0.10211528617666038,
+      "agg_score_TABLE": 0.1501739067705295,
+      "agg_score_macro": 0.12369933677431084,
+      "agg_score_micro": 0.11805390180956589
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41811579854857917,
+      "arc_cf:easy": 0.2007680045247343,
+      "hellaswag_cf": 0.08147711729495243,
+      "mmlu_redux_cf:_average": 0.14162628969779523,
+      "gsm8k": 0.11296728085446801,
+      "drop": 0.13685054395052473,
+      "wikitablequestions": 0.16808283668634202,
+      "treb_qa": 0.12664290515080145,
+      "winogrande_cf": 0.02970387620514551,
+      "piqa_cf": 0.06251933517118394,
+      "openbookqa_cf": 0.027264787248454,
+      "xcsqa_cf": 0.028527248822461965,
+      "agg_score_GK": 0.17119714711126477,
+      "agg_score_RC": 0.27748317124955196,
+      "agg_score_RES": 0.03943712374736663,
+      "agg_score_NLU": 0.05559049675004897,
+      "agg_score_MATH": 0.11296728085446801,
+      "agg_score_TABLE": 0.14736287091857175,
+      "agg_score_macro": 0.13400634843854534,
+      "agg_score_micro": 0.12787883534628688
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.38835768709879404,
+      "arc_cf:easy": 0.2216846531905718,
+      "hellaswag_cf": 0.0825172187956316,
+      "mmlu_redux_cf:_average": 0.14101709679456204,
+      "gsm8k": 0.10700898000259107,
+      "drop": 0.14785204720880715,
+      "wikitablequestions": 0.17562302672680175,
+      "treb_qa": 0.1285800753985723,
+      "winogrande_cf": 0.03966595844941264,
+      "piqa_cf": 0.05945720298067968,
+      "openbookqa_cf": 0.024320103509094585,
+      "xcsqa_cf": 0.03949377840526164,
+      "agg_score_GK": 0.1813508749925669,
+      "agg_score_RC": 0.2681048671538006,
+      "agg_score_RES": 0.04109036163167863,
+      "agg_score_NLU": 0.06109158862252212,
+      "agg_score_MATH": 0.10700898000259107,
+      "agg_score_TABLE": 0.15210155106268702,
+      "agg_score_macro": 0.1351247039109744,
+      "agg_score_micro": 0.12963148571339833
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.43524326031295574,
+      "arc_cf:easy": 0.20871004507757623,
+      "hellaswag_cf": 0.08179071558638829,
+      "mmlu_redux_cf:_average": 0.13439557467596028,
+      "gsm8k": 0.10184176124241284,
+      "drop": 0.1745551555162137,
+      "wikitablequestions": 0.1388073031295746,
+      "treb_qa": 0.13318382586488578,
+      "winogrande_cf": 0.039685758774159294,
+      "piqa_cf": 0.06382578507610222,
+      "openbookqa_cf": 0.026752375953824483,
+      "xcsqa_cf": 0.018829492159709936,
+      "agg_score_GK": 0.17155280987676824,
+      "agg_score_RC": 0.3048992079145847,
+      "agg_score_RES": 0.03646921772987888,
+      "agg_score_NLU": 0.06073823718027379,
+      "agg_score_MATH": 0.10184176124241284,
+      "agg_score_TABLE": 0.1359955644972302,
+      "agg_score_macro": 0.13524946640685812,
+      "agg_score_micro": 0.12980175444748027
+    }
+  },
+  {
+    "run": "fw_edu_hq-6.2b--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4354019592301388,
+      "arc_cf:easy": 0.20873387162574206,
+      "hellaswag_cf": 0.0801267591190389,
+      "mmlu_redux_cf:_average": 0.14020997287226195,
+      "gsm8k": 0.10179519942502391,
+      "drop": 0.15330944290188142,
+      "wikitablequestions": 0.17840710464632825,
+      "treb_qa": 0.13207578882712975,
+      "winogrande_cf": 0.027992653768303462,
+      "piqa_cf": 0.06273647006641743,
+      "openbookqa_cf": 0.025900139810084967,
+      "xcsqa_cf": 0.03203569003274047,
+      "agg_score_GK": 0.174471922249002,
+      "agg_score_RC": 0.2943557010660101,
+      "agg_score_RES": 0.04022409996974762,
+      "agg_score_NLU": 0.05405970644367118,
+      "agg_score_MATH": 0.10179519942502391,
+      "agg_score_TABLE": 0.15524144673672902,
+      "agg_score_macro": 0.1366913459816973,
+      "agg_score_micro": 0.13156042102709095
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2874327900621532,
+      "arc_cf:easy": 0.13951173079283744,
+      "hellaswag_cf": 0.08599696466891123,
+      "mmlu_redux_cf:_average": 0.10576026387244339,
+      "gsm8k": 0.0994047939169394,
+      "drop": 0.12488245092025298,
+      "wikitablequestions": 0.1538198489400371,
+      "treb_qa": 0.13200797308891546,
+      "winogrande_cf": 0.027266922137768584,
+      "piqa_cf": 0.06177476821713754,
+      "openbookqa_cf": 0.01639984807326794,
+      "xcsqa_cf": 0.018828089890217274,
+      "agg_score_GK": 0.12263599733264041,
+      "agg_score_RC": 0.2061576204912031,
+      "agg_score_RES": 0.03233423539354092,
+      "agg_score_NLU": 0.05663194340333991,
+      "agg_score_MATH": 0.0994047939169394,
+      "agg_score_TABLE": 0.14291391101447629,
+      "agg_score_macro": 0.11001308359202334,
+      "agg_score_micro": 0.10442387038174013
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2929636328647806,
+      "arc_cf:easy": 0.14067183250608706,
+      "hellaswag_cf": 0.08605392050557827,
+      "mmlu_redux_cf:_average": 0.10591090903561527,
+      "gsm8k": 0.09913632326601152,
+      "drop": 0.1303424487608974,
+      "wikitablequestions": 0.14678803650180167,
+      "treb_qa": 0.13246253431668806,
+      "winogrande_cf": 0.02773847166706941,
+      "piqa_cf": 0.06158940831076022,
+      "openbookqa_cf": 0.016670411891815853,
+      "xcsqa_cf": 0.019610009190529208,
+      "agg_score_GK": 0.12329137077085117,
+      "agg_score_RC": 0.211653040812839,
+      "agg_score_RES": 0.03262327646436843,
+      "agg_score_NLU": 0.05689619608632384,
+      "agg_score_MATH": 0.09913632326601152,
+      "agg_score_TABLE": 0.13962528540924485,
+      "agg_score_macro": 0.1105375821349398,
+      "agg_score_micro": 0.10499482823480288
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2881707592421276,
+      "arc_cf:easy": 0.14007891682416168,
+      "hellaswag_cf": 0.08588491799696613,
+      "mmlu_redux_cf:_average": 0.10587452267636617,
+      "gsm8k": 0.09876794511723805,
+      "drop": 0.10863953988001772,
+      "wikitablequestions": 0.15118383197617077,
+      "treb_qa": 0.1330074204460224,
+      "winogrande_cf": 0.027229066386355208,
+      "piqa_cf": 0.061391893182633495,
+      "openbookqa_cf": 0.016283418397568104,
+      "xcsqa_cf": 0.019576676574654596,
+      "agg_score_GK": 0.12297671975026392,
+      "agg_score_RC": 0.19840514956107266,
+      "agg_score_RES": 0.032417329384952065,
+      "agg_score_NLU": 0.05655699219166067,
+      "agg_score_MATH": 0.09876794511723805,
+      "agg_score_TABLE": 0.1420956262110966,
+      "agg_score_macro": 0.10853662703604733,
+      "agg_score_micro": 0.10300740905835683
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.29123338396051224,
+      "arc_cf:easy": 0.14044052064600754,
+      "hellaswag_cf": 0.08602495326092169,
+      "mmlu_redux_cf:_average": 0.1059502122567316,
+      "gsm8k": 0.09904292365685882,
+      "drop": 0.1292225338551583,
+      "wikitablequestions": 0.14947758432406436,
+      "treb_qa": 0.132791914271913,
+      "winogrande_cf": 0.027295201277535795,
+      "piqa_cf": 0.06149674197221214,
+      "openbookqa_cf": 0.016361443298718262,
+      "xcsqa_cf": 0.018983006368126536,
+      "agg_score_GK": 0.12319536645136957,
+      "agg_score_RC": 0.21022795890783527,
+      "agg_score_RES": 0.03228039721301898,
+      "agg_score_NLU": 0.05666007726922874,
+      "agg_score_MATH": 0.09904292365685882,
+      "agg_score_TABLE": 0.1411347492979887,
+      "agg_score_macro": 0.11042357879938336,
+      "agg_score_micro": 0.10486003492906336
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2816402918097083,
+      "arc_cf:easy": 0.1394991260777312,
+      "hellaswag_cf": 0.0859357756753567,
+      "mmlu_redux_cf:_average": 0.10652024728858277,
+      "gsm8k": 0.09894764134370702,
+      "drop": 0.10246230397471237,
+      "wikitablequestions": 0.1489321145815181,
+      "treb_qa": 0.13277077329812778,
+      "winogrande_cf": 0.02740430214028954,
+      "piqa_cf": 0.06131762828018132,
+      "openbookqa_cf": 0.016667438360078057,
+      "xcsqa_cf": 0.018584315279609392,
+      "agg_score_GK": 0.12300968668315698,
+      "agg_score_RC": 0.19205129789221032,
+      "agg_score_RES": 0.03218979397328959,
+      "agg_score_NLU": 0.056670038907823114,
+      "agg_score_MATH": 0.09894764134370702,
+      "agg_score_TABLE": 0.14085144393982293,
+      "agg_score_macro": 0.10728665045666834,
+      "agg_score_micro": 0.10172349650913354
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2899452979009469,
+      "arc_cf:easy": 0.1396762393461703,
+      "hellaswag_cf": 0.08612097111884774,
+      "mmlu_redux_cf:_average": 0.10562122823694445,
+      "gsm8k": 0.09882983492659558,
+      "drop": 0.11903574880674313,
+      "wikitablequestions": 0.15110750189941724,
+      "treb_qa": 0.13262053949514044,
+      "winogrande_cf": 0.02774501439412384,
+      "piqa_cf": 0.06149185977855752,
+      "openbookqa_cf": 0.016746264113108828,
+      "xcsqa_cf": 0.018971350170982917,
+      "agg_score_GK": 0.12264873379155737,
+      "agg_score_RC": 0.20449052335384502,
+      "agg_score_RES": 0.03240315802088309,
+      "agg_score_NLU": 0.05693299275648579,
+      "agg_score_MATH": 0.09882983492659558,
+      "agg_score_TABLE": 0.14186402069727883,
+      "agg_score_macro": 0.10952821059110762,
+      "agg_score_micro": 0.10399265418229824
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2861492048891541,
+      "arc_cf:easy": 0.1394759699025924,
+      "hellaswag_cf": 0.08592604826944762,
+      "mmlu_redux_cf:_average": 0.10684994715413597,
+      "gsm8k": 0.09906588076552736,
+      "drop": 0.12025649923064026,
+      "wikitablequestions": 0.14960041221224624,
+      "treb_qa": 0.13205596955174453,
+      "winogrande_cf": 0.02711131368541605,
+      "piqa_cf": 0.061642614849537,
+      "openbookqa_cf": 0.01657872476845904,
+      "xcsqa_cf": 0.019077192151352722,
+      "agg_score_GK": 0.12316295852836417,
+      "agg_score_RC": 0.20320285205989716,
+      "agg_score_RES": 0.03243284392311626,
+      "agg_score_NLU": 0.05651868097743183,
+      "agg_score_MATH": 0.09906588076552736,
+      "agg_score_TABLE": 0.14082819088199539,
+      "agg_score_macro": 0.10920190118938868,
+      "agg_score_micro": 0.10364914811918775
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.28714491635339345,
+      "arc_cf:easy": 0.14014315886329767,
+      "hellaswag_cf": 0.08595951229345665,
+      "mmlu_redux_cf:_average": 0.10586239951380938,
+      "gsm8k": 0.09883770244339106,
+      "drop": 0.13517568151640413,
+      "wikitablequestions": 0.1442168635743849,
+      "treb_qa": 0.1287004986678422,
+      "winogrande_cf": 0.027309387896101562,
+      "piqa_cf": 0.061447813507500754,
+      "openbookqa_cf": 0.016831972823771465,
+      "xcsqa_cf": 0.018881064016660305,
+      "agg_score_GK": 0.12300277918855353,
+      "agg_score_RC": 0.2111602989348988,
+      "agg_score_RES": 0.03238695011597751,
+      "agg_score_NLU": 0.056634450094779104,
+      "agg_score_MATH": 0.09883770244339106,
+      "agg_score_TABLE": 0.13645868112111353,
+      "agg_score_macro": 0.10974681031645224,
+      "agg_score_micro": 0.10420924762250111
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-fw_edu_hq--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq"
+    ],
+    "data_weights": [
+      1.0
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.2921638592333893,
+      "arc_cf:easy": 0.13971940284516723,
+      "hellaswag_cf": 0.0859392603560251,
+      "mmlu_redux_cf:_average": 0.10695618944912016,
+      "gsm8k": 0.09916728825601302,
+      "drop": 0.12149891250805925,
+      "wikitablequestions": 0.1533483720221982,
+      "treb_qa": 0.13288706773060344,
+      "winogrande_cf": 0.027383814085330492,
+      "piqa_cf": 0.06166555609656323,
+      "openbookqa_cf": 0.016571259821001234,
+      "xcsqa_cf": 0.019544076419386804,
+      "agg_score_GK": 0.1233377961471437,
+      "agg_score_RC": 0.20683138587072425,
+      "agg_score_RES": 0.03259363077898376,
+      "agg_score_NLU": 0.05666153722067779,
+      "agg_score_MATH": 0.09916728825601302,
+      "agg_score_TABLE": 0.14311771987640082,
+      "agg_score_macro": 0.11028489302499056,
+      "agg_score_micro": 0.10473708823523813
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4145318521900176,
+      "arc_cf:easy": 0.164436155722176,
+      "hellaswag_cf": 0.08625061169513555,
+      "mmlu_redux_cf:_average": 0.11693169286469195,
+      "gsm8k": 0.10553743845773893,
+      "drop": 0.1511603494407632,
+      "wikitablequestions": 0.17802995834833507,
+      "treb_qa": 0.11855442467820483,
+      "winogrande_cf": 0.03493119199460438,
+      "piqa_cf": 0.0667748226238503,
+      "openbookqa_cf": 0.022661791158433878,
+      "xcsqa_cf": 0.03478890913184007,
+      "agg_score_GK": 0.14068392429343396,
+      "agg_score_RC": 0.2828461008153904,
+      "agg_score_RES": 0.041408507638041415,
+      "agg_score_NLU": 0.06059090184486997,
+      "agg_score_MATH": 0.10553743845773893,
+      "agg_score_TABLE": 0.14829219151326994,
+      "agg_score_macro": 0.1298931774271241,
+      "agg_score_micro": 0.124549099858816
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41798473553599536,
+      "arc_cf:easy": 0.16498302948008992,
+      "hellaswag_cf": 0.08599241505284376,
+      "mmlu_redux_cf:_average": 0.11699209703436979,
+      "gsm8k": 0.10578937799651877,
+      "drop": 0.1790409578383011,
+      "wikitablequestions": 0.16138552762207262,
+      "treb_qa": 0.12852679215383084,
+      "winogrande_cf": 0.03419160097887037,
+      "piqa_cf": 0.06719430935431984,
+      "openbookqa_cf": 0.023226496045718862,
+      "xcsqa_cf": 0.035658907806604336,
+      "agg_score_GK": 0.14098756325722986,
+      "agg_score_RC": 0.2985128466871482,
+      "agg_score_RES": 0.04202657106888102,
+      "agg_score_NLU": 0.06009200801585707,
+      "agg_score_MATH": 0.10578937799651877,
+      "agg_score_TABLE": 0.14495615988795174,
+      "agg_score_macro": 0.1320607544855978,
+      "agg_score_micro": 0.12674718724162795
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41383828844592974,
+      "arc_cf:easy": 0.16571781611719794,
+      "hellaswag_cf": 0.08615213356941688,
+      "mmlu_redux_cf:_average": 0.11622346838252606,
+      "gsm8k": 0.1018764510627876,
+      "drop": 0.16492755027323786,
+      "wikitablequestions": 0.16901234477118598,
+      "treb_qa": 0.12784359339286663,
+      "winogrande_cf": 0.037211100989709665,
+      "piqa_cf": 0.06739773955436944,
+      "openbookqa_cf": 0.022070317846464512,
+      "xcsqa_cf": 0.03390136839538554,
+      "agg_score_GK": 0.140970642249862,
+      "agg_score_RC": 0.2893829193595838,
+      "agg_score_RES": 0.041123141932073164,
+      "agg_score_NLU": 0.06168161727956327,
+      "agg_score_MATH": 0.1018764510627876,
+      "agg_score_TABLE": 0.14842796908202632,
+      "agg_score_macro": 0.13057712349431605,
+      "agg_score_micro": 0.12551434773342315
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4106320057819474,
+      "arc_cf:easy": 0.16324286922782563,
+      "hellaswag_cf": 0.08620823545287838,
+      "mmlu_redux_cf:_average": 0.11586982420406454,
+      "gsm8k": 0.10530121485602009,
+      "drop": 0.17708445222216415,
+      "wikitablequestions": 0.14753693332079212,
+      "treb_qa": 0.12449166780071715,
+      "winogrande_cf": 0.034992549100773956,
+      "piqa_cf": 0.06689361118766826,
+      "openbookqa_cf": 0.021696125688676553,
+      "xcsqa_cf": 0.03330610550513561,
+      "agg_score_GK": 0.13955634671594508,
+      "agg_score_RC": 0.29385822900205577,
+      "agg_score_RES": 0.04063194746049348,
+      "agg_score_NLU": 0.06060039227682617,
+      "agg_score_MATH": 0.10530121485602009,
+      "agg_score_TABLE": 0.13601430056075464,
+      "agg_score_macro": 0.12932707181201586,
+      "agg_score_micro": 0.12393796619572196
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41524178352903995,
+      "arc_cf:easy": 0.16522047518780125,
+      "hellaswag_cf": 0.08619810897365554,
+      "mmlu_redux_cf:_average": 0.11586941051464988,
+      "gsm8k": 0.10443716981503329,
+      "drop": 0.17233245085740254,
+      "wikitablequestions": 0.16402682795002987,
+      "treb_qa": 0.12826023163105385,
+      "winogrande_cf": 0.03551620843439123,
+      "piqa_cf": 0.06754185522372076,
+      "openbookqa_cf": 0.02198165834698016,
+      "xcsqa_cf": 0.03621760262922911,
+      "agg_score_GK": 0.14054494285122557,
+      "agg_score_RC": 0.29378711719322126,
+      "agg_score_RES": 0.04191370539997668,
+      "agg_score_NLU": 0.06085715870402339,
+      "agg_score_MATH": 0.10443716981503329,
+      "agg_score_TABLE": 0.14614352979054185,
+      "agg_score_macro": 0.13128060395900365,
+      "agg_score_micro": 0.12607031525774895
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4149241743058424,
+      "arc_cf:easy": 0.16766146067715954,
+      "hellaswag_cf": 0.0864047596868005,
+      "mmlu_redux_cf:_average": 0.11693347056437892,
+      "gsm8k": 0.10314448219000927,
+      "drop": 0.15459916025320977,
+      "wikitablequestions": 0.1628335227102633,
+      "treb_qa": 0.12449351357634027,
+      "winogrande_cf": 0.035232033014773845,
+      "piqa_cf": 0.0673133240447911,
+      "openbookqa_cf": 0.023191206112341413,
+      "xcsqa_cf": 0.035903616395342765,
+      "agg_score_GK": 0.14229746562076923,
+      "agg_score_RC": 0.28476166727952607,
+      "agg_score_RES": 0.042136048850825086,
+      "agg_score_NLU": 0.060818396350787174,
+      "agg_score_MATH": 0.10314448219000927,
+      "agg_score_TABLE": 0.14366351814330178,
+      "agg_score_macro": 0.12947026307253642,
+      "agg_score_micro": 0.12438622696093776
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41739728672095455,
+      "arc_cf:easy": 0.16574135549492747,
+      "hellaswag_cf": 0.08634338615797899,
+      "mmlu_redux_cf:_average": 0.11677515591434684,
+      "gsm8k": 0.10436178747048384,
+      "drop": 0.15389929512507525,
+      "wikitablequestions": 0.17477703156674204,
+      "treb_qa": 0.13348856612999238,
+      "winogrande_cf": 0.0359366029754814,
+      "piqa_cf": 0.06721737842148227,
+      "openbookqa_cf": 0.022617870942387895,
+      "xcsqa_cf": 0.036723568937687884,
+      "agg_score_GK": 0.14125825570463715,
+      "agg_score_RC": 0.2856482909230149,
+      "agg_score_RES": 0.04218627276718601,
+      "agg_score_NLU": 0.061139994566730194,
+      "agg_score_MATH": 0.10436178747048384,
+      "agg_score_TABLE": 0.15413279884836723,
+      "agg_score_macro": 0.1314545667134032,
+      "agg_score_micro": 0.12627327382146175
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41186636817930167,
+      "arc_cf:easy": 0.1659029294836514,
+      "hellaswag_cf": 0.0863664775784998,
+      "mmlu_redux_cf:_average": 0.11709133229695408,
+      "gsm8k": 0.10364179250564275,
+      "drop": 0.14812661198102212,
+      "wikitablequestions": 0.16812937870491987,
+      "treb_qa": 0.1231580902743539,
+      "winogrande_cf": 0.03542399199293066,
+      "piqa_cf": 0.06763967159329981,
+      "openbookqa_cf": 0.022764355046565505,
+      "xcsqa_cf": 0.03606818630511091,
+      "agg_score_GK": 0.14149713089030275,
+      "agg_score_RC": 0.2799964900801619,
+      "agg_score_RES": 0.04215740431499208,
+      "agg_score_NLU": 0.060895234785715235,
+      "agg_score_MATH": 0.10364179250564275,
+      "agg_score_TABLE": 0.14564373448963688,
+      "agg_score_macro": 0.12897196451107526,
+      "agg_score_micro": 0.1238482654951877
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-continue_1b_hq--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "continue_1b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4106787533775314,
+      "arc_cf:easy": 0.16423102168819573,
+      "hellaswag_cf": 0.08639310897977485,
+      "mmlu_redux_cf:_average": 0.11842895880607394,
+      "gsm8k": 0.10446460775240143,
+      "drop": 0.14682333077874746,
+      "wikitablequestions": 0.17397174324621972,
+      "treb_qa": 0.12305727630833072,
+      "winogrande_cf": 0.03605390527947803,
+      "piqa_cf": 0.06753097470848457,
+      "openbookqa_cf": 0.021843156562712438,
+      "xcsqa_cf": 0.035533622091756756,
+      "agg_score_GK": 0.14132999024713483,
+      "agg_score_RC": 0.27875104207813944,
+      "agg_score_RES": 0.04163591778765125,
+      "agg_score_NLU": 0.061223507129626445,
+      "agg_score_MATH": 0.10446460775240143,
+      "agg_score_TABLE": 0.1485145097772752,
+      "agg_score_macro": 0.12931992912870477,
+      "agg_score_micro": 0.12408420496497558
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41447916283460473,
+      "arc_cf:easy": 0.1817239829939143,
+      "hellaswag_cf": 0.08650085480222376,
+      "mmlu_redux_cf:_average": 0.12117588241148435,
+      "gsm8k": 0.10338906186114893,
+      "drop": 0.16238182273950214,
+      "wikitablequestions": 0.1741797334521981,
+      "treb_qa": 0.13248689456828597,
+      "winogrande_cf": 0.03433554067858669,
+      "piqa_cf": 0.06897368650316787,
+      "openbookqa_cf": 0.02411964428530392,
+      "xcsqa_cf": 0.036181944941816424,
+      "agg_score_GK": 0.15144993270269932,
+      "agg_score_RC": 0.28843049278705346,
+      "agg_score_RES": 0.043091758576762736,
+      "agg_score_NLU": 0.06041819774040523,
+      "agg_score_MATH": 0.10338906186114893,
+      "agg_score_TABLE": 0.15333331401024203,
+      "agg_score_macro": 0.13335212627971862,
+      "agg_score_micro": 0.1283273510060198
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.41631409075680903,
+      "arc_cf:easy": 0.18180445029946365,
+      "hellaswag_cf": 0.0866458822538951,
+      "mmlu_redux_cf:_average": 0.12152097035318667,
+      "gsm8k": 0.10349860698109463,
+      "drop": 0.16550010886002348,
+      "wikitablequestions": 0.17423351844624316,
+      "treb_qa": 0.1381599877970859,
+      "winogrande_cf": 0.03414288781273795,
+      "piqa_cf": 0.06905350717873686,
+      "openbookqa_cf": 0.024140987129571734,
+      "xcsqa_cf": 0.03614661739299346,
+      "agg_score_GK": 0.15166271032632517,
+      "agg_score_RC": 0.2909070998084162,
+      "agg_score_RES": 0.043113703900434015,
+      "agg_score_NLU": 0.060394385033316525,
+      "agg_score_MATH": 0.10349860698109463,
+      "agg_score_TABLE": 0.15619675312166453,
+      "agg_score_macro": 0.1342955431952085,
+      "agg_score_micro": 0.12926346793848678
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4158418508482246,
+      "arc_cf:easy": 0.18174068202730603,
+      "hellaswag_cf": 0.08655961458976405,
+      "mmlu_redux_cf:_average": 0.12167644754385434,
+      "gsm8k": 0.10376809995347042,
+      "drop": 0.1558955429477056,
+      "wikitablequestions": 0.18545586141281495,
+      "treb_qa": 0.1363814419907318,
+      "winogrande_cf": 0.03433795790869285,
+      "piqa_cf": 0.06899018934338935,
+      "openbookqa_cf": 0.024159536917059788,
+      "xcsqa_cf": 0.036114127792349106,
+      "agg_score_GK": 0.1517085647855802,
+      "agg_score_RC": 0.2858686968979651,
+      "agg_score_RES": 0.04308795135093275,
+      "agg_score_NLU": 0.06044878624922845,
+      "agg_score_MATH": 0.10376809995347042,
+      "agg_score_TABLE": 0.16091865170177339,
+      "agg_score_macro": 0.1343001251564917,
+      "agg_score_micro": 0.12924344610628025
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4145541010620774,
+      "arc_cf:easy": 0.1817529734390177,
+      "hellaswag_cf": 0.08652289916139097,
+      "mmlu_redux_cf:_average": 0.12115251484589336,
+      "gsm8k": 0.10368160648286641,
+      "drop": 0.16530784525162118,
+      "wikitablequestions": 0.17517793968044426,
+      "treb_qa": 0.136412174007862,
+      "winogrande_cf": 0.03449720709381846,
+      "piqa_cf": 0.06890389688392726,
+      "openbookqa_cf": 0.024008798205783437,
+      "xcsqa_cf": 0.036146341227734226,
+      "agg_score_GK": 0.15145274414245552,
+      "agg_score_RC": 0.2899309731568493,
+      "agg_score_RES": 0.04301967877248164,
+      "agg_score_NLU": 0.06051005312760471,
+      "agg_score_MATH": 0.10368160648286641,
+      "agg_score_TABLE": 0.15579505684415312,
+      "agg_score_macro": 0.1340650187544018,
+      "agg_score_micro": 0.12900985811186974
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4147110050469103,
+      "arc_cf:easy": 0.18193386157916125,
+      "hellaswag_cf": 0.08656376141653664,
+      "mmlu_redux_cf:_average": 0.12124107509553536,
+      "gsm8k": 0.1035927127071462,
+      "drop": 0.1692258777525961,
+      "wikitablequestions": 0.16942520104922515,
+      "treb_qa": 0.13641752177422256,
+      "winogrande_cf": 0.034061234946707646,
+      "piqa_cf": 0.06898305740669261,
+      "openbookqa_cf": 0.024012016775861428,
+      "xcsqa_cf": 0.03649545667523972,
+      "agg_score_GK": 0.15158746833734832,
+      "agg_score_RC": 0.2919684413997532,
+      "agg_score_RES": 0.04316351028593126,
+      "agg_score_NLU": 0.06031249818162214,
+      "agg_score_MATH": 0.1035927127071462,
+      "agg_score_TABLE": 0.15292136141172386,
+      "agg_score_macro": 0.13392433205392082,
+      "agg_score_micro": 0.12888856518548625
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4147964113384795,
+      "arc_cf:easy": 0.1821905155538954,
+      "hellaswag_cf": 0.0865594425037582,
+      "mmlu_redux_cf:_average": 0.12168639505723312,
+      "gsm8k": 0.10355004748948889,
+      "drop": 0.14027625274990946,
+      "wikitablequestions": 0.18134402164059257,
+      "treb_qa": 0.1383367154211003,
+      "winogrande_cf": 0.034347597929517006,
+      "piqa_cf": 0.0689669613018498,
+      "openbookqa_cf": 0.024086697075325084,
+      "xcsqa_cf": 0.03649000025230629,
+      "agg_score_GK": 0.15193845530556427,
+      "agg_score_RC": 0.2775363320441945,
+      "agg_score_RES": 0.04318121954316039,
+      "agg_score_NLU": 0.06045352021663761,
+      "agg_score_MATH": 0.10355004748948889,
+      "agg_score_TABLE": 0.15984036853084643,
+      "agg_score_macro": 0.13274999052164868,
+      "agg_score_micro": 0.12771925485945465
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": null
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4139275431899954,
+      "arc_cf:easy": 0.18186267328655725,
+      "hellaswag_cf": 0.08655469732236805,
+      "mmlu_redux_cf:_average": 0.12101679559590299,
+      "gsm8k": 0.1035949407889021,
+      "drop": 0.1453022420596443,
+      "wikitablequestions": 0.1769857462913833,
+      "treb_qa": 0.13883026832123732,
+      "winogrande_cf": 0.0344737876249899,
+      "piqa_cf": 0.06908493316964749,
+      "openbookqa_cf": 0.02412573122748357,
+      "xcsqa_cf": 0.036566242574640105,
+      "agg_score_GK": 0.15143973444123013,
+      "agg_score_RC": 0.27961489262481987,
+      "agg_score_RES": 0.04325896899059039,
+      "agg_score_NLU": 0.060514242473678974,
+      "agg_score_MATH": 0.1035949407889021,
+      "agg_score_TABLE": 0.15790800730631033,
+      "agg_score_macro": 0.13272179777092197,
+      "agg_score_micro": 0.12769380012106266
+    }
+  },
+  {
+    "run": "fw_edu_lq-decay-mix-fw_edu_hq-tutorial_12b_hq--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "tutorial_12b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.4173783641237047,
+      "arc_cf:easy": 0.18171377158346086,
+      "hellaswag_cf": 0.08658473125198415,
+      "mmlu_redux_cf:_average": 0.12160988314596452,
+      "gsm8k": 0.10357441551772337,
+      "drop": 0.14460816647040373,
+      "wikitablequestions": 0.17365592817706216,
+      "treb_qa": 0.13618009239160433,
+      "winogrande_cf": 0.034133148333648895,
+      "piqa_cf": 0.06906840939332108,
+      "openbookqa_cf": 0.024075703163869644,
+      "xcsqa_cf": 0.036438599565886694,
+      "agg_score_GK": 0.15166182736471268,
+      "agg_score_RC": 0.2809932652970542,
+      "agg_score_RES": 0.043194237374359144,
+      "agg_score_NLU": 0.06035893979281652,
+      "agg_score_MATH": 0.10357441551772337,
+      "agg_score_TABLE": 0.15491801028433325,
+      "agg_score_macro": 0.13245011593849987,
+      "agg_score_micro": 0.12741843442655285
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6068500538040271,
+      "arc_cf:easy": 0.22760095952468415,
+      "hellaswag_cf": 0.07723830000409117,
+      "mmlu_redux_cf:_average": 0.15831349405576012,
+      "gsm8k": 0.11351055160949626,
+      "drop": 0.15557858398672594,
+      "wikitablequestions": 0.24524954711621627,
+      "treb_qa": 0.2020303493451824,
+      "winogrande_cf": 0.04536399640427009,
+      "piqa_cf": 0.06388714650014621,
+      "openbookqa_cf": 0.03732045599490159,
+      "xcsqa_cf": 0.05256048060828056,
+      "agg_score_GK": 0.19295722679022215,
+      "agg_score_RC": 0.38121431889537655,
+      "agg_score_RES": 0.05125602770110945,
+      "agg_score_NLU": 0.06130114820418063,
+      "agg_score_MATH": 0.11351055160949626,
+      "agg_score_TABLE": 0.22363994823069933,
+      "agg_score_macro": 0.17064653690518075,
+      "agg_score_micro": 0.16545865991281516
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6201528982958753,
+      "arc_cf:easy": 0.22985260044173514,
+      "hellaswag_cf": 0.07708405843750774,
+      "mmlu_redux_cf:_average": 0.15525422647114334,
+      "gsm8k": 0.11220721601458294,
+      "drop": 0.21386751060394857,
+      "wikitablequestions": 0.2174380333865788,
+      "treb_qa": 0.1962686950092847,
+      "winogrande_cf": 0.031929922105426806,
+      "piqa_cf": 0.06195608788636372,
+      "openbookqa_cf": 0.034576868423098386,
+      "xcsqa_cf": 0.057571637116682825,
+      "agg_score_GK": 0.19255341345643923,
+      "agg_score_RC": 0.41701020444991194,
+      "agg_score_RES": 0.05136819780871497,
+      "agg_score_NLU": 0.05450699027146727,
+      "agg_score_MATH": 0.11220721601458294,
+      "agg_score_TABLE": 0.20685336419793177,
+      "agg_score_macro": 0.172416564366508,
+      "agg_score_micro": 0.1673466461826857
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6087703200783667,
+      "arc_cf:easy": 0.22329235023073749,
+      "hellaswag_cf": 0.07708070401494824,
+      "mmlu_redux_cf:_average": 0.15763646797443578,
+      "gsm8k": 0.11376835673873135,
+      "drop": 0.19346632104245173,
+      "wikitablequestions": 0.24016695913224964,
+      "treb_qa": 0.211822048869677,
+      "winogrande_cf": 0.03768370613113903,
+      "piqa_cf": 0.06425491472551935,
+      "openbookqa_cf": 0.03771798643156231,
+      "xcsqa_cf": 0.054515226670039635,
+      "agg_score_GK": 0.19046440910258663,
+      "agg_score_RC": 0.40111832056040925,
+      "agg_score_RES": 0.0521627092757071,
+      "agg_score_NLU": 0.05738220507304363,
+      "agg_score_MATH": 0.11376835673873135,
+      "agg_score_TABLE": 0.22599450400096333,
+      "agg_score_macro": 0.17348175079190686,
+      "agg_score_micro": 0.16834794683665485
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6181694109618622,
+      "arc_cf:easy": 0.22667143189034225,
+      "hellaswag_cf": 0.07651277014865074,
+      "mmlu_redux_cf:_average": 0.15620736779470595,
+      "gsm8k": 0.11608482966554433,
+      "drop": 0.18053981852243853,
+      "wikitablequestions": 0.25202202488050074,
+      "treb_qa": 0.20284367014718177,
+      "winogrande_cf": 0.035034695661891206,
+      "piqa_cf": 0.06289924407532996,
+      "openbookqa_cf": 0.03790332720896591,
+      "xcsqa_cf": 0.05640505049027457,
+      "agg_score_GK": 0.19143939984252412,
+      "agg_score_RC": 0.39935461474215034,
+      "agg_score_RES": 0.052402540591523473,
+      "agg_score_NLU": 0.055773732905270976,
+      "agg_score_MATH": 0.11608482966554433,
+      "agg_score_TABLE": 0.22743284751384124,
+      "agg_score_macro": 0.17374799421014242,
+      "agg_score_micro": 0.16844113678730735
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6158798345783544,
+      "arc_cf:easy": 0.22326238605738694,
+      "hellaswag_cf": 0.0776590227817386,
+      "mmlu_redux_cf:_average": 0.15556642676614454,
+      "gsm8k": 0.1135321111725305,
+      "drop": 0.21605987489384368,
+      "wikitablequestions": 0.22534763829151672,
+      "treb_qa": 0.19802460133971786,
+      "winogrande_cf": 0.04032063710384665,
+      "piqa_cf": 0.06312918619073941,
+      "openbookqa_cf": 0.03490451614454143,
+      "xcsqa_cf": 0.052834087271724346,
+      "agg_score_GK": 0.18941440641176574,
+      "agg_score_RC": 0.41596985473609904,
+      "agg_score_RES": 0.050289263202335066,
+      "agg_score_NLU": 0.05898982994279263,
+      "agg_score_MATH": 0.1135321111725305,
+      "agg_score_TABLE": 0.2116861198156173,
+      "agg_score_macro": 0.1733135975468567,
+      "agg_score_micro": 0.16804336021600708
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6089311051311747,
+      "arc_cf:easy": 0.22804718461366524,
+      "hellaswag_cf": 0.07592914722399335,
+      "mmlu_redux_cf:_average": 0.155907052969546,
+      "gsm8k": 0.10975555435625853,
+      "drop": 0.19581948101390168,
+      "wikitablequestions": 0.24889625332011586,
+      "treb_qa": 0.20753040400767464,
+      "winogrande_cf": 0.03859053884219555,
+      "piqa_cf": 0.06325929747465185,
+      "openbookqa_cf": 0.0356474595593623,
+      "xcsqa_cf": 0.050292015582808755,
+      "agg_score_GK": 0.19197711879160562,
+      "agg_score_RC": 0.40237529307253816,
+      "agg_score_RES": 0.04973292420560763,
+      "agg_score_NLU": 0.05725984303309445,
+      "agg_score_MATH": 0.10975555435625853,
+      "agg_score_TABLE": 0.22821332866389527,
+      "agg_score_macro": 0.17321901035383325,
+      "agg_score_micro": 0.1682171245079457
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6075859527348787,
+      "arc_cf:easy": 0.219809898738235,
+      "hellaswag_cf": 0.0770624851278918,
+      "mmlu_redux_cf:_average": 0.15393567802239513,
+      "gsm8k": 0.11273604929653473,
+      "drop": 0.18315433932132072,
+      "wikitablequestions": 0.2384943866485926,
+      "treb_qa": 0.2022699397678931,
+      "winogrande_cf": 0.03315919519456486,
+      "piqa_cf": 0.0639961495172196,
+      "openbookqa_cf": 0.03562695849033501,
+      "xcsqa_cf": 0.0495472307906345,
+      "agg_score_GK": 0.18687278838031507,
+      "agg_score_RC": 0.3953701460280997,
+      "agg_score_RES": 0.04972344626606304,
+      "agg_score_NLU": 0.05511084016122833,
+      "agg_score_MATH": 0.11273604929653473,
+      "agg_score_TABLE": 0.22038216320824283,
+      "agg_score_macro": 0.17003257222341395,
+      "agg_score_micro": 0.16478152197087467
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6044889886030173,
+      "arc_cf:easy": 0.22232805241108455,
+      "hellaswag_cf": 0.07730871087629217,
+      "mmlu_redux_cf:_average": 0.15603137275921167,
+      "gsm8k": 0.11107661222639217,
+      "drop": 0.1765813596114333,
+      "wikitablequestions": 0.2544946673544107,
+      "treb_qa": 0.1949830483045398,
+      "winogrande_cf": 0.03776990648551452,
+      "piqa_cf": 0.06283078376419476,
+      "openbookqa_cf": 0.03798339248611074,
+      "xcsqa_cf": 0.05328994850779832,
+      "agg_score_GK": 0.1891797125851481,
+      "agg_score_RC": 0.39053517410722527,
+      "agg_score_RES": 0.051368041586034606,
+      "agg_score_NLU": 0.057539308680903345,
+      "agg_score_MATH": 0.11107661222639217,
+      "agg_score_TABLE": 0.22473885782947522,
+      "agg_score_macro": 0.1707396178358631,
+      "agg_score_micro": 0.16576390361583335
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "1.7b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6296279004584936,
+      "arc_cf:easy": 0.22747078930813,
+      "hellaswag_cf": 0.07670835296728251,
+      "mmlu_redux_cf:_average": 0.15501715375817168,
+      "gsm8k": 0.11192504452834207,
+      "drop": 0.20880734543300494,
+      "wikitablequestions": 0.23816421729885662,
+      "treb_qa": 0.19449966743577393,
+      "winogrande_cf": 0.039979332020307776,
+      "piqa_cf": 0.06446045620504154,
+      "openbookqa_cf": 0.0352958780836374,
+      "xcsqa_cf": 0.049284092752587626,
+      "agg_score_GK": 0.19124397153315084,
+      "agg_score_RC": 0.41921762294574927,
+      "agg_score_RES": 0.04968014234708886,
+      "agg_score_NLU": 0.058343842493795144,
+      "agg_score_MATH": 0.11192504452834207,
+      "agg_score_TABLE": 0.2163319423673153,
+      "agg_score_macro": 0.17445709436924026,
+      "agg_score_micro": 0.16927001918746912
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5085966905503723,
+      "arc_cf:easy": 0.18775560700774388,
+      "hellaswag_cf": 0.06385695331496567,
+      "mmlu_redux_cf:_average": 0.12773669989205083,
+      "gsm8k": 0.10427143576287125,
+      "drop": 0.1424246737294173,
+      "wikitablequestions": 0.20473843695757973,
+      "treb_qa": 0.15946738938750243,
+      "winogrande_cf": 0.029094559807192638,
+      "piqa_cf": 0.05217727894768157,
+      "openbookqa_cf": 0.025638381715899227,
+      "xcsqa_cf": 0.030152452878772024,
+      "agg_score_GK": 0.15774615344989734,
+      "agg_score_RC": 0.32551068213989476,
+      "agg_score_RES": 0.035989371180784276,
+      "agg_score_NLU": 0.046475756561079155,
+      "agg_score_MATH": 0.10427143576287125,
+      "agg_score_TABLE": 0.18210291317254107,
+      "agg_score_macro": 0.14201605204451132,
+      "agg_score_micro": 0.13632587999600407
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5066387999921093,
+      "arc_cf:easy": 0.19108407488186094,
+      "hellaswag_cf": 0.06424614080548843,
+      "mmlu_redux_cf:_average": 0.1268040123940379,
+      "gsm8k": 0.10687584607059382,
+      "drop": 0.14872409364835643,
+      "wikitablequestions": 0.19942789385219403,
+      "treb_qa": 0.15738619627095227,
+      "winogrande_cf": 0.027204794080040253,
+      "piqa_cf": 0.05132728211783064,
+      "openbookqa_cf": 0.027991631701458887,
+      "xcsqa_cf": 0.02721386487461573,
+      "agg_score_GK": 0.15894404363794942,
+      "agg_score_RC": 0.3276814468202328,
+      "agg_score_RES": 0.035510926231301754,
+      "agg_score_NLU": 0.045725467442764345,
+      "agg_score_MATH": 0.10687584607059382,
+      "agg_score_TABLE": 0.17840704506157315,
+      "agg_score_macro": 0.14219079587740255,
+      "agg_score_micro": 0.13624371922412817
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5001680899059106,
+      "arc_cf:easy": 0.18127472867358962,
+      "hellaswag_cf": 0.06443911463192892,
+      "mmlu_redux_cf:_average": 0.12548580944595328,
+      "gsm8k": 0.10583444958873416,
+      "drop": 0.1684734991114015,
+      "wikitablequestions": 0.1967034362950859,
+      "treb_qa": 0.15167693067649704,
+      "winogrande_cf": 0.030841589847518308,
+      "piqa_cf": 0.050817999957467844,
+      "openbookqa_cf": 0.02614821050409783,
+      "xcsqa_cf": 0.030392097679657594,
+      "agg_score_GK": 0.15338026905977145,
+      "agg_score_RC": 0.33432079450865604,
+      "agg_score_RES": 0.03578610271374109,
+      "agg_score_NLU": 0.04764035223972361,
+      "agg_score_MATH": 0.10583444958873416,
+      "agg_score_TABLE": 0.17419018348579146,
+      "agg_score_macro": 0.14185869193273629,
+      "agg_score_micro": 0.13602132969315353
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5097004262308076,
+      "arc_cf:easy": 0.18399447582884798,
+      "hellaswag_cf": 0.06407618689616361,
+      "mmlu_redux_cf:_average": 0.12471766389791931,
+      "gsm8k": 0.10555902469069872,
+      "drop": 0.14991791625334291,
+      "wikitablequestions": 0.20268498557936798,
+      "treb_qa": 0.1491886012435359,
+      "winogrande_cf": 0.022173077049341464,
+      "piqa_cf": 0.05185015825652847,
+      "openbookqa_cf": 0.027797300597761834,
+      "xcsqa_cf": 0.028424223227492003,
+      "agg_score_GK": 0.15435606986338365,
+      "agg_score_RC": 0.32980917124207526,
+      "agg_score_RES": 0.03602389402726077,
+      "agg_score_NLU": 0.043124631972752535,
+      "agg_score_MATH": 0.10555902469069872,
+      "agg_score_TABLE": 0.17593679341145194,
+      "agg_score_macro": 0.14080159753460383,
+      "agg_score_micro": 0.13500700331265067
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.525788703260238,
+      "arc_cf:easy": 0.18764035830873962,
+      "hellaswag_cf": 0.06387148106768546,
+      "mmlu_redux_cf:_average": 0.1283913533508709,
+      "gsm8k": 0.10517838414646655,
+      "drop": 0.1714645954833807,
+      "wikitablequestions": 0.19142003311150707,
+      "treb_qa": 0.16572101063260833,
+      "winogrande_cf": 0.03355209358964396,
+      "piqa_cf": 0.049763401658007425,
+      "openbookqa_cf": 0.02752492521894609,
+      "xcsqa_cf": 0.031384169989146275,
+      "agg_score_GK": 0.15801585582980526,
+      "agg_score_RC": 0.3486266493718093,
+      "agg_score_RES": 0.03622416562203326,
+      "agg_score_NLU": 0.04871178732866471,
+      "agg_score_MATH": 0.10517838414646655,
+      "agg_score_TABLE": 0.17857052187205769,
+      "agg_score_macro": 0.14588789402847277,
+      "agg_score_micro": 0.1401417091514367
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5120401818130658,
+      "arc_cf:easy": 0.18169609933418743,
+      "hellaswag_cf": 0.06492379275238516,
+      "mmlu_redux_cf:_average": 0.12463707237264333,
+      "gsm8k": 0.11049738170884199,
+      "drop": 0.1803991160780209,
+      "wikitablequestions": 0.18536715279924623,
+      "treb_qa": 0.15493564824742875,
+      "winogrande_cf": 0.027744594889166287,
+      "piqa_cf": 0.050959199709113986,
+      "openbookqa_cf": 0.02679276386652853,
+      "xcsqa_cf": 0.02647555231603077,
+      "agg_score_GK": 0.1531665858534154,
+      "agg_score_RC": 0.34621964894554336,
+      "agg_score_RES": 0.034742505297224426,
+      "agg_score_NLU": 0.04633419382077572,
+      "agg_score_MATH": 0.11049738170884199,
+      "agg_score_TABLE": 0.1701514005233375,
+      "agg_score_macro": 0.14351861935818974,
+      "agg_score_micro": 0.13720571299055492
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5183221864350537,
+      "arc_cf:easy": 0.18603562777698326,
+      "hellaswag_cf": 0.06370080789249517,
+      "mmlu_redux_cf:_average": 0.12680118126631254,
+      "gsm8k": 0.10694774792933523,
+      "drop": 0.1782816722448331,
+      "wikitablequestions": 0.18471142078921138,
+      "treb_qa": 0.15987868302936878,
+      "winogrande_cf": 0.02783892790994012,
+      "piqa_cf": 0.051766156988627736,
+      "openbookqa_cf": 0.027327497079173473,
+      "xcsqa_cf": 0.03164848248962572,
+      "agg_score_GK": 0.1564184045216479,
+      "agg_score_RC": 0.3483019293399434,
+      "agg_score_RES": 0.03691404551914231,
+      "agg_score_NLU": 0.04576986790121765,
+      "agg_score_MATH": 0.10694774792933523,
+      "agg_score_TABLE": 0.17229505190929006,
+      "agg_score_macro": 0.1444411745200961,
+      "agg_score_micro": 0.13860503265257998
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.5248885515479362,
+      "arc_cf:easy": 0.18751232675460197,
+      "hellaswag_cf": 0.0643170170847951,
+      "mmlu_redux_cf:_average": 0.12641032071198088,
+      "gsm8k": 0.1080034020878594,
+      "drop": 0.18286960137062505,
+      "wikitablequestions": 0.18587657211992775,
+      "treb_qa": 0.1677010417389102,
+      "winogrande_cf": 0.02280344065454554,
+      "piqa_cf": 0.0516838004053551,
+      "openbookqa_cf": 0.026216546489177272,
+      "xcsqa_cf": 0.03038240987099156,
+      "agg_score_GK": 0.1569613237332914,
+      "agg_score_RC": 0.35387907645928063,
+      "agg_score_RES": 0.036094252255174646,
+      "agg_score_NLU": 0.04356022886967032,
+      "agg_score_MATH": 0.1080034020878594,
+      "agg_score_TABLE": 0.17678880692941898,
+      "agg_score_macro": 0.14588118172244924,
+      "agg_score_micro": 0.1398887525697255
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-0.5b--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "0.5b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.48206100271377367,
+      "arc_cf:easy": 0.18626479462794782,
+      "hellaswag_cf": 0.06427202288445125,
+      "mmlu_redux_cf:_average": 0.12731713359310928,
+      "gsm8k": 0.1062937192532747,
+      "drop": 0.17020713843581967,
+      "wikitablequestions": 0.19632394238192347,
+      "treb_qa": 0.1476498523802449,
+      "winogrande_cf": 0.03107633223679305,
+      "piqa_cf": 0.0509107078400203,
+      "openbookqa_cf": 0.027404774508180484,
+      "xcsqa_cf": 0.029809301089125436,
+      "agg_score_GK": 0.15679096411052856,
+      "agg_score_RC": 0.32613407057479665,
+      "agg_score_RES": 0.03604159447910874,
+      "agg_score_NLU": 0.047674177560622144,
+      "agg_score_MATH": 0.1062937192532747,
+      "agg_score_TABLE": 0.1719868973810842,
+      "agg_score_macro": 0.14082023722656917,
+      "agg_score_micro": 0.13496589349538865
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6282873435968841,
+      "arc_cf:easy": 0.23826750440237732,
+      "hellaswag_cf": 0.08118438250126786,
+      "mmlu_redux_cf:_average": 0.163665846514095,
+      "gsm8k": 0.11566346789653585,
+      "drop": 0.194371992300505,
+      "wikitablequestions": 0.24586146175805512,
+      "treb_qa": 0.21567242658336683,
+      "winogrande_cf": 0.04408737793011655,
+      "piqa_cf": 0.06609850622133351,
+      "openbookqa_cf": 0.03965332412253574,
+      "xcsqa_cf": 0.06622184387880227,
+      "agg_score_GK": 0.20096667545823615,
+      "agg_score_RC": 0.4113296679486945,
+      "agg_score_RES": 0.05732455807422384,
+      "agg_score_NLU": 0.0626358802156922,
+      "agg_score_MATH": 0.11566346789653585,
+      "agg_score_TABLE": 0.23076694417071097,
+      "agg_score_macro": 0.17978119896068226,
+      "agg_score_micro": 0.17491962314215626
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6350641288341015,
+      "arc_cf:easy": 0.2400336086408371,
+      "hellaswag_cf": 0.08110226529773752,
+      "mmlu_redux_cf:_average": 0.16605652886447028,
+      "gsm8k": 0.11463681039851178,
+      "drop": 0.2373551503728303,
+      "wikitablequestions": 0.2101702079083844,
+      "treb_qa": 0.2103924867528763,
+      "winogrande_cf": 0.042215802054234745,
+      "piqa_cf": 0.06665349559147041,
+      "openbookqa_cf": 0.03941792201008973,
+      "xcsqa_cf": 0.06077167956109978,
+      "agg_score_GK": 0.20304506875265368,
+      "agg_score_RC": 0.43620963960346587,
+      "agg_score_RES": 0.055614365720886634,
+      "agg_score_NLU": 0.06165903367598613,
+      "agg_score_MATH": 0.11463681039851178,
+      "agg_score_TABLE": 0.21028134733063036,
+      "agg_score_macro": 0.1802410442470224,
+      "agg_score_micro": 0.17532250719055367
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6303662087983182,
+      "arc_cf:easy": 0.23767590414799433,
+      "hellaswag_cf": 0.08040428941689819,
+      "mmlu_redux_cf:_average": 0.16397869723485575,
+      "gsm8k": 0.11749296060761127,
+      "drop": 0.20223497195160825,
+      "wikitablequestions": 0.2466357954538382,
+      "treb_qa": 0.21315777418234425,
+      "winogrande_cf": 0.042596212015583876,
+      "piqa_cf": 0.06633605211034489,
+      "openbookqa_cf": 0.03713398200304349,
+      "xcsqa_cf": 0.058738035364672786,
+      "agg_score_GK": 0.20082730069142504,
+      "agg_score_RC": 0.4163005903749632,
+      "agg_score_RES": 0.05406935649268705,
+      "agg_score_NLU": 0.06150025071624103,
+      "agg_score_MATH": 0.11749296060761127,
+      "agg_score_TABLE": 0.22989678481809123,
+      "agg_score_macro": 0.18001454061683644,
+      "agg_score_micro": 0.1747292402739262
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6297606996650565,
+      "arc_cf:easy": 0.23347131645571328,
+      "hellaswag_cf": 0.07949712062685091,
+      "mmlu_redux_cf:_average": 0.1628044665947027,
+      "gsm8k": 0.11803329006859162,
+      "drop": 0.18863292024172865,
+      "wikitablequestions": 0.24016471939835987,
+      "treb_qa": 0.2199433872766723,
+      "winogrande_cf": 0.04182705498654535,
+      "piqa_cf": 0.06567769594860752,
+      "openbookqa_cf": 0.036305752138387146,
+      "xcsqa_cf": 0.060205148840003955,
+      "agg_score_GK": 0.198137891525208,
+      "agg_score_RC": 0.4091968099533926,
+      "agg_score_RES": 0.05406286564233287,
+      "agg_score_NLU": 0.06066208780669813,
+      "agg_score_MATH": 0.11803329006859162,
+      "agg_score_TABLE": 0.23005405333751608,
+      "agg_score_macro": 0.17835783305562322,
+      "agg_score_micro": 0.173026964353435
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.625806600118419,
+      "arc_cf:easy": 0.23144748620813507,
+      "hellaswag_cf": 0.08026141587067659,
+      "mmlu_redux_cf:_average": 0.16592141394210044,
+      "gsm8k": 0.11305632937156133,
+      "drop": 0.2383806970627981,
+      "wikitablequestions": 0.2411193911855309,
+      "treb_qa": 0.2066001618490436,
+      "winogrande_cf": 0.04405436984450048,
+      "piqa_cf": 0.06616522517683424,
+      "openbookqa_cf": 0.040297411886530694,
+      "xcsqa_cf": 0.05939535128831536,
+      "agg_score_GK": 0.19868445007511776,
+      "agg_score_RC": 0.43209364859060856,
+      "agg_score_RES": 0.05528599611722676,
+      "agg_score_NLU": 0.062157892857588534,
+      "agg_score_MATH": 0.11305632937156133,
+      "agg_score_TABLE": 0.22385977651728725,
+      "agg_score_macro": 0.18085634892156502,
+      "agg_score_micro": 0.17604215448370383
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6219618620060975,
+      "arc_cf:easy": 0.23795417225186236,
+      "hellaswag_cf": 0.07967899204266059,
+      "mmlu_redux_cf:_average": 0.16526806754567266,
+      "gsm8k": 0.11623268220971798,
+      "drop": 0.16744946381029477,
+      "wikitablequestions": 0.25903720532904506,
+      "treb_qa": 0.20827286873661183,
+      "winogrande_cf": 0.03831099514180605,
+      "piqa_cf": 0.06625092084274137,
+      "openbookqa_cf": 0.03698071333110162,
+      "xcsqa_cf": 0.06582279799139784,
+      "agg_score_GK": 0.2016111198987675,
+      "agg_score_RC": 0.39470566290819614,
+      "agg_score_RES": 0.05635147738841361,
+      "agg_score_NLU": 0.058994993592233314,
+      "agg_score_MATH": 0.11623268220971798,
+      "agg_score_TABLE": 0.23365503703282844,
+      "agg_score_macro": 0.17692516217169285,
+      "agg_score_micro": 0.17193506176991746
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6289080712284328,
+      "arc_cf:easy": 0.23338632151815217,
+      "hellaswag_cf": 0.08044481907767626,
+      "mmlu_redux_cf:_average": 0.16481819042719284,
+      "gsm8k": 0.11619313573394999,
+      "drop": 0.21353033148516037,
+      "wikitablequestions": 0.24371057781342068,
+      "treb_qa": 0.2218773189850527,
+      "winogrande_cf": 0.035266870508630616,
+      "piqa_cf": 0.0674168448998143,
+      "openbookqa_cf": 0.040315914666609894,
+      "xcsqa_cf": 0.06553951373412739,
+      "agg_score_GK": 0.1991022559726725,
+      "agg_score_RC": 0.4212192013567966,
+      "agg_score_RES": 0.057757424433517196,
+      "agg_score_NLU": 0.057855844793153435,
+      "agg_score_MATH": 0.11619313573394999,
+      "agg_score_TABLE": 0.23279394839923667,
+      "agg_score_macro": 0.1808203017815544,
+      "agg_score_micro": 0.17595065917318506
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6263759089106439,
+      "arc_cf:easy": 0.23376272380953272,
+      "hellaswag_cf": 0.08042138511688447,
+      "mmlu_redux_cf:_average": 0.16252458065401126,
+      "gsm8k": 0.11644806395492525,
+      "drop": 0.1685070784342972,
+      "wikitablequestions": 0.24964741509062974,
+      "treb_qa": 0.202529584340719,
+      "winogrande_cf": 0.03779484334513154,
+      "piqa_cf": 0.06751876438488519,
+      "openbookqa_cf": 0.039233509465613235,
+      "xcsqa_cf": 0.05897974012615516,
+      "agg_score_GK": 0.198143652231772,
+      "agg_score_RC": 0.3974414936724705,
+      "agg_score_RES": 0.05524400465888454,
+      "agg_score_NLU": 0.05910811423100801,
+      "agg_score_MATH": 0.11644806395492525,
+      "agg_score_TABLE": 0.22608849971567435,
+      "agg_score_macro": 0.17541230474412242,
+      "agg_score_micro": 0.17031196646945237
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-2.9b--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "2.9b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6110839050151011,
+      "arc_cf:easy": 0.2437105312425627,
+      "hellaswag_cf": 0.08002170839233981,
+      "mmlu_redux_cf:_average": 0.165965768323406,
+      "gsm8k": 0.12039836346773777,
+      "drop": 0.19318319930189887,
+      "wikitablequestions": 0.24018184569336204,
+      "treb_qa": 0.2022910091346333,
+      "winogrande_cf": 0.04163931233182227,
+      "piqa_cf": 0.06754702619096657,
+      "openbookqa_cf": 0.03836006887008648,
+      "xcsqa_cf": 0.06063759871917279,
+      "agg_score_GK": 0.20483814978298437,
+      "agg_score_RC": 0.4021335521585,
+      "agg_score_RES": 0.05551489792674195,
+      "agg_score_NLU": 0.060830510362081036,
+      "agg_score_MATH": 0.12039836346773777,
+      "agg_score_TABLE": 0.22123642741399768,
+      "agg_score_macro": 0.1774919835186738,
+      "agg_score_micro": 0.17208502805692413
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=1-seed=1-seed-101",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6308440513882004,
+      "arc_cf:easy": 0.23789843087061968,
+      "hellaswag_cf": 0.08513991045479145,
+      "mmlu_redux_cf:_average": 0.17442443209567451,
+      "gsm8k": 0.11682419345245987,
+      "drop": 0.1823582016220422,
+      "wikitablequestions": 0.27685778701324726,
+      "treb_qa": 0.21250812794548068,
+      "winogrande_cf": 0.04317620518829402,
+      "piqa_cf": 0.07046749832938434,
+      "openbookqa_cf": 0.03752664239381528,
+      "xcsqa_cf": 0.06735625465014629,
+      "agg_score_GK": 0.20616143148314708,
+      "agg_score_RC": 0.4066011265051213,
+      "agg_score_RES": 0.0584501317911153,
+      "agg_score_NLU": 0.06415805782154274,
+      "agg_score_MATH": 0.11682419345245987,
+      "agg_score_TABLE": 0.24468295747936397,
+      "agg_score_macro": 0.1828129830887917,
+      "agg_score_micro": 0.17794847795034632
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=1-seed=2-seed-102",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6563012491100717,
+      "arc_cf:easy": 0.2442780992621444,
+      "hellaswag_cf": 0.08411321294421574,
+      "mmlu_redux_cf:_average": 0.17160337584754046,
+      "gsm8k": 0.11760390860038757,
+      "drop": 0.22104977937029102,
+      "wikitablequestions": 0.2491937475851253,
+      "treb_qa": 0.2147653580683603,
+      "winogrande_cf": 0.03896777732378393,
+      "piqa_cf": 0.06966210587526409,
+      "openbookqa_cf": 0.04173271866876892,
+      "xcsqa_cf": 0.06579586008376426,
+      "agg_score_GK": 0.20794073755484244,
+      "agg_score_RC": 0.43867551424018136,
+      "agg_score_RES": 0.059063561542599084,
+      "agg_score_NLU": 0.06154049513399984,
+      "agg_score_MATH": 0.11760390860038757,
+      "agg_score_TABLE": 0.23197955282674282,
+      "agg_score_macro": 0.1861339616497922,
+      "agg_score_micro": 0.18125559939497649
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=1-seed=3-seed-103",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 1,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6461597465245819,
+      "arc_cf:easy": 0.2456058186832604,
+      "hellaswag_cf": 0.08359763369696277,
+      "mmlu_redux_cf:_average": 0.17283665124219263,
+      "gsm8k": 0.11788784305149248,
+      "drop": 0.22064710864050646,
+      "wikitablequestions": 0.24942415474448892,
+      "treb_qa": 0.2270408077849099,
+      "winogrande_cf": 0.04295774544864966,
+      "piqa_cf": 0.06944879729166485,
+      "openbookqa_cf": 0.03993482217192572,
+      "xcsqa_cf": 0.06622485213941193,
+      "agg_score_GK": 0.20922123496272652,
+      "agg_score_RC": 0.43340342758254413,
+      "agg_score_RES": 0.05853615720100083,
+      "agg_score_NLU": 0.06327768957280622,
+      "agg_score_MATH": 0.11788784305149248,
+      "agg_score_TABLE": 0.23823248126469942,
+      "agg_score_macro": 0.18675980560587827,
+      "agg_score_micro": 0.18181383178500396
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=2-seed=1-seed-201",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.640107857232084,
+      "arc_cf:easy": 0.2467515009228036,
+      "hellaswag_cf": 0.08437911765250206,
+      "mmlu_redux_cf:_average": 0.17258509685231194,
+      "gsm8k": 0.12133597523422963,
+      "drop": 0.23364539895781178,
+      "wikitablequestions": 0.24695653735875833,
+      "treb_qa": 0.2203544702713846,
+      "winogrande_cf": 0.04540349029885606,
+      "piqa_cf": 0.07003392036387707,
+      "openbookqa_cf": 0.04260408115331701,
+      "xcsqa_cf": 0.0687551421147825,
+      "agg_score_GK": 0.20966829888755778,
+      "agg_score_RC": 0.43687662809494787,
+      "agg_score_RES": 0.060464381210658856,
+      "agg_score_NLU": 0.06489130397567906,
+      "agg_score_MATH": 0.12133597523422963,
+      "agg_score_TABLE": 0.23365550381507147,
+      "agg_score_macro": 0.18781534853635748,
+      "agg_score_micro": 0.1827427157010599
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=2-seed=2-seed-202",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6364378658444785,
+      "arc_cf:easy": 0.2406000816132597,
+      "hellaswag_cf": 0.08479448696680983,
+      "mmlu_redux_cf:_average": 0.1717868525168053,
+      "gsm8k": 0.11503015668615743,
+      "drop": 0.1983469329261174,
+      "wikitablequestions": 0.2627272163928214,
+      "treb_qa": 0.22332185237596733,
+      "winogrande_cf": 0.037477454351941594,
+      "piqa_cf": 0.0693760267070029,
+      "openbookqa_cf": 0.042475129843381504,
+      "xcsqa_cf": 0.06871727566170666,
+      "agg_score_GK": 0.2061934670650325,
+      "agg_score_RC": 0.41739239938529793,
+      "agg_score_RES": 0.060189477404030356,
+      "agg_score_NLU": 0.06113597065937571,
+      "agg_score_MATH": 0.11503015668615743,
+      "agg_score_TABLE": 0.24302453438439436,
+      "agg_score_macro": 0.18382766759738137,
+      "agg_score_micro": 0.1792576109905374
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=2-seed=3-seed-203",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 2,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6517768255774297,
+      "arc_cf:easy": 0.24364236121987604,
+      "hellaswag_cf": 0.08393721208974746,
+      "mmlu_redux_cf:_average": 0.17244176709941422,
+      "gsm8k": 0.11716032260435122,
+      "drop": 0.20266443425246053,
+      "wikitablequestions": 0.2693945320341959,
+      "treb_qa": 0.21993788447835144,
+      "winogrande_cf": 0.039947179373467985,
+      "piqa_cf": 0.07029587252872091,
+      "openbookqa_cf": 0.04325873460187509,
+      "xcsqa_cf": 0.06777600547705069,
+      "agg_score_GK": 0.20804206415964513,
+      "agg_score_RC": 0.4272206299149451,
+      "agg_score_RES": 0.06044353753588224,
+      "agg_score_NLU": 0.061942195731607724,
+      "agg_score_MATH": 0.11716032260435122,
+      "agg_score_TABLE": 0.24466620825627367,
+      "agg_score_macro": 0.18657915970045083,
+      "agg_score_micro": 0.18185276094474512
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=3-seed=1-seed-301",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 1,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6586394856650991,
+      "arc_cf:easy": 0.2480676890215073,
+      "hellaswag_cf": 0.08292759160693419,
+      "mmlu_redux_cf:_average": 0.17387542715955964,
+      "gsm8k": 0.12278038500629995,
+      "drop": 0.22982118024595502,
+      "wikitablequestions": 0.2504028743857631,
+      "treb_qa": 0.21839745320103934,
+      "winogrande_cf": 0.04595481055492748,
+      "piqa_cf": 0.06960484296619193,
+      "openbookqa_cf": 0.04058283787235508,
+      "xcsqa_cf": 0.06608274186436175,
+      "agg_score_GK": 0.21097155809053347,
+      "agg_score_RC": 0.44423033295552705,
+      "agg_score_RES": 0.05875680756763626,
+      "agg_score_NLU": 0.06444120108093083,
+      "agg_score_MATH": 0.12278038500629995,
+      "agg_score_TABLE": 0.23440016379340123,
+      "agg_score_macro": 0.18926340808238815,
+      "agg_score_micro": 0.1839281099624995
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=3-seed=2-seed-302",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 2,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6591271968018595,
+      "arc_cf:easy": 0.24235278351560974,
+      "hellaswag_cf": 0.0833880619911614,
+      "mmlu_redux_cf:_average": 0.1718346301779895,
+      "gsm8k": 0.11830010073875383,
+      "drop": 0.2112604674159878,
+      "wikitablequestions": 0.27369405832633575,
+      "treb_qa": 0.20976925191286283,
+      "winogrande_cf": 0.040718705083092346,
+      "piqa_cf": 0.06966077305792891,
+      "openbookqa_cf": 0.04206211351501784,
+      "xcsqa_cf": 0.06867348288379552,
+      "agg_score_GK": 0.20709370684679962,
+      "agg_score_RC": 0.43519383210892365,
+      "agg_score_RES": 0.06013212315224742,
+      "agg_score_NLU": 0.062053383537126874,
+      "agg_score_MATH": 0.11830010073875383,
+      "agg_score_TABLE": 0.2417316551195993,
+      "agg_score_macro": 0.1874174669172418,
+      "agg_score_micro": 0.18257013545169962
+    }
+  },
+  {
+    "run": "mix-fw_edu_hq-table_smollm2_1.7b_hq-6.2b--data-seed=3-seed=3-seed-303",
+    "experiment_family": "variance_check",
+    "model_size": "6.2b",
+    "datasets": [
+      "fw_edu_hq",
+      "table_smollm2_1.7b_hq"
+    ],
+    "data_weights": [
+      0.5,
+      0.5
+    ],
+    "seed": 3,
+    "data_seed": 3,
+    "train_steps": 10000,
+    "tokens_consumed_b": 20.972,
+    "results": {
+      "squad_v2": 0.6442269901092621,
+      "arc_cf:easy": 0.24452551110465037,
+      "hellaswag_cf": 0.08415719137555522,
+      "mmlu_redux_cf:_average": 0.17221009893825065,
+      "gsm8k": 0.12142268166274552,
+      "drop": 0.1958222440371401,
+      "wikitablequestions": 0.25511345005600305,
+      "treb_qa": 0.22389477116538037,
+      "winogrande_cf": 0.034989914529838545,
+      "piqa_cf": 0.06905161284396397,
+      "openbookqa_cf": 0.039615009089244646,
+      "xcsqa_cf": 0.06785785005094028,
+      "agg_score_GK": 0.20836780502145053,
+      "agg_score_RC": 0.4200246170732011,
+      "agg_score_RES": 0.058841490661382966,
+      "agg_score_NLU": 0.05957355295269688,
+      "agg_score_MATH": 0.12142268166274552,
+      "agg_score_TABLE": 0.2395041106106917,
+      "agg_score_macro": 0.18462237633036147,
+      "agg_score_micro": 0.17940727708024792
+    }
+  }
+]

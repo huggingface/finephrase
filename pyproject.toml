@@ -71,6 +71,7 @@ collect-rephrasing-metadata = "finephrase.cli.collect_rephrasing_metadata:main"
 collect-training-metadata = "finephrase.cli.collect_training_metadata:main"
 export-benchmark-csv = "finephrase.cli.export_benchmark_csv:main"
 audit-contamination = "finephrase.cli.audit_contamination:main"
+clone-checkpoints-to-hf = "finephrase.cli.clone_checkpoints_to_hf:main"
 
 [tool.setuptools.packages.find]
 include = ["finephrase*"]

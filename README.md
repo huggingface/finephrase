@@ -84,6 +84,7 @@ After installation, you can use these console commands for different aspects of 
 - `collect-training-metadata`   - Collect training-only run metadata (proportion sweep / variance grids) into a JSON file
 - `export-benchmark-csv`        - Export all S3 lighteval evals into a single wide benchmark CSV
 - `audit-contamination`   - N-gram overlap audit between training data and eval benchmarks
+- `clone-checkpoints-to-hf`     - Clone all training-run checkpoints from S3 into an HF Bucket (skips decay/rephrase/essentialweb)
 
 All commands support `--help` to see available options. Below, we walk through them in the order of a typical workflow: first understand your data, then prepare, rephrase, train, and evaluate.
 
@@ -281,6 +282,51 @@ export-benchmark-csv
 # Keep decay runs, restrict to a subset, or change the output path
 export-benchmark-csv --include-decay
 export-benchmark-csv --runs-regex 'mix-0\.[1-9]-.*' --output /tmp/sweep.csv
+```
+
+### `clone-checkpoints-to-hf`
+
+Clone the trained-model checkpoints from S3 into the
+[`HuggingFaceFW/finephrase-checkpoints`](https://huggingface.co/buckets/HuggingFaceFW/finephrase-checkpoints)
+HF Bucket. By default it auto-discovers every run folder under
+`s3://finephrase/experiments/checkpoints/`, **excludes runs whose name contains an
+`EXCLUDE_MARKERS` substring** (`-decay-` grids, `rephrase` budget ablations, `essentialweb`
+raw datasets), and clones only the runs **not yet present in the bucket**. It is a thin
+wrapper around the cluster-native `clone-s3-to-hf.sh` cloner (slurm-array sharded, streams
+S3 → xet with no local disk staging); it only copies — it never deletes the S3 source.
+
+The cloner derives each destination key by stripping the **exact `--source` prefix**,
+and the bucket's layout is top-level `<run>/…` folders. So the script always clones from
+the shared parent `s3://finephrase/experiments/checkpoints/` (leaving `<run>/…` intact)
+and selects runs by emitting one `--exclude '<key>/<run>/*'` glob per run it does *not*
+want.
+
+The cloner does **not** diff against the destination bucket — it re-reads and re-hashes
+its whole source set on every run. So this script does a cheap presence check itself (one
+bucket API call per run) and feeds the cloner only the run folders missing from the
+bucket, avoiding a wasteful S3 re-read of already-cloned runs. A run left half-cloned by
+an interrupted job counts as "present" and is skipped by default.
+
+To recover such partial runs, pass `--repair`: it does a precise **file-level diff** —
+lists the actual S3 vs bucket file keys, computes the missing files, and submits a clone
+restricted to only the FNV shards (`fnv1a64(key) % 64`) and runs that hold them. Since a
+failed shard loses a whole FNV bucket, this re-reads only those buckets (≈ the missing
+fraction) rather than re-streaming every run. The S3 *listing* (~1.7M keys) takes a few
+minutes, but the transfer is minimal. Use `--runs <name> [<name> …]` to force specific
+runs instead (also overrides the name-marker filter).
+
+```bash
+# Preview the plan (discovers runs, diffs the bucket, prints the cloner command); submits nothing
+clone-checkpoints-to-hf
+
+# Actually submit the slurm-array clone of all not-yet-present non-decay runs
+clone-checkpoints-to-hf --submit
+
+# Repair: also re-clone runs only partially in the bucket (slow; enumerates all of S3)
+clone-checkpoints-to-hf --repair --submit
+
+# Clone an explicit subset (e.g. a single run), regardless of bucket state; tune array size
+clone-checkpoints-to-hf --runs fw_edu_hq --shards 16 --submit
 ```
 
 ### `audit-contamination`
